@@ -198,7 +198,8 @@ def read_data(folder, where):
 
 
 def manifest_bytes(man):
-    """the one way a manifest is laid out in a package"""
+    """the one way a manifest is laid out in a package + boards always written as the index row has them"""
+    man = dict(man, boards=man.get("boards", list(BOARDS)))
     return (json.dumps({key: man[key] for key in KEYS if key in man}, ensure_ascii=False, indent=2) + "\n").encode()
 
 

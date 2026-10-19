@@ -124,9 +124,10 @@ class Package(unittest.TestCase):
 
     def test_manifest_is_laid_out_one_way(self):
         body = zipfile.ZipFile(io.BytesIO(self.data)).read("mooboard.json")
-        self.assertEqual(body, (json.dumps(manifest(), ensure_ascii=False, indent=2) + "\n").encode())
+        self.assertEqual(body, (json.dumps(manifest(boards=["s3", "p4"]), ensure_ascii=False, indent=2)
+                                + "\n").encode())
         self.assertEqual(list(json.loads(body)), ["format", "id", "name", "version", "by", "description",
-                                                  "category", "uses", "minFirmware"])
+                                                  "category", "uses", "minFirmware", "boards"])
 
     def test_index_is_the_contract_shape(self):
         raw = read(os.path.join(self.out, "index.json"))
