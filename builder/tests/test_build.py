@@ -9,6 +9,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import unittest.mock
 import zipfile
 import zlib
 
@@ -359,3 +360,52 @@ class TheRepo(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class Generated(unittest.TestCase):
+    """boards refuse an index older than the one they hold and never lower that floor (board review n1) + so the
+    builder refuses a stamp that is not later than the live catalog's or is more than a day ahead"""
+
+    NOW = 1792396800   # 2026-10-19T08:00:00Z
+
+    def test_a_stamp_more_than_a_day_ahead_is_refused(self):
+        build.check_generated("2026-10-20T08:00:00Z", now=self.NOW)   # a day ahead is still fine
+        with self.assertRaises(build.Refused):
+            build.check_generated("2026-10-20T08:00:01Z", now=self.NOW)
+        with self.assertRaises(build.Refused):
+            build.check_generated("2062-10-19T08:00:00Z", now=self.NOW)
+
+    def test_a_stamp_not_later_than_the_live_one_is_refused(self):
+        build.check_generated("2026-10-19T08:00:00Z", previous="2026-10-19T07:59:59Z", now=self.NOW)
+        for previous in ("2026-10-19T08:00:00Z", "2026-10-19T08:00:01Z"):
+            with self.assertRaises(build.Refused):
+                build.check_generated("2026-10-19T08:00:00Z", previous=previous, now=self.NOW)
+
+    def test_build_takes_the_floor_and_writes_nothing_when_refused(self):
+        tree = Tree(self)
+        out = os.path.join(tree.root, "dist")
+        with self.assertRaises(build.Refused):
+            build.build(tree.root, out, generated=GENERATED, previous=GENERATED)
+        self.assertFalse(os.path.exists(os.path.join(out, "index.json")))
+        build.build(tree.root, out, generated=GENERATED, previous="2026-10-18T08:00:00Z")
+        self.assertEqual(build.previous_generated(os.path.join(out, "index.json")), GENERATED)
+
+    def test_the_command_reads_the_floor_from_the_last_build_or_the_live_index(self):
+        tree = Tree(self)
+        out = os.path.join(tree.root, "dist")
+        build.build(tree.root, out, generated=GENERATED)
+        stderr = io.StringIO()
+        with unittest.mock.patch.object(sys, "stderr", stderr), unittest.mock.patch.object(build, "build") as called:
+            called.side_effect = build.Refused("x")
+            self.assertEqual(build.main(["--out", out, "--generated", GENERATED]), 1)
+        self.assertEqual(called.call_args.kwargs["previous"], GENERATED)
+        live = os.path.join(tree.root, "live.json")
+        with open(live, "w") as f:
+            json.dump({"format": 1, "generated": "2026-10-19T09:00:00Z"}, f)
+        with unittest.mock.patch.object(build, "build") as called:
+            build.main(["--out", out, "--previous", live])
+        self.assertEqual(called.call_args.kwargs["previous"], "2026-10-19T09:00:00Z")
+        with open(live, "w") as f:
+            f.write("not json")
+        with unittest.mock.patch.object(sys, "stderr", io.StringIO()):
+            self.assertEqual(build.main(["--out", out, "--previous", live]), 1)

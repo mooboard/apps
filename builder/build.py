@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Builds every app in this repo into dist/: <id>-<version>.mooboard, index.json and, with --key, index.sig.
 
-Usage: python3 builder/build.py [--out DIR] [--key PEM] [--generated YYYY-MM-DDTHH:MM:SSZ] [--openssl PATH]
+Usage: python3 builder/build.py [--out DIR] [--key PEM] [--generated YYYY-MM-DDTHH:MM:SSZ] [--previous INDEX]
+                               [--openssl PATH]
 
 Apps live in <Category>/<App>/: mooboard.json (package format 2), icon.png (32x32), README.md, LICENSE and
 data/. A package is a ZIP of stored entries with fixed headers and times, in a fixed order (mooboard.json,
@@ -11,6 +12,7 @@ Python 3 standard library and the openssl command only.
 """
 import argparse
 import base64
+import calendar
 import datetime
 import hashlib
 import json
@@ -308,10 +310,37 @@ def default_generated():
     return datetime.datetime.utcfromtimestamp(moment).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-def build(root, out, generated=None, key=None, openssl="openssl", say=lambda line: None):
+AHEAD_LIMIT_SEC = 24 * 3600   # a stamp further ahead than this is a typo or a skewed clock
+
+
+def previous_generated(path):
+    """the generated stamp of an earlier index.json or None when there is none to read"""
+    try:
+        with open(path, "rb") as f:
+            stamp = json.loads(f.read().decode("utf-8")).get("generated")
+    except (OSError, ValueError, AttributeError):
+        return None
+    return stamp if isinstance(stamp, str) and STAMP.fullmatch(stamp) else None
+
+
+def check_generated(generated, previous=None, now=None):
+    """boards refuse an index older than the one they hold and never lower that floor (board review n1) + so a stamp
+    must be later than the live catalog's and no more than a day ahead of now"""
+    now = time.time() if now is None else now
+    moment = calendar.timegm(time.strptime(generated, "%Y-%m-%dT%H:%M:%SZ"))
+    if moment > now + AHEAD_LIMIT_SEC:
+        raise Refused("--generated %s is more than a day ahead of now; boards would refuse every index after it"
+                      % generated)
+    if previous is not None and generated <= previous:
+        raise Refused("--generated %s is not later than the live catalog's %s; boards would refuse it"
+                      % (generated, previous))
+
+
+def build(root, out, generated=None, key=None, openssl="openssl", say=lambda line: None, previous=None, now=None):
     generated = generated or default_generated()
     if not STAMP.fullmatch(generated):
         raise Refused("--generated must be YYYY-MM-DDTHH:MM:SSZ")
+    check_generated(generated, previous, now)
     rows, packages, seen = [], {}, set()
     for category, folder in find_apps(root):
         man, icon, package, boards, count = load_app(root, category, folder)
@@ -361,10 +390,16 @@ def main(argv=None):
     parser.add_argument("--out", default=os.path.join(root, "dist"))
     parser.add_argument("--key", help="the catalog's private key (PEM); signs index.json into index.sig")
     parser.add_argument("--generated", help="the index's time, YYYY-MM-DDTHH:MM:SSZ (default now)")
+    parser.add_argument("--previous", help="the live catalog's index.json (default: the one in --out from the last build); "
+                                           "the new stamp must be later than its own")
     parser.add_argument("--openssl", default="openssl")
     args = parser.parse_args(argv)
+    previous = previous_generated(args.previous or os.path.join(args.out, "index.json"))
+    if args.previous and previous is None:
+        print("refused: %s holds no index generated stamp" % args.previous, file=sys.stderr)
+        return 1
     try:
-        build(root, args.out, args.generated, args.key, args.openssl, say=print)
+        build(root, args.out, args.generated, args.key, args.openssl, say=print, previous=previous)
     except Refused as refused:
         print("refused: %s" % refused, file=sys.stderr)
         return 1
