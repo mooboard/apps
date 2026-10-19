@@ -9,9 +9,9 @@ import tempfile
 import unittest
 import zipfile
 
-TOOLS = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-REPO = os.path.dirname(TOOLS)
-sys.path.insert(0, TOOLS)
+BUILDER = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+REPO = os.path.dirname(BUILDER)
+sys.path.insert(0, BUILDER)
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build  # noqa: E402
 import seasonal  # noqa: E402

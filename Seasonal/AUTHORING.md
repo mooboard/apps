@@ -44,7 +44,7 @@ when you know them. Diwali 2026 is on November 8.
 
 ## Preview it
 
-1. From this repo: `python3 tools/build.py`. It checks the rules and writes the packages and `index.json` to `dist/`.
+1. From this repo: `python3 builder/build.py`. It checks the rules and writes the packages and `index.json` to `dist/`.
 2. From the firmware repo:
 
    ```sh

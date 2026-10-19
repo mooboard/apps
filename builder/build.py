@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Builds every app in this repo into dist/: <id>-<version>.mooboard, index.json and, with --key, index.sig.
 
-Usage: python3 tools/build.py [--out DIR] [--key PEM] [--generated YYYY-MM-DDTHH:MM:SSZ] [--openssl PATH]
+Usage: python3 builder/build.py [--out DIR] [--key PEM] [--generated YYYY-MM-DDTHH:MM:SSZ] [--openssl PATH]
 
 Apps live in <Category>/<App>/: mooboard.json (package format 2), icon.png (32x32), README.md, LICENSE and
 data/. A package is a ZIP of stored entries with fixed headers and times, in a fixed order (mooboard.json,
@@ -40,7 +40,7 @@ DESCRIPTION_MAX = 80
 KEYS = ("format", "id", "name", "version", "by", "description", "category", "uses", "minFirmware", "boards")
 NEEDED_KEYS = ("format", "id", "name", "version", "by", "description", "category")
 REPO_ONLY = ("README.md", "LICENSE")
-NOT_APPS = ("tools", "dist", "Seasonal")
+NOT_APPS = ("builder", "dist", "Seasonal")
 
 ID = re.compile(r"[a-z0-9-]{1,32}")
 BY = re.compile(r"[A-Za-z0-9](?:[A-Za-z0-9]|-(?=[A-Za-z0-9])){0,38}")

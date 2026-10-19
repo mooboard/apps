@@ -12,9 +12,9 @@ import unittest
 import zipfile
 import zlib
 
-TOOLS = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-REPO = os.path.dirname(TOOLS)
-sys.path.insert(0, TOOLS)
+BUILDER = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+REPO = os.path.dirname(BUILDER)
+sys.path.insert(0, BUILDER)
 import build  # noqa: E402
 
 GENERATED = "2026-10-19T08:00:00Z"
