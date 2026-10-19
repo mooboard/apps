@@ -259,6 +259,25 @@ class Rules(unittest.TestCase):
         del data["glyphs/om.bin"]
         self.refused(lambda t: self.replace(t, data=data), "glyphs/om.bin is missing")
 
+    def test_settings_apps_carry_no_data(self):
+        countdowns = manifest(id="countdowns", name="Countdowns", uses="countdown",
+                              description="Days until the dates you care about.")
+        self.refused(lambda t: self.replace(t, countdowns, {"items.json": b"[]"}, folder="Countdowns"),
+                     "Lifestyle/Countdowns: a countdown app carries no data/")
+        sketch = manifest(id="sketch", name="Sketch", uses="sketch", description="Draw on your phone.")
+        self.refused(lambda t: self.replace(t, sketch, {"art/one.bin": b"x"}, folder="Sketch"),
+                     "Lifestyle/Sketch: a sketch app carries no data/")
+
+    def test_settings_apps_are_their_manifest_and_icon(self):
+        tree = Tree(self)
+        tree.app("Lifestyle", "Countdowns", manifest(id="countdowns", name="Countdowns", uses="countdown",
+                                                     description="Days until the dates you care about."), {})
+        out = tree.build()
+        names = zipfile.ZipFile(os.path.join(out, "countdowns-1.0.0.mooboard")).namelist()
+        self.assertEqual(names, ["mooboard.json", "icon.png"])
+        index = json.loads(read(os.path.join(out, "index.json")))
+        self.assertEqual([(a["id"], a["uses"]) for a in index["apps"]], [("countdowns", "countdown"), ("prayer", "prayer")])
+
     def test_two_apps_with_one_id(self):
         def edit(tree):
             tree.app("Games", "Prayer", manifest(category="Games"), pack_files())
@@ -319,9 +338,10 @@ class TheRepo(unittest.TestCase):
         self.addCleanup(shutil.rmtree, out)
         build.build(REPO, out, generated=GENERATED)
         index = json.loads(read(os.path.join(out, "index.json")))
-        self.assertEqual([(a["id"], a["name"], a["category"]) for a in index["apps"]],
-                         [("prayer", "Prayer", "Lifestyle")])
-        self.assertLessEqual(index["apps"][0]["size"], build.BOARD_CAP["s3"])
+        self.assertEqual([(a["id"], a["name"], a["category"], a["uses"]) for a in index["apps"]],
+                         [("countdowns", "Countdowns", "Lifestyle", "countdown"), ("prayer", "Prayer", "Lifestyle", "prayer"),
+                          ("sketch", "Sketch", "Lifestyle", "sketch")])
+        self.assertTrue(all(a["size"] <= build.BOARD_CAP["s3"] for a in index["apps"]))
         names = zipfile.ZipFile(os.path.join(out, "prayer-1.0.0.mooboard")).namelist()
         self.assertTrue(all(n.endswith((".json", ".bin", ".png")) for n in names))
 

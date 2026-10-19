@@ -25,7 +25,7 @@ import time
 import zlib
 
 CATEGORIES = ("Lifestyle", "Games")
-USES = ("prayer",)
+USES = ("prayer", "countdown", "sketch")   # the firmware's renderers (pw::AppRenderer), in its order
 BOARDS = ("s3", "p4")
 BOARD_CAP = {"s3": 2 * 1024 * 1024, "p4": 8 * 1024 * 1024}
 ENTRY_CAP = 512 * 1024
@@ -163,7 +163,15 @@ def check_prayer(data, where):
             raise Refused("%s/data/%s does not match pack.json" % (where, path))
 
 
-USES_CHECKS = {"prayer": check_prayer}
+def check_no_data(uses):
+    """a renderer whose settings live on the board + its package is the manifest and the icon alone"""
+    def check(data, where):
+        if data:
+            raise Refused("%s: a %s app carries no data/ (its settings live on the board)" % (where, uses))
+    return check
+
+
+USES_CHECKS = {"prayer": check_prayer, "countdown": check_no_data("countdown"), "sketch": check_no_data("sketch")}
 
 
 def check_size(app_id, size, boards):
