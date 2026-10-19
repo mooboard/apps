@@ -1,12 +1,13 @@
 # mooboard apps
 
-Apps for mooboard, sorted by category. Each app is a folder: `<Category>/<app>/`.
+Apps for mooboard
 
-| Category | Apps |
-| --- | --- |
-| Lifestyle | Prayer |
-| Games | Coming soon |
+| Category |
+| --- |
+| Lifestyle |
+| Games |
 
-Install apps from your board's web app: Home, then Add.
+Install apps from your board's web app.
+From Home, tap Add.
 
 To make your own app, start with the [dev kit](https://github.com/mooboard/dev-kit).
