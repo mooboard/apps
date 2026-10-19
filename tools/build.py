@@ -40,7 +40,7 @@ DESCRIPTION_MAX = 80
 KEYS = ("format", "id", "name", "version", "by", "description", "category", "uses", "minFirmware", "boards")
 NEEDED_KEYS = ("format", "id", "name", "version", "by", "description", "category")
 REPO_ONLY = ("README.md", "LICENSE")
-NOT_APPS = ("tools", "dist")
+NOT_APPS = ("tools", "dist", "Seasonal")
 
 ID = re.compile(r"[a-z0-9-]{1,32}")
 BY = re.compile(r"[A-Za-z0-9](?:[A-Za-z0-9]|-(?=[A-Za-z0-9])){0,38}")
@@ -256,8 +256,10 @@ def find_apps(root):
     return sorted(apps, key=lambda a: (CATEGORIES.index(a[0]), a[1]))
 
 
-def index_bytes(rows, generated):
+def index_bytes(rows, generated, events=None):
     index = {"format": 1, "generated": generated, "categories": list(CATEGORIES), "apps": rows}
+    if events:
+        index["seasonal"] = events
     return (json.dumps(index, ensure_ascii=False, separators=(",", ":")) + "\n").encode("utf-8")
 
 
@@ -314,7 +316,14 @@ def build(root, out, generated=None, key=None, openssl="openssl", say=lambda lin
                    icon=base64.b64encode(icon).decode("ascii"))
         rows.append(row)
         say("%s/%s: %s, %d bytes, %d entries" % (category, folder, name, len(package), count))
-    index = index_bytes(rows, generated)
+    import seasonal
+    events, event_packages = seasonal.build_events(root, generated, say)
+    for row in events:
+        if row["id"] in seen:
+            raise Refused("two apps have the id %s" % row["id"])
+        seen.add(row["id"])
+    packages.update(event_packages)
+    index = index_bytes(rows, generated, events)
     if len(index) > INDEX_CAP:
         raise Refused("index.json is %d bytes, over 64 KB" % len(index))
     signature = sign(openssl, key, index) if key else None
@@ -336,6 +345,7 @@ def build(root, out, generated=None, key=None, openssl="openssl", say=lambda lin
 
 
 def main(argv=None):
+    sys.modules.setdefault("build", sys.modules[__name__])   # seasonal.py raises this module's Refused
     root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     parser.add_argument("--out", default=os.path.join(root, "dist"))
