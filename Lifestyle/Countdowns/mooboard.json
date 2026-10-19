@@ -1,0 +1,11 @@
+{
+  "format": 2,
+  "id": "countdowns",
+  "name": "Countdowns",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "Days until the dates you care about.",
+  "category": "Lifestyle",
+  "uses": "countdown",
+  "minFirmware": "0.3.0"
+}

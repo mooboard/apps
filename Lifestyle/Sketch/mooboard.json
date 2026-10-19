@@ -1,0 +1,11 @@
+{
+  "format": 2,
+  "id": "sketch",
+  "name": "Sketch",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "Draw on your phone and see it on your mooboard.",
+  "category": "Lifestyle",
+  "uses": "sketch",
+  "minFirmware": "0.3.0"
+}
