@@ -25,7 +25,7 @@ import time
 import zlib
 
 CATEGORIES = ("Lifestyle", "Games")
-USES = ("prayer", "countdown", "sketch")   # the firmware's renderers (pw::AppRenderer), in its order
+USES = ("prayer", "countdown", "sketch", "life", "plasma", "starfield", "fireplace")   # the firmware's renderers (pw::AppRenderer), in its order
 BOARDS = ("s3", "p4")
 BOARD_CAP = {"s3": 2 * 1024 * 1024, "p4": 8 * 1024 * 1024}
 ENTRY_CAP = 512 * 1024
@@ -172,6 +172,8 @@ def check_no_data(uses):
 
 
 USES_CHECKS = {"prayer": check_prayer, "countdown": check_no_data("countdown"), "sketch": check_no_data("sketch")}
+# the live renders u487 + their settings live on the board too
+USES_CHECKS.update({uses: check_no_data(uses) for uses in ("life", "plasma", "starfield", "fireplace")})
 
 
 def check_size(app_id, size, boards):

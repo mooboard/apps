@@ -268,6 +268,13 @@ class Rules(unittest.TestCase):
         self.refused(lambda t: self.replace(t, sketch, {"art/one.bin": b"x"}, folder="Sketch"),
                      "Lifestyle/Sketch: a sketch app carries no data/")
 
+    def test_live_renders_carry_no_data(self):
+        for uses, name in (("life", "Game of Life"), ("plasma", "Plasma"), ("starfield", "Starfield"),
+                           ("fireplace", "Fireplace")):
+            live = manifest(id=uses, name=name, uses=uses, description="A live render.")
+            self.refused(lambda t: self.replace(t, live, {"seed.json": b"{}"}, folder=name),
+                         "Lifestyle/%s: a %s app carries no data/" % (name, uses))
+
     def test_settings_apps_are_their_manifest_and_icon(self):
         tree = Tree(self)
         tree.app("Lifestyle", "Countdowns", manifest(id="countdowns", name="Countdowns", uses="countdown",
