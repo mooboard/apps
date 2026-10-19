@@ -8,4 +8,4 @@ Stars rushing toward you, or drifting past in layers.
 - Colors: White, Warm or Rainbow.
 - Direction: toward you, left, right, up or down.
 
-It takes a turn after the clock. Change its settings in your board's web app.
+It shows for 15 seconds each minute, after the clock. Change its settings in your board's web app.
