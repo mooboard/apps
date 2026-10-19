@@ -1,0 +1,14 @@
+{
+  "id": "diwali",
+  "name": "Diwali",
+  "start": "2026-10-25",
+  "end": "2026-11-10",
+  "clock": {
+    "x": 64,
+    "y": 9,
+    "align": "center",
+    "font": "clock",
+    "size": 14,
+    "color": "#ffd27a"
+  }
+}
