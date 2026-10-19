@@ -1,0 +1,11 @@
+{
+  "format": 2,
+  "id": "prayer",
+  "name": "Prayer",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "Aarti words in time with the recording.",
+  "category": "Lifestyle",
+  "uses": "prayer",
+  "minFirmware": "0.3.0"
+}
