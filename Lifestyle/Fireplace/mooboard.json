@@ -1,0 +1,11 @@
+{
+  "format": 2,
+  "id": "fireplace",
+  "name": "Fireplace",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "A fire crackling on the logs.",
+  "category": "Lifestyle",
+  "uses": "fireplace",
+  "minFirmware": "0.3.0"
+}

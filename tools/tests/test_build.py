@@ -346,8 +346,12 @@ class TheRepo(unittest.TestCase):
         build.build(REPO, out, generated=GENERATED)
         index = json.loads(read(os.path.join(out, "index.json")))
         self.assertEqual([(a["id"], a["name"], a["category"], a["uses"]) for a in index["apps"]],
-                         [("countdowns", "Countdowns", "Lifestyle", "countdown"), ("prayer", "Prayer", "Lifestyle", "prayer"),
-                          ("sketch", "Sketch", "Lifestyle", "sketch")])
+                         [("countdowns", "Countdowns", "Lifestyle", "countdown"),
+                          ("fireplace", "Fireplace", "Lifestyle", "fireplace"),
+                          ("life", "Game of Life", "Lifestyle", "life"),
+                          ("plasma", "Plasma", "Lifestyle", "plasma"), ("prayer", "Prayer", "Lifestyle", "prayer"),
+                          ("sketch", "Sketch", "Lifestyle", "sketch"),
+                          ("starfield", "Starfield", "Lifestyle", "starfield")])
         self.assertTrue(all(a["size"] <= build.BOARD_CAP["s3"] for a in index["apps"]))
         names = zipfile.ZipFile(os.path.join(out, "prayer-1.0.0.mooboard")).namelist()
         self.assertTrue(all(n.endswith((".json", ".bin", ".png")) for n in names))
