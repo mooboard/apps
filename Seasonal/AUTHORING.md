@@ -1,7 +1,7 @@
 # Seasonal faces
 
 A board on the Seasonal clock face shows the event of the day: its picture, with the time on top. Between events it
-shows Big Time. Boards check for new events once a day, and fetch an event the day before it starts.
+shows the face it had before Seasonal was picked, or Classic. Boards check for new events once a day, and fetch an event the day before it starts.
 
 ## Add an event
 
