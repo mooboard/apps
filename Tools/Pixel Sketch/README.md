@@ -1,4 +1,4 @@
-# Sketch
+# Pixel Sketch
 
 Draw on your phone and see it on your mooboard as you draw.
 

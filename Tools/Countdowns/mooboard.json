@@ -5,7 +5,7 @@
   "version": "1.0.0",
   "by": "mooboard",
   "description": "Days until the dates you care about.",
-  "category": "Lifestyle",
+  "category": "Tools",
   "uses": "countdown",
   "minFirmware": "0.3.0"
 }

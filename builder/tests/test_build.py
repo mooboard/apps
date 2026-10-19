@@ -134,7 +134,7 @@ class Package(unittest.TestCase):
         index = json.loads(raw)
         self.assertEqual(list(index), ["format", "generated", "categories", "apps"])
         self.assertEqual((index["format"], index["generated"], index["categories"]),
-                         (1, GENERATED, ["Lifestyle", "Games"]))
+                         (1, GENERATED, ["Lifestyle", "Games", "Tools"]))
         row = index["apps"][0]
         self.assertEqual(list(row), ["id", "name", "category", "by", "description", "version", "uses", "minFirmware",
                                      "boards", "file", "size", "sha256", "icon"])
@@ -171,7 +171,7 @@ class Rules(unittest.TestCase):
         tree.app(category, folder, manifest() if man is None else man, pack_files() if data is None else data, icon)
 
     def test_folder_not_a_category(self):
-        self.refused(lambda t: self.replace(t, category="Tools"), "Tools is not a category")
+        self.refused(lambda t: self.replace(t, category="Utilities"), "Utilities is not a category")
 
     def test_manifest_category_must_be_its_folder(self):
         self.refused(lambda t: self.replace(t, manifest(category="Games")), "category must be Lifestyle")
@@ -346,12 +346,12 @@ class TheRepo(unittest.TestCase):
         build.build(REPO, out, generated=GENERATED)
         index = json.loads(read(os.path.join(out, "index.json")))
         self.assertEqual([(a["id"], a["name"], a["category"], a["uses"]) for a in index["apps"]],
-                         [("countdowns", "Countdowns", "Lifestyle", "countdown"),
-                          ("fireplace", "Fireplace", "Lifestyle", "fireplace"),
+                         [("fireplace", "Fireplace", "Lifestyle", "fireplace"),
                           ("life", "Game of Life", "Lifestyle", "life"),
                           ("plasma", "Plasma", "Lifestyle", "plasma"), ("prayer", "Prayer", "Lifestyle", "prayer"),
-                          ("sketch", "Sketch", "Lifestyle", "sketch"),
-                          ("starfield", "Starfield", "Lifestyle", "starfield")])
+                          ("starfield", "Starfield", "Lifestyle", "starfield"),
+                          ("countdowns", "Countdowns", "Tools", "countdown"),
+                          ("sketch", "Pixel Sketch", "Tools", "sketch")])
         self.assertTrue(all(a["size"] <= build.BOARD_CAP["s3"] for a in index["apps"]))
         names = zipfile.ZipFile(os.path.join(out, "prayer-1.0.0.mooboard")).namelist()
         self.assertTrue(all(n.endswith((".json", ".bin", ".png")) for n in names))
