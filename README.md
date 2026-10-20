@@ -5,7 +5,9 @@ Apps for mooboard
 | Category |
 | --- |
 | Lifestyle |
+| Ambient |
 | Games |
+| Tools |
 
 Install apps from your board's web app.
 From Home, tap Add.

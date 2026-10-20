@@ -135,7 +135,7 @@ class Package(unittest.TestCase):
         index = json.loads(raw)
         self.assertEqual(list(index), ["format", "generated", "categories", "apps"])
         self.assertEqual((index["format"], index["generated"], index["categories"]),
-                         (1, GENERATED, ["Lifestyle", "Games", "Tools"]))
+                         (1, GENERATED, ["Lifestyle", "Ambient", "Games", "Tools"]))
         row = index["apps"][0]
         self.assertEqual(list(row), ["id", "name", "category", "by", "description", "version", "uses", "minFirmware",
                                      "boards", "file", "size", "sha256", "icon"])
@@ -347,9 +347,9 @@ class TheRepo(unittest.TestCase):
         build.build(REPO, out, generated=GENERATED)
         index = json.loads(read(os.path.join(out, "index.json")))
         self.assertEqual([(a["id"], a["name"], a["category"], a["uses"]) for a in index["apps"]],
-                         [("fireplace", "Fireplace", "Lifestyle", "fireplace"),
-                          ("plasma", "Plasma", "Lifestyle", "plasma"), ("prayer", "Prayer", "Lifestyle", "prayer"),
-                          ("starfield", "Starfield", "Lifestyle", "starfield"),
+                         [("prayer", "Prayer", "Lifestyle", "prayer"),
+                          ("fireplace", "Fireplace", "Ambient", "fireplace"), ("plasma", "Plasma", "Ambient", "plasma"),
+                          ("starfield", "Starfield", "Ambient", "starfield"),
                           ("life", "Game of Life", "Games", "life"),
                           ("countdowns", "Countdowns", "Tools", "countdown"),
                           ("sketch", "Pixel Sketch", "Tools", "sketch")])

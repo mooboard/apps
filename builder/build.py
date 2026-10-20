@@ -26,7 +26,8 @@ import tempfile
 import time
 import zlib
 
-CATEGORIES = ("Lifestyle", "Games", "Tools")
+# the store shows its headings in this order + apps a to z by folder within each (the owner, 2026-10-20)
+CATEGORIES = ("Lifestyle", "Ambient", "Games", "Tools")
 USES = ("prayer", "countdown", "sketch", "life", "plasma", "starfield", "fireplace")   # the firmware's renderers (pw::AppRenderer), in its order
 BOARDS = ("s3", "p4")
 BOARD_CAP = {"s3": 2 * 1024 * 1024, "p4": 8 * 1024 * 1024}
