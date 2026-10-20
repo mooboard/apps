@@ -5,7 +5,7 @@
   "version": "1.0.0",
   "by": "mooboard",
   "description": "Conway's Game of Life on your board.",
-  "category": "Lifestyle",
+  "category": "Games",
   "uses": "life",
   "minFirmware": "0.3.0"
 }

@@ -348,9 +348,9 @@ class TheRepo(unittest.TestCase):
         index = json.loads(read(os.path.join(out, "index.json")))
         self.assertEqual([(a["id"], a["name"], a["category"], a["uses"]) for a in index["apps"]],
                          [("fireplace", "Fireplace", "Lifestyle", "fireplace"),
-                          ("life", "Game of Life", "Lifestyle", "life"),
                           ("plasma", "Plasma", "Lifestyle", "plasma"), ("prayer", "Prayer", "Lifestyle", "prayer"),
                           ("starfield", "Starfield", "Lifestyle", "starfield"),
+                          ("life", "Game of Life", "Games", "life"),
                           ("countdowns", "Countdowns", "Tools", "countdown"),
                           ("sketch", "Pixel Sketch", "Tools", "sketch")])
         self.assertTrue(all(a["size"] <= build.BOARD_CAP["s3"] for a in index["apps"]))
