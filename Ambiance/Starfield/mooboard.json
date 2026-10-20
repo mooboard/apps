@@ -5,7 +5,7 @@
   "version": "1.0.0",
   "by": "mooboard",
   "description": "Stars rushing past.",
-  "category": "Ambient",
+  "category": "Ambiance",
   "uses": "starfield",
   "minFirmware": "0.3.0"
 }
