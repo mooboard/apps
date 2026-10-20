@@ -354,8 +354,12 @@ class TheRepo(unittest.TestCase):
                           ("countdowns", "Countdowns", "Tools", "countdown"),
                           ("sketch", "Pixel Sketch", "Tools", "sketch")])
         self.assertTrue(all(a["size"] <= build.BOARD_CAP["s3"] for a in index["apps"]))
-        names = zipfile.ZipFile(os.path.join(out, "prayer-1.0.0.mooboard")).namelist()
+        prayer = [a for a in index["apps"] if a["id"] == "prayer"][0]
+        names = zipfile.ZipFile(os.path.join(out, prayer["file"])).namelist()
         self.assertTrue(all(n.endswith((".json", ".bin", ".png")) for n in names))
+        # the prayer calendar face reads these two + without them it shows only the time and date
+        self.assertIn("data/calendar.json", names)
+        self.assertIn("data/glyphs/calendar.bin", names)
 
 
 if __name__ == "__main__":
