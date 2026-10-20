@@ -5,7 +5,7 @@
   "version": "1.0.0",
   "by": "mooboard",
   "description": "A fire crackling on the logs.",
-  "category": "Ambient",
+  "category": "Ambiance",
   "uses": "fireplace",
   "minFirmware": "0.3.0"
 }

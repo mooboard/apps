@@ -26,8 +26,20 @@ import tempfile
 import time
 import zlib
 
-# the store shows its headings in this order + apps a to z by folder within each (the owner, 2026-10-20)
-CATEGORIES = ("Lifestyle", "Ambient", "Games", "Tools")
+# the store's headings in their order from categories.txt at the repo's top, one a line + apps a to z by folder within
+# each (the owner, 2026-10-20) + a new category is a line there and a folder, and boards read it with the catalog
+def read_categories(root):
+    with open(os.path.join(root, "categories.txt"), encoding="utf-8") as f:
+        names = tuple(line.strip() for line in f if line.strip())
+    if not names or len(set(names)) != len(names):
+        raise SystemExit("categories.txt needs one name a line, none twice")
+    for name in names:   # the board's own rule (pw_apps validCategory): a capital then letters, 1 to 24
+        if not re.fullmatch(r"[A-Z][A-Za-z]{0,23}", name):
+            raise SystemExit("categories.txt: %r is not a capital then letters, 24 at most" % name)
+    return names
+
+
+CATEGORIES = read_categories(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 USES = ("prayer", "countdown", "sketch", "life", "plasma", "starfield", "fireplace")   # the firmware's renderers (pw::AppRenderer), in its order
 BOARDS = ("s3", "p4")
 BOARD_CAP = {"s3": 2 * 1024 * 1024, "p4": 8 * 1024 * 1024}

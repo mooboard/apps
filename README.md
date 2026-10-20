@@ -5,7 +5,7 @@ Apps for mooboard
 | Category |
 | --- |
 | Lifestyle |
-| Ambient |
+| Ambiance |
 | Games |
 | Tools |
 
