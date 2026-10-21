@@ -622,7 +622,7 @@ class TheRepo(unittest.TestCase):
         got = [(a["id"], a["name"], a["category"], a["uses"]) for a in index["apps"]]
         self.assertEqual(got, want)
         # the store's own first apps stay in it
-        for row in (("prayer", "Prayer", "Lifestyle", "prayer"), ("fireplace", "Fireplace", "Ambiance", "fireplace"),
+        for row in (("prayer", "Pooja", "Lifestyle", "prayer"), ("fireplace", "Fireplace", "Ambiance", "fireplace"),
                     ("plasma", "Plasma", "Ambiance", "plasma"), ("starfield", "Starfield", "Ambiance", "starfield"),
                     ("life", "Game of Life", "Games", "life"), ("countdowns", "Countdowns", "Tools", "countdown"),
                     ("sketch", "Pixel Sketch", "Tools", "sketch")):
