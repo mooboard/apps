@@ -1,0 +1,34 @@
+{
+  "format": 2,
+  "id": "rain",
+  "name": "Rain",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "Rain on the glass and the city glowing behind it.",
+  "category": "Ambiance",
+  "uses": "rain",
+  "minFirmware": "0.3.2",
+  "settings": [
+    {
+      "key": "rain",
+      "type": "choice",
+      "label": "Rain",
+      "default": "Steady",
+      "options": [
+        "Light",
+        "Steady",
+        "Heavy"
+      ]
+    },
+    {
+      "key": "city",
+      "type": "choice",
+      "label": "City",
+      "default": "Warm",
+      "options": [
+        "Warm",
+        "Cool"
+      ]
+    }
+  ]
+}
