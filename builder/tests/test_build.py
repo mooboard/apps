@@ -292,6 +292,123 @@ class Rules(unittest.TestCase):
         self.refused(edit, "two apps have the id prayer")
 
 
+def scoreboard(**changes):
+    """a catalog tool app with settings and controls u517 + written in an order the board does not keep"""
+    out = manifest(id="scoreboard", name="Scoreboard", uses="scoreboard", category="Tools", minFirmware="0.3.1",
+                   description="Two scores you keep from your phone.")
+    out["settings"] = [{"type": "text", "key": "left", "label": "Left name", "max": 8, "default": "Home"},
+                       {"key": "right", "type": "text", "label": "Right name", "default": "Guest", "max": 8},
+                       {"key": "left_color", "type": "color", "label": "Left color", "default": "#3C9DFF"}]
+    out["controls"] = [{"label": "{left}", "key": "left", "type": "stepper", "max": 999, "min": 0},
+                       {"key": "right", "type": "stepper", "label": "{right}", "min": 0, "max": 999},
+                       {"key": "reset", "type": "button", "label": "Reset"}]
+    out.update(changes)
+    return {key: value for key, value in out.items() if value is not None}
+
+
+class Catalog(unittest.TestCase):
+    """the catalog apps u517: settings and controls checked as the board reads them and held to the renderers' key
+    table, laid out in the board's key order, and word and quotes' list c2910 c2911 c2914"""
+
+    def tree(self, man, data=None, category="Tools", folder="Scoreboard"):
+        tree = Tree(self)
+        tree.app(category, folder, man, data or {})
+        return tree
+
+    def refused(self, man, words, data=None, category="Tools", folder="Scoreboard"):
+        tree = self.tree(man, data, category, folder)
+        with self.assertRaises(build.Refused) as caught:
+            tree.build()
+        self.assertIn(words, str(caught.exception))
+
+    def test_a_tool_app_builds_in_the_boards_key_order(self):
+        out = self.tree(scoreboard()).build()
+        body = zipfile.ZipFile(os.path.join(out, "scoreboard-1.0.0.mooboard")).read("mooboard.json").decode()
+        man = json.loads(body)
+        self.assertEqual(list(man)[-2:], ["settings", "controls"])
+        self.assertEqual(list(man["settings"][0]), ["key", "type", "label", "default", "max"])
+        self.assertEqual(list(man["controls"][0]), ["key", "type", "label", "min", "max"])
+        self.assertEqual(body, json.dumps(man, ensure_ascii=False, indent=2) + "\n")
+        row = [a for a in json.loads(read(os.path.join(out, "index.json")))["apps"] if a["id"] == "scoreboard"][0]
+        self.assertNotIn("settings", row)   # the index stays the catalog's rows
+        self.assertEqual(row["uses"], "scoreboard")
+
+    def test_every_catalog_renderer_is_known(self):
+        self.assertEqual(len(build.CATALOG_USES), 16)
+        self.assertEqual(set(build.RENDERER_KEYS), set(build.CATALOG_USES))
+        self.assertEqual(build.USES[7:], build.CATALOG_USES)
+
+    def test_keys_the_renderer_does_not_take(self):
+        self.refused(scoreboard(controls=[{"key": "undo", "type": "button", "label": "Undo"}]),
+                     "scoreboard takes no button control undo")
+        self.refused(scoreboard(controls=[{"key": "reset", "type": "readout", "label": "Reset"}]),
+                     "scoreboard takes no readout control reset")
+        self.refused(scoreboard(settings=[{"key": "tint", "type": "color", "label": "Tint", "default": "#FFFFFF"}],
+                                controls=[]), "scoreboard takes no color setting tint")
+        self.refused(scoreboard(settings=[{"key": "left", "type": "text", "label": "Left", "default": "Home",
+                                           "max": 9}], controls=[]), "setting left is 8 characters at most")
+        pong = manifest(id="pong-clock", name="Pong Clock", uses="pong", category="Games", minFirmware="0.3.1",
+                        description="Two paddles play, and the score is the time.",
+                        settings=[{"key": "speed", "type": "choice", "label": "Speed", "default": "Slow",
+                                   "options": ["Slow", "Fast"]}])
+        self.refused(pong, "setting speed needs 3 options", category="Games", folder="Pong Clock")
+        habits = manifest(id="habit-streaks", name="Habit Streaks", uses="habits", minFirmware="0.3.1",
+                          description="Tap a habit on your phone and watch the streak grow.",
+                          controls=[{"key": "habits", "type": "list", "label": "Habits", "max": 7, "chars": 12,
+                                     "add": "Add habit"}])
+        self.refused(habits, "list habits is 6 items at most", category="Lifestyle", folder="Habit Streaks")
+        # a renderer from before the catalog takes none
+        self.refused(manifest(id="countdowns", name="Countdowns", uses="countdown", description="Days.",
+                              settings=[]), "a countdown app takes no settings or controls",
+                     category="Lifestyle", folder="Countdowns")
+
+    def test_controls_out_of_their_rules(self):
+        presets = [{"key": "start", "type": "button", "label": "Go", "arg": i} for i in range(17)]
+        timer = manifest(id="timer", name="Timer", uses="timer", minFirmware="0.3.1", category="Tools",
+                         description="A countdown or a stopwatch you run from your phone.")
+        self.refused(dict(timer, controls=presets), "controls must be a list of at most 16", folder="Timer")
+        self.tree(dict(timer, controls=presets[:16]), folder="Timer").build()
+        self.refused(scoreboard(controls=[{"key": "reset", "type": "button", "label": "R" * 25}]),
+                     "label must be 1 to 24 characters")
+        self.refused(scoreboard(controls=[{"key": "left", "type": "stepper", "label": "{left_color}", "min": 0,
+                                           "max": 9}]), "a {word} in its label must be a text setting")
+        self.refused(scoreboard(controls=[{"key": "left", "type": "stepper", "label": "Left", "min": 5, "max": 5}]),
+                     "min and max must be whole numbers with min under max")
+        self.refused(scoreboard(controls=[{"key": "reset", "type": "button", "label": "Reset", "min": 0}]),
+                     "with only its own fields")
+        self.refused(scoreboard(controls=[{"key": "reset", "type": "button", "label": "Reset"},
+                                          {"key": "reset", "type": "button", "label": "Again"}]), "is there twice")
+        self.refused(dict(timer, controls=[{"key": "start", "type": "button", "label": "Go", "arg": 86401}]),
+                     "arg must be 0 to 86400", folder="Timer")
+
+    def test_a_catalog_app_needs_the_firmware_that_reads_it(self):
+        self.refused(scoreboard(minFirmware="0.3.0"), "a scoreboard app needs minFirmware 0.3.1 or later")
+        self.refused(scoreboard(minFirmware=None), "needs minFirmware 0.3.1")
+
+    def test_settings_out_of_their_rules(self):
+        self.refused(scoreboard(settings=[{"key": "left", "type": "text", "label": "Left", "default": "Home"}],
+                                controls=[]), "max must be 1 to 32")
+        self.refused(scoreboard(settings=[{"key": "left_color", "type": "color", "label": "Left",
+                                           "default": "blue"}], controls=[]), "default must be a color")
+
+    def test_word_and_quotes_carry_their_list(self):
+        word = manifest(id="word-of-the-day", name="Word of the Day", uses="word", minFirmware="0.3.1",
+                        description="A new word and what it means, every day.")
+        good = {"list.json": json.dumps({"format": 1, "items": [["petrichor", "noun", "the smell of rain"]]}).encode()}
+        out = self.tree(word, good, "Lifestyle", "Word of the Day").build()
+        names = zipfile.ZipFile(os.path.join(out, "word-of-the-day-1.0.0.mooboard")).namelist()
+        self.assertEqual(names, ["mooboard.json", "icon.png", "data/list.json"])
+        self.refused(word, "its data/ is list.json alone", {"words.json": good["list.json"]}, "Lifestyle",
+                     "Word of the Day")
+        self.refused(word, "its data/ is list.json alone", {}, "Lifestyle", "Word of the Day")
+        self.refused(word, "must be format 1", {"list.json": b'{"items": [["a"]]}'}, "Lifestyle", "Word of the Day")
+        self.refused(word, "needs items", {"list.json": b'{"format": 1, "items": [[1]]}'}, "Lifestyle",
+                     "Word of the Day")
+        big = {"list.json": json.dumps({"format": 1, "items": [["x" * 100]] * 700}).encode()}
+        self.refused(word, "over 64 KB", big, "Lifestyle", "Word of the Day")
+        self.refused(scoreboard(), "a scoreboard app carries no data/", {"seed.json": b"{}"})
+
+
 def openssl(*args, data=None):
     return subprocess.run(["openssl"] + list(args), input=data, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                           check=True).stdout

@@ -40,7 +40,40 @@ def read_categories(root):
 
 
 CATEGORIES = read_categories(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-USES = ("prayer", "countdown", "sketch", "life", "plasma", "starfield", "fireplace")   # the firmware's renderers (pw::AppRenderer), in its order
+# the catalog's renderers u517 + their sheet is their manifest's settings and controls + the firmware's
+# pw_model/store/Keys.h lists the keys each takes and tools/tests/test_store_keys.py there holds this table to it
+CATALOG_USES = ("pong", "snake", "blocks", "maze", "aquarium", "lava", "aurora", "rain", "sunmoon", "word", "quotes",
+                "habits", "timer", "pomodoro", "scoreboard", "dice")
+USES = ("prayer", "countdown", "sketch", "life", "plasma", "starfield", "fireplace") + CATALOG_USES   # the firmware's renderers (pw::AppRenderer), in its order
+SPEED = {"speed": ("choice", 3)}
+RENDERER_KEYS = {
+    "pong": {"hold": False, "settings": dict(SPEED, colors=("choice", 2)), "controls": {}},
+    "snake": {"hold": False, "settings": dict(SPEED, colors=("choice", 2)), "controls": {}},
+    "blocks": {"hold": False, "settings": dict(SPEED), "controls": {}},
+    "maze": {"hold": False, "settings": dict(SPEED), "controls": {}},
+    "aquarium": {"hold": False, "settings": {"fish": ("choice", 3)}, "controls": {}},
+    "lava": {"hold": False, "settings": dict({"color": ("color", 0)}, **SPEED), "controls": {}},
+    "aurora": {"hold": False, "settings": dict({"colors": ("choice", 3)}, **SPEED), "controls": {}},
+    "rain": {"hold": False, "settings": {"rain": ("choice", 3), "city": ("choice", 2)}, "controls": {}},
+    "sunmoon": {"hold": False, "settings": {}, "controls": {}},
+    "word": {"hold": False, "settings": {}, "controls": {}},
+    "quotes": {"hold": False, "settings": {}, "controls": {}},
+    "habits": {"hold": False, "settings": {}, "controls": {"habits": ("list", 6)}},
+    "timer": {"hold": True, "settings": {}, "controls": {
+        "start": ("button", 0), "add": ("button", 0), "pause": ("button", 0), "resume": ("button", 0),
+        "cancel": ("button", 0), "sw_start": ("button", 0), "sw_stop": ("button", 0), "sw_reset": ("button", 0),
+        "countdown": ("readout", 0), "stopwatch": ("readout", 0)}},
+    "pomodoro": {"hold": True, "settings": {"focus": ("choice", 6), "break": ("choice", 3), "long_break": ("choice", 4)},
+                 "controls": {"start": ("button", 0), "pause": ("button", 0), "resume": ("button", 0),
+                              "skip": ("button", 0), "stop": ("button", 0), "left": ("readout", 0)}},
+    "scoreboard": {"hold": True, "settings": {"left": ("text", 8), "right": ("text", 8), "left_color": ("color", 0),
+                                              "right_color": ("color", 0)},
+                   "controls": {"left": ("stepper", 0), "right": ("stepper", 0), "reset": ("button", 0),
+                                "done": ("button", 0)}},
+    "dice": {"hold": True, "settings": {"dice": ("choice", 2)},
+             "controls": {"roll": ("button", 0), "flip": ("button", 0), "result": ("readout", 0)}},
+}
+CATALOG_FIRMWARE = (0, 3, 1)   # the first firmware that reads a manifest's settings and controls
 BOARDS = ("s3", "p4")
 BOARD_CAP = {"s3": 2 * 1024 * 1024, "p4": 8 * 1024 * 1024}
 ENTRY_CAP = 512 * 1024
@@ -52,12 +85,20 @@ INDEX_CAP = 64 * 1024
 ICON = 32
 NAME_MAX = 24
 DESCRIPTION_MAX = 80
-KEYS = ("format", "id", "name", "version", "by", "description", "category", "uses", "minFirmware", "boards")
+KEYS = ("format", "id", "name", "version", "by", "description", "category", "uses", "minFirmware", "boards",
+        "settings", "controls")
+SETTING_KEYS = ("key", "type", "label", "default", "max", "options")
+CONTROL_KEYS = ("key", "type", "label", "arg", "min", "max", "chars", "add")
+SETTINGS_MAX = 8
+CONTROLS_MAX = 16
+LABEL_MAX = 24
 NEEDED_KEYS = ("format", "id", "name", "version", "by", "description", "category")
 REPO_ONLY = ("README.md", "LICENSE")
 NOT_APPS = ("builder", "dist", "Seasonal")
 
 ID = re.compile(r"[a-z0-9-]{1,32}")
+KEY = re.compile(r"[a-z][a-z0-9_]{0,15}")
+COLOR = re.compile(r"#[0-9A-Fa-f]{6}")
 BY = re.compile(r"[A-Za-z0-9](?:[A-Za-z0-9]|-(?=[A-Za-z0-9])){0,38}")
 NUMBER = r"(?:0|[1-9][0-9]{0,8})"
 SEMVER = re.compile(r"%s\.%s\.%s" % (NUMBER, NUMBER, NUMBER))
@@ -135,7 +176,130 @@ def check_manifest(body, category, folder):
     if (not isinstance(boards, list) or not boards or len(set(map(str, boards))) != len(boards)
             or any(b not in BOARDS for b in boards)):
         raise Refused("%s: boards must be a list of s3 and p4, each once" % where)
+    check_sheet(man, where)
     return man
+
+
+def _label(value, most=LABEL_MAX):
+    return _text(value, most) and "://" not in value
+
+
+def _words(label):
+    """the {key} words of a label in the board's reading + an unclosed brace is plain text"""
+    found, at = [], 0
+    while True:
+        at = label.find("{", at)
+        if at < 0:
+            return found
+        close = min((i for i in (label.find("{", at + 1), label.find("}", at + 1)) if i >= 0), default=-1)
+        if close < 0:
+            return found
+        if label[close] == "{":
+            at = close
+            continue
+        found.append(label[at + 1:close])
+        at = close + 1
+
+
+def _int(value, low, high):
+    return type(value) is int and low <= value <= high
+
+
+def check_settings(settings, where):
+    """format 1's settings exactly as the board reads them (pw_apps Manifest.cpp readSettings)"""
+    if not isinstance(settings, list) or len(settings) > SETTINGS_MAX:
+        raise Refused("%s: settings must be a list of at most %d" % (where, SETTINGS_MAX))
+    seen = set()
+    for s in settings:
+        if not isinstance(s, dict) or not isinstance(s.get("key"), str) or not KEY.fullmatch(s["key"]):
+            raise Refused("%s: a setting's key must be a-z then a-z, 0-9 and _, 16 at most" % where)
+        what = "%s: setting %s" % (where, s["key"])
+        kind = s.get("type")
+        allowed = {"key", "type", "label", "default"} | ({"max"} if kind == "text" else set()) | (
+            {"options"} if kind == "choice" else set())
+        if kind not in ("text", "color", "toggle", "choice") or set(s) - allowed or "default" not in s:
+            raise Refused("%s must be text, color, toggle or choice with only its own fields" % what)
+        if not _label(s.get("label")):
+            raise Refused("%s: label must be 1 to %d characters on one line" % (what, LABEL_MAX))
+        if s["key"] in seen:
+            raise Refused("%s is there twice" % what)
+        seen.add(s["key"])
+        default = s["default"]
+        if kind == "text" and not (_int(s.get("max"), 1, 32) and isinstance(default, str)
+                                   and 1 <= len(default) <= s["max"]):
+            raise Refused("%s: max must be 1 to 32 and the default 1 to max characters" % what)
+        if kind == "color" and not (isinstance(default, str) and COLOR.fullmatch(default)):
+            raise Refused("%s: default must be a color as #RRGGBB" % what)
+        if kind == "toggle" and not isinstance(default, bool):
+            raise Refused("%s: default must be true or false" % what)
+        if kind == "choice":
+            options = s.get("options")
+            if (not isinstance(options, list) or not 2 <= len(options) <= 8 or len(set(map(str, options))) != len(options)
+                    or not all(isinstance(o, str) and 1 <= len(o) <= 16 for o in options) or default not in options):
+                raise Refused("%s: options must be 2 to 8 words of 1 to 16 characters and hold the default" % what)
+
+
+def check_controls(controls, settings, where):
+    """a catalog app's controls as the board reads them (pw_apps Manifest.cpp readControls) c2910"""
+    if not isinstance(controls, list) or len(controls) > CONTROLS_MAX:
+        raise Refused("%s: controls must be a list of at most %d" % (where, CONTROLS_MAX))
+    texts = {s["key"] for s in settings if s["type"] == "text"}
+    seen = {}
+    fields = {"button": {"arg"}, "stepper": {"min", "max"}, "readout": set(), "list": {"max", "chars", "add"}}
+    for c in controls:
+        if not isinstance(c, dict) or not isinstance(c.get("key"), str) or not KEY.fullmatch(c["key"]):
+            raise Refused("%s: a control's key must be a-z then a-z, 0-9 and _, 16 at most" % where)
+        what = "%s: control %s" % (where, c["key"])
+        kind = c.get("type")
+        if kind not in fields or set(c) - ({"key", "type", "label"} | fields[kind]):
+            raise Refused("%s must be a button, stepper, readout or list with only its own fields" % what)
+        if ("label" in c or kind != "readout") and not _label(c.get("label")):
+            raise Refused("%s: label must be 1 to %d characters on one line" % (what, LABEL_MAX))
+        if any(word not in texts for word in _words(c.get("label", ""))):
+            raise Refused("%s: a {word} in its label must be a text setting" % what)
+        if kind == "button" and "arg" in c and not _int(c["arg"], 0, 86400):
+            raise Refused("%s: arg must be 0 to 86400" % what)
+        if kind == "stepper" and not (_int(c.get("min"), -99999, 99999) and _int(c.get("max"), -99999, 99999)
+                                      and c["min"] < c["max"]):
+            raise Refused("%s: min and max must be whole numbers with min under max" % what)
+        if kind == "list" and not (_int(c.get("max"), 1, 8) and _int(c.get("chars"), 1, 16) and _label(c.get("add"))):
+            raise Refused("%s: max must be 1 to 8, chars 1 to 16 and add its button's words" % what)
+        if c["key"] in seen:
+            other = seen[c["key"]]
+            # presets are one button again with an arg of its own
+            if not (kind == "button" and all(x["type"] == "button" and "arg" in x for x in other)
+                    and "arg" in c and all(x["arg"] != c["arg"] for x in other)):
+                raise Refused("%s is there twice (a button may come again with another arg)" % what)
+        seen.setdefault(c["key"], []).append(c)
+
+
+def check_sheet(man, where):
+    """settings and controls only for a catalog renderer and only the keys its firmware table takes c2911"""
+    settings, controls = man.get("settings", []), man.get("controls", [])
+    if man["uses"] not in CATALOG_USES:
+        if "settings" in man or "controls" in man:
+            raise Refused("%s: a %s app takes no settings or controls" % (where, man["uses"]))
+        return
+    need = ".".join(map(str, CATALOG_FIRMWARE))
+    if tuple(int(n) for n in man.get("minFirmware", "0.0.0").split(".")) < CATALOG_FIRMWARE:
+        raise Refused("%s: a %s app needs minFirmware %s or later" % (where, man["uses"], need))
+    check_settings(settings, where)
+    check_controls(controls, settings, where)
+    table = RENDERER_KEYS[man["uses"]]
+    for s in settings:
+        want = table["settings"].get(s["key"])
+        if want is None or want[0] != s["type"]:
+            raise Refused("%s: %s takes no %s setting %s" % (where, man["uses"], s["type"], s["key"]))
+        if s["type"] == "choice" and len(s["options"]) != want[1]:
+            raise Refused("%s: setting %s needs %d options" % (where, s["key"], want[1]))
+        if s["type"] == "text" and s["max"] > want[1]:
+            raise Refused("%s: setting %s is %d characters at most" % (where, s["key"], want[1]))
+    for c in controls:
+        want = table["controls"].get(c["key"])
+        if want is None or want[0] != c["type"]:
+            raise Refused("%s: %s takes no %s control %s" % (where, man["uses"], c["type"], c["key"]))
+        if c["type"] == "list" and c["max"] > want[1]:
+            raise Refused("%s: list %s is %d items at most" % (where, c["key"], want[1]))
 
 
 def check_icon(body, where):
@@ -186,9 +350,32 @@ def check_no_data(uses):
     return check
 
 
+def check_list(data, where):
+    """word of the day and quotes carry their list alone + {"format": 1, "items": [[...], ...]} of 64 KB at most u517
+    + the words and quotes themselves are the lifestyle batch's to check"""
+    if sorted(data) != ["list.json"]:
+        raise Refused("%s: its data/ is list.json alone" % where)
+    if len(data["list.json"]) > LIST_CAP:
+        raise Refused("%s/data/list.json is over 64 KB" % where)
+    try:
+        body = json.loads(data["list.json"].decode("utf-8"))
+    except ValueError:
+        raise Refused("%s/data/list.json is not valid JSON" % where)
+    if not isinstance(body, dict) or body.get("format") != 1:
+        raise Refused("%s/data/list.json must be format 1" % where)
+    items = body.get("items")
+    if not isinstance(items, list) or not items or not all(
+            isinstance(i, list) and i and all(isinstance(t, str) for t in i) for i in items):
+        raise Refused("%s/data/list.json needs items, each a list of strings" % where)
+
+
+LIST_CAP = 64 * 1024
 USES_CHECKS = {"prayer": check_prayer, "countdown": check_no_data("countdown"), "sketch": check_no_data("sketch")}
 # the live renders u487 + their settings live on the board too
 USES_CHECKS.update({uses: check_no_data(uses) for uses in ("life", "plasma", "starfield", "fireplace")})
+# the catalog apps u517 + their settings live on the board and word and quotes carry their list
+USES_CHECKS.update({uses: check_no_data(uses) for uses in CATALOG_USES})
+USES_CHECKS.update({"word": check_list, "quotes": check_list})
 
 
 def check_size(app_id, size, boards):
@@ -225,6 +412,11 @@ def read_data(folder, where):
 def manifest_bytes(man):
     """the one way a manifest is laid out in a package + boards always written as the index row has them"""
     man = dict(man, boards=man.get("boards", list(BOARDS)))
+    # + each setting and control in the board's key order too c2910
+    if "settings" in man:
+        man["settings"] = [{k: s[k] for k in SETTING_KEYS if k in s} for s in man["settings"]]
+    if "controls" in man:
+        man["controls"] = [{k: c[k] for k in CONTROL_KEYS if k in c} for c in man["controls"]]
     return (json.dumps({key: man[key] for key in KEYS if key in man}, ensure_ascii=False, indent=2) + "\n").encode()
 
 
