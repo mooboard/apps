@@ -1,0 +1,35 @@
+{
+  "format": 2,
+  "id": "aurora",
+  "name": "Aurora",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "Northern lights over a starry sky.",
+  "category": "Ambiance",
+  "uses": "aurora",
+  "minFirmware": "0.3.2",
+  "settings": [
+    {
+      "key": "colors",
+      "type": "choice",
+      "label": "Colors",
+      "default": "Green and pink",
+      "options": [
+        "Green",
+        "Green and pink",
+        "Violet"
+      ]
+    },
+    {
+      "key": "speed",
+      "type": "choice",
+      "label": "Speed",
+      "default": "Normal",
+      "options": [
+        "Slow",
+        "Normal",
+        "Fast"
+      ]
+    }
+  ]
+}
