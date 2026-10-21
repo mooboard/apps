@@ -1,0 +1,26 @@
+{
+  "format": 2,
+  "id": "spin-the-wheel",
+  "name": "Spin the Wheel",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "Can't decide? Spin the wheel.",
+  "category": "Tools",
+  "uses": "wheel",
+  "minFirmware": "0.3.2",
+  "controls": [
+    {
+      "key": "items",
+      "type": "list",
+      "label": "Choices",
+      "max": 8,
+      "chars": 14,
+      "add": "Add choice"
+    },
+    {
+      "key": "spin",
+      "type": "button",
+      "label": "Spin"
+    }
+  ]
+}
