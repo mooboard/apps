@@ -1,0 +1,40 @@
+{
+  "format": 2,
+  "id": "chore-chart",
+  "name": "Chore Chart",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "Whose turn it is for each chore, tapped done on your phone.",
+  "category": "Lifestyle",
+  "uses": "chores",
+  "minFirmware": "0.3.2",
+  "settings": [
+    {
+      "key": "people",
+      "type": "text",
+      "label": "People",
+      "default": "Ana, Ben",
+      "max": 32
+    },
+    {
+      "key": "rotate",
+      "type": "choice",
+      "label": "Rotate",
+      "default": "Weekly",
+      "options": [
+        "Daily",
+        "Weekly"
+      ]
+    }
+  ],
+  "controls": [
+    {
+      "key": "chores",
+      "type": "list",
+      "label": "Chores",
+      "max": 6,
+      "chars": 12,
+      "add": "Add chore"
+    }
+  ]
+}
