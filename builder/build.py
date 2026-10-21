@@ -406,6 +406,99 @@ def check_list(data, where):
         raise Refused("%s/data/list.json needs items, each a list of strings" % where)
 
 
+def _list_items(data, where):
+    """list.json's items as check_list reads its shape + any item may hold more than strings"""
+    if sorted(data) != ["list.json"]:
+        raise Refused("%s: its data/ is list.json alone" % where)
+    if len(data["list.json"]) > LIST_CAP:
+        raise Refused("%s/data/list.json is over 64 KB" % where)
+    try:
+        body = json.loads(data["list.json"].decode("utf-8"))
+    except ValueError:
+        raise Refused("%s/data/list.json is not valid JSON" % where)
+    if not isinstance(body, dict) or body.get("format") != 1:
+        raise Refused("%s/data/list.json must be format 1" % where)
+    items = body.get("items")
+    if not isinstance(items, list) or not items or not all(isinstance(i, list) for i in items):
+        raise Refused("%s/data/list.json needs items, each a list" % where)
+    return items
+
+
+def _drawn(text, what, where):
+    """a text the board draws + no em dash and nothing of unicode's other categories (a tab, a control)"""
+    if "\u2014" in text:
+        raise Refused("%s: %s has an em dash" % (where, what))
+    if any(unicodedata.category(ch).startswith("C") for ch in text):
+        raise Refused("%s: %s has a character the board cannot draw" % (where, what))
+
+
+def _sized(item, at, name, most, where):
+    value = item[at]
+    if not isinstance(value, str) or not 1 <= len(value) <= most or value != value.strip():
+        raise Refused("%s: %s is 1 to %d characters" % (where, name, most))
+    _drawn(value, name, where)
+    return value
+
+
+WORD_KINDS = ("noun", "verb", "adjective", "adverb")
+
+
+def check_words(data, where):
+    """word of the day's list u517 c2948 + [word, kind, meaning] with a word of 12 letters at most, one of four kinds,
+    and a meaning of 44 characters at most, each word once"""
+    check_list(data, where)
+    seen = set()
+    for n, item in enumerate(_list_items(data, where)):
+        at = "%s/data/list.json item %d" % (where, n + 1)
+        if len(item) != 3:
+            raise Refused("%s is word, kind, and meaning" % at)
+        word = _sized(item, 0, "word", 12, at)
+        if item[1] not in WORD_KINDS:
+            raise Refused("%s: kind is noun, verb, adjective, or adverb" % at)
+        _sized(item, 2, "meaning", 44, at)
+        if word.lower() in seen:
+            raise Refused("%s: %s is in the list twice" % (at, word.lower()))
+        seen.add(word.lower())
+
+
+QUOTES_LAST_YEAR = 1930   # published in the us in 1930 or before is in the public domain there
+
+
+def check_quotes(data, where):
+    """the quotes' list u517 c2948 + [text, who, work, year] public domain by its year with text of 72 characters
+    and who of 24, each text once + the work and year show it is free to use and stay in the repo"""
+    seen = set()
+    for n, item in enumerate(_list_items(data, where)):
+        at = "%s/data/list.json item %d" % (where, n + 1)
+        if len(item) != 4:
+            raise Refused("%s is text, who, work, and year" % at)
+        text = _sized(item, 0, "text", 72, at)
+        _sized(item, 1, "who", 24, at)
+        _sized(item, 2, "work", 64, at)
+        year = item[3]
+        if type(year) is not int:
+            raise Refused("%s: year is a whole number" % at)
+        if year > QUOTES_LAST_YEAR:
+            raise Refused("%s: published after %d is not in the public domain" % (at, QUOTES_LAST_YEAR))
+        if text in seen:
+            raise Refused("%s: %s is in the list twice" % (at, text))
+        seen.add(text)
+
+
+# the fields of each item a package carries + the rest stays in the repo c2946
+LIST_KEEP = {"quotes": 2}
+
+
+def package_data(uses, data):
+    """data/ as the package carries it + a list cut to the fields the board shows"""
+    keep = LIST_KEEP.get(uses)
+    if keep is None:
+        return data
+    items = json.loads(data["list.json"].decode("utf-8"))["items"]
+    rows = ",\n".join(json.dumps(item[:keep], ensure_ascii=False) for item in items)
+    return dict(data, **{"list.json": ('{"format": 1, "items": [\n%s\n]}\n' % rows).encode()})
+
+
 LIST_CAP = 64 * 1024
 USES_CHECKS = {"prayer": check_prayer, "countdown": check_no_data("countdown"), "sketch": check_no_data("sketch")}
 # the live renders u487 + their settings live on the board too
@@ -413,6 +506,7 @@ USES_CHECKS.update({uses: check_no_data(uses) for uses in ("life", "plasma", "st
 # the catalog apps u517 u523 + their settings live on the board and the four list apps carry their list
 USES_CHECKS.update({uses: check_no_data(uses) for uses in CATALOG_USES})
 USES_CHECKS.update({uses: check_list for uses in ("word", "quotes", "facts", "jokes")})   # u523 e7
+USES_CHECKS.update({"word": check_words, "quotes": check_quotes})   # c2948
 
 
 def check_size(app_id, size, boards):
@@ -489,6 +583,7 @@ def load_app(root, category, folder):
     if 2 + len(data) > MAX_ENTRIES:
         raise Refused("%s has more than %d entries" % (where, MAX_ENTRIES))
     USES_CHECKS[man["uses"]](data, where)
+    data = package_data(man["uses"], data)
     entries = [("mooboard.json", manifest_bytes(man)), ("icon.png", icon)]
     entries += [("data/" + path, data[path]) for path in sorted(data)]
     package = write_zip(entries)

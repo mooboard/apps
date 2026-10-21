@@ -419,6 +419,51 @@ class Catalog(unittest.TestCase):
         self.refused(word, "over 64 KB", big, "Lifestyle", "Word of the Day")
         self.refused(scoreboard(), "a scoreboard app carries no data/", {"seed.json": b"{}"})
 
+    def word_list(self, items):
+        return {"list.json": json.dumps({"format": 1, "items": items}).encode()}
+
+    def test_the_words_are_checked(self):
+        # u517 c2948 + a word of 12 letters at most, one of four kinds, a meaning of 44 characters, each once
+        word = manifest(id="word-of-the-day", name="Word of the Day", uses="word", minFirmware="0.3.2",
+                        description="A new word and what it means, every day.")
+        good = [["petrichor", "noun", "the smell of rain on dry ground"], ["jaunt", "noun", "a short trip for fun"]]
+        self.tree(word, self.word_list(good), "Lifestyle", "Word of the Day").build()
+        for items, words in (([["petrichor", "noun"]], "is word, kind, and meaning"),
+                             ([["serendipitous", "adjective", "found by luck"]], "word is 1 to 12 characters"),
+                             ([["jaunt", "pronoun", "a short trip"]], "kind is noun, verb, adjective, or adverb"),
+                             ([["jaunt", "noun", "x" * 45]], "meaning is 1 to 44 characters"),
+                             ([["jaunt", "noun", "a trip"], ["Jaunt", "noun", "a walk"]], "jaunt is in the list twice"),
+                             ([["jaunt", "noun", "a short trip \u2014 for fun"]], "has an em dash"),
+                             ([["jaunt", "noun", "a short\ttrip"]], "has a character the board cannot draw")):
+            with self.subTest(words=words):
+                self.refused(word, words, self.word_list(items), "Lifestyle", "Word of the Day")
+
+    def test_the_quotes_are_checked_and_carry_text_and_who(self):
+        # u517 c2948 + public domain by its year, text of 72 characters and who of 24, each once + the package keeps
+        # the text and who the board shows and the repo keeps the work and year that show it is free to use
+        quotes = manifest(id="quotes", name="Quotes", uses="quotes", minFirmware="0.3.2",
+                          description="A new quote every hour.")
+        good = [["Confine thyself to the present.", "Marcus Aurelius", "Meditations", 180],
+                ["A friend in need is a friend indeed.", "Proverb", "Traditional", 0]]
+        out = self.tree(quotes, self.word_list(good), "Lifestyle", "Quotes").build()
+        body = zipfile.ZipFile(os.path.join(out, "quotes-1.0.0.mooboard")).read("data/list.json")
+        self.assertEqual(json.loads(body), {"format": 1, "items": [["Confine thyself to the present.",
+                                                                    "Marcus Aurelius"],
+                                                                   ["A friend in need is a friend indeed.",
+                                                                    "Proverb"]]})
+        for items, words in (([["Know thyself.", "Proverb", "Traditional"]], "is text, who, work, and year"),
+                             ([["x" * 73, "Proverb", "Traditional", 0]], "text is 1 to 72 characters"),
+                             ([["Know thyself.", "x" * 25, "Traditional", 0]], "who is 1 to 24 characters"),
+                             ([["Know thyself.", "Proverb", "", 0]], "work is 1 to 64 characters"),
+                             ([["Know thyself.", "Proverb", "Traditional", "0"]], "year is a whole number"),
+                             ([["Know thyself.", "Proverb", "Traditional", True]], "year is a whole number"),
+                             ([["Know thyself.", "Someone", "A Book", 1931]], "published after 1930"),
+                             ([["Know thyself.", "Proverb", "Traditional", 0], ["Know thyself.", "Thales", "Sayings",
+                                                                             -600]], "is in the list twice"),
+                             ([["Know \u2014 thyself.", "Proverb", "Traditional", 0]], "has an em dash")):
+            with self.subTest(words=words):
+                self.refused(quotes, words, self.word_list(items), "Lifestyle", "Quotes")
+
     def test_facts_and_jokes_carry_their_list_too(self):
         # u523 e7 + their own checks of the words are the second lifestyle batch's
         for app_id, name, uses, folder in (("fun-facts", "Fun Facts", "facts", "Fun Facts"),
