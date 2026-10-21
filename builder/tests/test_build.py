@@ -294,7 +294,7 @@ class Rules(unittest.TestCase):
 
 def scoreboard(**changes):
     """a catalog tool app with settings and controls u517 + written in an order the board does not keep"""
-    out = manifest(id="scoreboard", name="Scoreboard", uses="scoreboard", category="Tools", minFirmware="0.3.1",
+    out = manifest(id="scoreboard", name="Scoreboard", uses="scoreboard", category="Tools", minFirmware="0.3.2",
                    description="Two scores you keep from your phone.")
     out["settings"] = [{"type": "text", "key": "left", "label": "Left name", "max": 8, "default": "Home"},
                        {"key": "right", "type": "text", "label": "Right name", "default": "Guest", "max": 8},
@@ -334,9 +334,15 @@ class Catalog(unittest.TestCase):
         self.assertEqual(row["uses"], "scoreboard")
 
     def test_every_catalog_renderer_is_known(self):
-        self.assertEqual(len(build.CATALOG_USES), 16)
-        self.assertEqual(set(build.RENDERER_KEYS), set(build.CATALOG_USES))
+        # both waves u517 u523 + a card takes its turn a hold holds the panel and ok to wake does both e6
+        self.assertEqual(len(build.CATALOG_USES), 32)
+        self.assertEqual(list(build.RENDERER_KEYS), list(build.CATALOG_USES))
         self.assertEqual(build.USES[7:], build.CATALOG_USES)
+        kinds = {uses: row["kind"] for uses, row in build.RENDERER_KEYS.items()}
+        self.assertEqual(sorted(u for u, k in kinds.items() if k == "hold"),
+                         ["chessclock", "dice", "intervals", "pomodoro", "scoreboard", "tally", "timer", "wheel"])
+        self.assertEqual([u for u, k in kinds.items() if k == "night"], ["oktowake"])
+        self.assertEqual(set(kinds.values()), {"card", "hold", "night"})
 
     def test_keys_the_renderer_does_not_take(self):
         self.refused(scoreboard(controls=[{"key": "undo", "type": "button", "label": "Undo"}]),
@@ -347,12 +353,12 @@ class Catalog(unittest.TestCase):
                                 controls=[]), "scoreboard takes no color setting tint")
         self.refused(scoreboard(settings=[{"key": "left", "type": "text", "label": "Left", "default": "Home",
                                            "max": 9}], controls=[]), "setting left is 8 characters at most")
-        pong = manifest(id="pong-clock", name="Pong Clock", uses="pong", category="Games", minFirmware="0.3.1",
+        pong = manifest(id="pong-clock", name="Pong Clock", uses="pong", category="Games", minFirmware="0.3.2",
                         description="Two paddles play, and the score is the time.",
                         settings=[{"key": "speed", "type": "choice", "label": "Speed", "default": "Slow",
                                    "options": ["Slow", "Fast"]}])
         self.refused(pong, "setting speed needs 3 options", category="Games", folder="Pong Clock")
-        habits = manifest(id="habit-streaks", name="Habit Streaks", uses="habits", minFirmware="0.3.1",
+        habits = manifest(id="habit-streaks", name="Habit Streaks", uses="habits", minFirmware="0.3.2",
                           description="Tap a habit on your phone and watch the streak grow.",
                           controls=[{"key": "habits", "type": "list", "label": "Habits", "max": 7, "chars": 12,
                                      "add": "Add habit"}])
@@ -364,11 +370,14 @@ class Catalog(unittest.TestCase):
 
     def test_controls_out_of_their_rules(self):
         presets = [{"key": "start", "type": "button", "label": "Go", "arg": i} for i in range(17)]
-        timer = manifest(id="timer", name="Timer", uses="timer", minFirmware="0.3.1", category="Tools",
+        timer = manifest(id="timer", name="Timer", uses="timer", minFirmware="0.3.2", category="Tools",
                          description="A countdown or a stopwatch you run from your phone.")
         self.refused(dict(timer, controls=presets), "controls must be a list of at most 16", folder="Timer")
         self.tree(dict(timer, controls=presets[:16]), folder="Timer").build()
         self.refused(scoreboard(controls=[{"key": "reset", "type": "button", "label": "R" * 25}]),
+                     "label must be 1 to 24 characters")
+        # a format character the board's label rule refuses
+        self.refused(scoreboard(controls=[{"key": "reset", "type": "button", "label": "Re\u200bset"}]),
                      "label must be 1 to 24 characters")
         self.refused(scoreboard(controls=[{"key": "left", "type": "stepper", "label": "{left_color}", "min": 0,
                                            "max": 9}]), "a {word} in its label must be a text setting")
@@ -382,8 +391,10 @@ class Catalog(unittest.TestCase):
                      "arg must be 0 to 86400", folder="Timer")
 
     def test_a_catalog_app_needs_the_firmware_that_reads_it(self):
-        self.refused(scoreboard(minFirmware="0.3.0"), "a scoreboard app needs minFirmware 0.3.1 or later")
-        self.refused(scoreboard(minFirmware=None), "needs minFirmware 0.3.1")
+        # the firmware with the renderers is 0.3.2 u523
+        self.refused(scoreboard(minFirmware="0.3.1"), "a scoreboard app needs minFirmware 0.3.2 or later")
+        self.refused(scoreboard(minFirmware=None), "needs minFirmware 0.3.2")
+        self.tree(scoreboard(minFirmware="0.3.2")).build()
 
     def test_settings_out_of_their_rules(self):
         self.refused(scoreboard(settings=[{"key": "left", "type": "text", "label": "Left", "default": "Home"}],
@@ -392,7 +403,7 @@ class Catalog(unittest.TestCase):
                                            "default": "blue"}], controls=[]), "default must be a color")
 
     def test_word_and_quotes_carry_their_list(self):
-        word = manifest(id="word-of-the-day", name="Word of the Day", uses="word", minFirmware="0.3.1",
+        word = manifest(id="word-of-the-day", name="Word of the Day", uses="word", minFirmware="0.3.2",
                         description="A new word and what it means, every day.")
         good = {"list.json": json.dumps({"format": 1, "items": [["petrichor", "noun", "the smell of rain"]]}).encode()}
         out = self.tree(word, good, "Lifestyle", "Word of the Day").build()
@@ -407,6 +418,43 @@ class Catalog(unittest.TestCase):
         big = {"list.json": json.dumps({"format": 1, "items": [["x" * 100]] * 700}).encode()}
         self.refused(word, "over 64 KB", big, "Lifestyle", "Word of the Day")
         self.refused(scoreboard(), "a scoreboard app carries no data/", {"seed.json": b"{}"})
+
+    def test_facts_and_jokes_carry_their_list_too(self):
+        # u523 e7 + their own checks of the words are the second lifestyle batch's
+        for app_id, name, uses, folder in (("fun-facts", "Fun Facts", "facts", "Fun Facts"),
+                                           ("joke-of-the-day", "Joke of the Day", "jokes", "Joke of the Day")):
+            with self.subTest(uses=uses):
+                man = manifest(id=app_id, name=name, uses=uses, minFirmware="0.3.2", description="One a day.")
+                good = {"list.json": json.dumps({"format": 1, "items": [["a", "b"]]}).encode()}
+                out = self.tree(man, good, "Lifestyle", folder).build()
+                names = zipfile.ZipFile(os.path.join(out, "%s-1.0.0.mooboard" % app_id)).namelist()
+                self.assertEqual(names, ["mooboard.json", "icon.png", "data/list.json"])
+                self.refused(man, "its data/ is list.json alone", {}, "Lifestyle", folder)
+
+    def test_the_second_waves_keys(self):
+        cycles = manifest(id="light-cycles", name="Light Cycles", uses="cycles", category="Games",
+                          minFirmware="0.3.2", description="Light trails race to box each other in.",
+                          settings=[{"key": "riders", "type": "choice", "label": "Riders", "default": "Four",
+                                     "options": ["Two", "Three", "Four"]}])
+        self.tree(cycles, category="Games", folder="Light Cycles").build()
+        wake = manifest(id="ok-to-wake", name="OK to Wake", uses="oktowake", category="Lifestyle",
+                        minFirmware="0.3.2", description="A sleep light.",
+                        settings=[{"key": "clock", "type": "toggle", "label": "Show clock", "default": False}])
+        self.tree(wake, category="Lifestyle", folder="OK to Wake").build()
+        wheel = manifest(id="spin-the-wheel", name="Spin the Wheel", uses="wheel", category="Tools",
+                         minFirmware="0.3.2", description="Can't decide? Spin the wheel.",
+                         controls=[{"key": "items", "type": "list", "label": "Choices", "max": 9, "chars": 14,
+                                    "add": "Add choice"}])
+        self.refused(wheel, "max must be 1 to 8", category="Tools", folder="Spin the Wheel")
+        wheel["controls"][0]["max"] = 8
+        self.tree(wheel, category="Tools", folder="Spin the Wheel").build()
+        chores = manifest(id="chore-chart", name="Chore Chart", uses="chores", category="Lifestyle",
+                          minFirmware="0.3.2", description="Whose turn it is.",
+                          settings=[{"key": "people", "type": "text", "label": "People", "default": "Ana, Ben",
+                                     "max": 32}])
+        self.tree(chores, category="Lifestyle", folder="Chore Chart").build()
+        # the spec's hyphenated keys are not the board's c2911
+        self.refused(dict(wake, uses="ok-to-wake"), "uses must be one of", category="Lifestyle", folder="OK to Wake")
 
 
 def openssl(*args, data=None):

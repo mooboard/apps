@@ -24,6 +24,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import unicodedata
 import zlib
 
 # the store's headings in their order from categories.txt at the repo's top, one a line + apps a to z by folder within
@@ -40,40 +41,70 @@ def read_categories(root):
 
 
 CATEGORIES = read_categories(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-# the catalog's renderers u517 + their sheet is their manifest's settings and controls + the firmware's
-# pw_model/store/Keys.h lists the keys each takes and tools/tests/test_store_keys.py there holds this table to it
+# the catalog's renderers u517 u523 + their sheet is their manifest's settings and controls + the firmware's
+# pw_model/store/Keys.h lists the keys each takes and tools/tests/test_store_keys.py there holds this table to it +
+# kind is card (takes its turn) hold (holds the panel while it runs) or night (ok to wake: a card by day that holds
+# the panel at night) + the firmware's keys are [a-z]+ so digital rain is raincode and ok to wake oktowake
 CATALOG_USES = ("pong", "snake", "blocks", "maze", "aquarium", "lava", "aurora", "rain", "sunmoon", "word", "quotes",
-                "habits", "timer", "pomodoro", "scoreboard", "dice")
+                "habits", "timer", "pomodoro", "scoreboard", "dice",
+                "breakout", "invaders", "flappy", "cycles", "fireworks", "nightcity", "snowglobe", "raincode",
+                "oktowake", "chores", "facts", "jokes", "intervals", "chessclock", "wheel", "tally")
 USES = ("prayer", "countdown", "sketch", "life", "plasma", "starfield", "fireplace") + CATALOG_USES   # the firmware's renderers (pw::AppRenderer), in its order
 SPEED = {"speed": ("choice", 3)}
+SPEED_COLORS = dict(SPEED, colors=("choice", 2))
+COLOR_SPEED = dict({"color": ("color", 0)}, **SPEED)
+
+
+def _row(kind, settings=None, controls=None):
+    return {"kind": kind, "settings": dict(settings or {}), "controls": dict(controls or {})}
+
+
+def _buttons(*keys):
+    return {key: ("button", 0) for key in keys}
+
+
 RENDERER_KEYS = {
-    "pong": {"hold": False, "settings": dict(SPEED, colors=("choice", 2)), "controls": {}},
-    "snake": {"hold": False, "settings": dict(SPEED, colors=("choice", 2)), "controls": {}},
-    "blocks": {"hold": False, "settings": dict(SPEED), "controls": {}},
-    "maze": {"hold": False, "settings": dict(SPEED), "controls": {}},
-    "aquarium": {"hold": False, "settings": {"fish": ("choice", 3)}, "controls": {}},
-    "lava": {"hold": False, "settings": dict({"color": ("color", 0)}, **SPEED), "controls": {}},
-    "aurora": {"hold": False, "settings": dict({"colors": ("choice", 3)}, **SPEED), "controls": {}},
-    "rain": {"hold": False, "settings": {"rain": ("choice", 3), "city": ("choice", 2)}, "controls": {}},
-    "sunmoon": {"hold": False, "settings": {}, "controls": {}},
-    "word": {"hold": False, "settings": {}, "controls": {}},
-    "quotes": {"hold": False, "settings": {}, "controls": {}},
-    "habits": {"hold": False, "settings": {}, "controls": {"habits": ("list", 6)}},
-    "timer": {"hold": True, "settings": {}, "controls": {
-        "start": ("button", 0), "add": ("button", 0), "pause": ("button", 0), "resume": ("button", 0),
-        "cancel": ("button", 0), "sw_start": ("button", 0), "sw_stop": ("button", 0), "sw_reset": ("button", 0),
-        "countdown": ("readout", 0), "stopwatch": ("readout", 0)}},
-    "pomodoro": {"hold": True, "settings": {"focus": ("choice", 6), "break": ("choice", 3), "long_break": ("choice", 4)},
-                 "controls": {"start": ("button", 0), "pause": ("button", 0), "resume": ("button", 0),
-                              "skip": ("button", 0), "stop": ("button", 0), "left": ("readout", 0)}},
-    "scoreboard": {"hold": True, "settings": {"left": ("text", 8), "right": ("text", 8), "left_color": ("color", 0),
-                                              "right_color": ("color", 0)},
-                   "controls": {"left": ("stepper", 0), "right": ("stepper", 0), "reset": ("button", 0),
-                                "done": ("button", 0)}},
-    "dice": {"hold": True, "settings": {"dice": ("choice", 2)},
-             "controls": {"roll": ("button", 0), "flip": ("button", 0), "result": ("readout", 0)}},
+    "pong": _row("card", SPEED_COLORS),
+    "snake": _row("card", SPEED_COLORS),
+    "blocks": _row("card", SPEED),
+    "maze": _row("card", SPEED),
+    "aquarium": _row("card", {"fish": ("choice", 3)}),
+    "lava": _row("card", COLOR_SPEED),
+    "aurora": _row("card", dict({"colors": ("choice", 3)}, **SPEED)),
+    "rain": _row("card", {"rain": ("choice", 3), "city": ("choice", 2)}),
+    "sunmoon": _row("card"),
+    "word": _row("card"),
+    "quotes": _row("card"),
+    "habits": _row("card", controls={"habits": ("list", 6)}),
+    "timer": _row("hold", controls=dict(_buttons("start", "add", "pause", "resume", "cancel", "sw_start", "sw_stop",
+                                                 "sw_reset"), countdown=("readout", 0), stopwatch=("readout", 0))),
+    "pomodoro": _row("hold", {"focus": ("choice", 6), "break": ("choice", 3), "long_break": ("choice", 4)},
+                     dict(_buttons("start", "pause", "resume", "skip", "stop"), left=("readout", 0))),
+    "scoreboard": _row("hold", {"left": ("text", 8), "right": ("text", 8), "left_color": ("color", 0),
+                                "right_color": ("color", 0)},
+                       dict({"left": ("stepper", 0), "right": ("stepper", 0)}, **_buttons("reset", "done"))),
+    "dice": _row("hold", {"dice": ("choice", 2)}, dict(_buttons("roll", "flip"), result=("readout", 0))),
+    # the second wave u523
+    "breakout": _row("card", SPEED),
+    "invaders": _row("card", SPEED_COLORS),
+    "flappy": _row("card", SPEED),
+    "cycles": _row("card", dict({"riders": ("choice", 3)}, **SPEED)),
+    "fireworks": _row("card", {"colors": ("choice", 3), "show": ("choice", 2)}),
+    "nightcity": _row("card"),
+    "snowglobe": _row("card", {"scene": ("choice", 3)}),
+    "raincode": _row("card", COLOR_SPEED),
+    "oktowake": _row("night", {"bedtime": ("choice", 5), "wake": ("choice", 5), "clock": ("toggle", 0)}),
+    "chores": _row("card", {"people": ("text", 32), "rotate": ("choice", 2)}, {"chores": ("list", 6)}),
+    "facts": _row("card"),
+    "jokes": _row("card"),
+    "intervals": _row("hold", {"work": ("choice", 5), "rest": ("choice", 4), "rounds": ("choice", 5)},
+                      dict(_buttons("start", "pause", "resume", "skip", "stop"), phase=("readout", 0))),
+    "chessclock": _row("hold", {"time": ("choice", 6), "increment": ("choice", 5)},
+                       _buttons("left", "right", "pause", "reset", "done")),
+    "wheel": _row("hold", controls=dict({"items": ("list", 8)}, **_buttons("spin"))),
+    "tally": _row("hold", {"label": ("text", 12)}, dict({"count": ("stepper", 0)}, **_buttons("add", "reset", "done"))),
 }
-CATALOG_FIRMWARE = (0, 3, 1)   # the first firmware that reads a manifest's settings and controls
+CATALOG_FIRMWARE = (0, 3, 2)   # the first firmware that carries the catalog's renderers u523
 BOARDS = ("s3", "p4")
 BOARD_CAP = {"s3": 2 * 1024 * 1024, "p4": 8 * 1024 * 1024}
 ENTRY_CAP = 512 * 1024
@@ -181,7 +212,8 @@ def check_manifest(body, category, folder):
 
 
 def _label(value, most=LABEL_MAX):
-    return _text(value, most) and "://" not in value
+    """the board's validLabel + and no character of unicode's other categories c2910"""
+    return _text(value, most) and "://" not in value and not any(unicodedata.category(ch)[0] == "C" for ch in value)
 
 
 def _words(label):
@@ -351,7 +383,7 @@ def check_no_data(uses):
 
 
 def check_list(data, where):
-    """word of the day and quotes carry their list alone + {"format": 1, "items": [[...], ...]} of 64 KB at most u517
+    """word of the day quotes fun facts and joke of the day carry their list alone + {"format": 1, "items": [[...], ...]} of 64 KB at most u517
     + the words and quotes themselves are the lifestyle batch's to check"""
     if sorted(data) != ["list.json"]:
         raise Refused("%s: its data/ is list.json alone" % where)
@@ -373,9 +405,9 @@ LIST_CAP = 64 * 1024
 USES_CHECKS = {"prayer": check_prayer, "countdown": check_no_data("countdown"), "sketch": check_no_data("sketch")}
 # the live renders u487 + their settings live on the board too
 USES_CHECKS.update({uses: check_no_data(uses) for uses in ("life", "plasma", "starfield", "fireplace")})
-# the catalog apps u517 + their settings live on the board and word and quotes carry their list
+# the catalog apps u517 u523 + their settings live on the board and the four list apps carry their list
 USES_CHECKS.update({uses: check_no_data(uses) for uses in CATALOG_USES})
-USES_CHECKS.update({"word": check_list, "quotes": check_list})
+USES_CHECKS.update({uses: check_list for uses in ("word", "quotes", "facts", "jokes")})   # u523 e7
 
 
 def check_size(app_id, size, boards):
