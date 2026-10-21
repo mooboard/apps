@@ -56,7 +56,8 @@ COLOR_SPEED = dict({"color": ("color", 0)}, **SPEED)
 
 
 def _row(kind, settings=None, controls=None, needs=()):
-    """needs is what a card waits for before its turn, as the board's table has it (clock, entries, item, place)"""
+    """needs is what a card waits for before its turn, as the board's table has it (clock, entries, item, place) + minute
+    for a turn across the minute's change"""
     return {"kind": kind, "needs": tuple(sorted(needs)), "settings": dict(settings or {}),
             "controls": dict(controls or {})}
 
@@ -66,7 +67,7 @@ def _buttons(*keys):
 
 
 RENDERER_KEYS = {
-    "pong": _row("card", SPEED_COLORS),
+    "pong": _row("card", SPEED_COLORS, needs=("minute",)),   # its turn straddles the minute
     "snake": _row("card", SPEED_COLORS),
     "blocks": _row("card", SPEED),
     "maze": _row("card", SPEED),
