@@ -1,0 +1,67 @@
+{
+  "format": 2,
+  "id": "chess-clock",
+  "name": "Chess Clock",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "Two clocks for chess or any turn-based game.",
+  "category": "Tools",
+  "uses": "chessclock",
+  "minFirmware": "0.3.2",
+  "settings": [
+    {
+      "key": "time",
+      "type": "choice",
+      "label": "Time",
+      "default": "5 min",
+      "options": [
+        "1 min",
+        "3 min",
+        "5 min",
+        "10 min",
+        "15 min",
+        "30 min"
+      ]
+    },
+    {
+      "key": "increment",
+      "type": "choice",
+      "label": "Increment",
+      "default": "0 s",
+      "options": [
+        "0 s",
+        "1 s",
+        "2 s",
+        "3 s",
+        "5 s"
+      ]
+    }
+  ],
+  "controls": [
+    {
+      "key": "left",
+      "type": "button",
+      "label": "Left done"
+    },
+    {
+      "key": "right",
+      "type": "button",
+      "label": "Right done"
+    },
+    {
+      "key": "pause",
+      "type": "button",
+      "label": "Pause"
+    },
+    {
+      "key": "reset",
+      "type": "button",
+      "label": "Reset"
+    },
+    {
+      "key": "done",
+      "type": "button",
+      "label": "Done"
+    }
+  ]
+}
