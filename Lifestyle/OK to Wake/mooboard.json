@@ -1,0 +1,45 @@
+{
+  "format": 2,
+  "id": "ok-to-wake",
+  "name": "OK to Wake",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "A sleep light that tells kids when it's time to get up.",
+  "category": "Lifestyle",
+  "uses": "oktowake",
+  "minFirmware": "0.3.2",
+  "settings": [
+    {
+      "key": "bedtime",
+      "type": "choice",
+      "label": "Bedtime",
+      "default": "8:00 PM",
+      "options": [
+        "7:00 PM",
+        "7:30 PM",
+        "8:00 PM",
+        "8:30 PM",
+        "9:00 PM"
+      ]
+    },
+    {
+      "key": "wake",
+      "type": "choice",
+      "label": "Wake time",
+      "default": "7:00 AM",
+      "options": [
+        "6:00 AM",
+        "6:30 AM",
+        "7:00 AM",
+        "7:30 AM",
+        "8:00 AM"
+      ]
+    },
+    {
+      "key": "clock",
+      "type": "toggle",
+      "label": "Show clock",
+      "default": false
+    }
+  ]
+}
