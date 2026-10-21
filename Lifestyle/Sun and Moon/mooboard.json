@@ -1,0 +1,11 @@
+{
+  "format": 2,
+  "id": "sun-and-moon",
+  "name": "Sun and Moon",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "Sunrise, sunset, and the moon's phase where you live.",
+  "category": "Lifestyle",
+  "uses": "sunmoon",
+  "minFirmware": "0.3.2"
+}
