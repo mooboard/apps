@@ -511,13 +511,24 @@ class TheRepo(unittest.TestCase):
         self.addCleanup(shutil.rmtree, out)
         build.build(REPO, out, generated=GENERATED)
         index = json.loads(read(os.path.join(out, "index.json")))
-        self.assertEqual([(a["id"], a["name"], a["category"], a["uses"]) for a in index["apps"]],
-                         [("prayer", "Prayer", "Lifestyle", "prayer"),
-                          ("fireplace", "Fireplace", "Ambiance", "fireplace"), ("plasma", "Plasma", "Ambiance", "plasma"),
-                          ("starfield", "Starfield", "Ambiance", "starfield"),
-                          ("life", "Game of Life", "Games", "life"),
-                          ("countdowns", "Countdowns", "Tools", "countdown"),
-                          ("sketch", "Pixel Sketch", "Tools", "sketch")])
+        # every app folder in the repo in categories.txt's order and a to z by folder + read from the folders so a branch
+        # that adds an app adds nothing here
+        want = []
+        for category in build.CATEGORIES:
+            top = os.path.join(REPO, category)
+            for folder in sorted(f for f in os.listdir(top) if not f.startswith(".")) if os.path.isdir(top) else []:
+                path = os.path.join(top, folder, "mooboard.json")
+                if os.path.isfile(path):
+                    man = json.loads(read(path))
+                    want.append((man["id"], man["name"], category, man["uses"]))
+        got = [(a["id"], a["name"], a["category"], a["uses"]) for a in index["apps"]]
+        self.assertEqual(got, want)
+        # the store's own first apps stay in it
+        for row in (("prayer", "Prayer", "Lifestyle", "prayer"), ("fireplace", "Fireplace", "Ambiance", "fireplace"),
+                    ("plasma", "Plasma", "Ambiance", "plasma"), ("starfield", "Starfield", "Ambiance", "starfield"),
+                    ("life", "Game of Life", "Games", "life"), ("countdowns", "Countdowns", "Tools", "countdown"),
+                    ("sketch", "Pixel Sketch", "Tools", "sketch")):
+            self.assertIn(row, got)
         self.assertTrue(all(a["size"] <= build.BOARD_CAP["s3"] for a in index["apps"]))
         prayer = [a for a in index["apps"] if a["id"] == "prayer"][0]
         names = zipfile.ZipFile(os.path.join(out, prayer["file"])).namelist()
