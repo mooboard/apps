@@ -1,0 +1,11 @@
+{
+  "format": 2,
+  "id": "fun-facts",
+  "name": "Fun Facts",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "A new fun fact every hour.",
+  "category": "Lifestyle",
+  "uses": "facts",
+  "minFirmware": "0.3.2"
+}
