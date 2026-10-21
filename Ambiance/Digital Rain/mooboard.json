@@ -1,0 +1,30 @@
+{
+  "format": 2,
+  "id": "digital-rain",
+  "name": "Digital Rain",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "Columns of glowing code falling down.",
+  "category": "Ambiance",
+  "uses": "raincode",
+  "minFirmware": "0.3.2",
+  "settings": [
+    {
+      "key": "color",
+      "type": "color",
+      "label": "Color",
+      "default": "#22FF66"
+    },
+    {
+      "key": "speed",
+      "type": "choice",
+      "label": "Speed",
+      "default": "Normal",
+      "options": [
+        "Slow",
+        "Normal",
+        "Fast"
+      ]
+    }
+  ]
+}
