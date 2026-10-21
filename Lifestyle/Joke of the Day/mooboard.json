@@ -1,0 +1,11 @@
+{
+  "format": 2,
+  "id": "joke-of-the-day",
+  "name": "Joke of the Day",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "A new joke every day, punchline included.",
+  "category": "Lifestyle",
+  "uses": "jokes",
+  "minFirmware": "0.3.2"
+}
