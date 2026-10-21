@@ -1,0 +1,45 @@
+{
+  "format": 2,
+  "id": "tally-counter",
+  "name": "Tally Counter",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "Count anything with a tap on your phone.",
+  "category": "Tools",
+  "uses": "tally",
+  "minFirmware": "0.3.2",
+  "settings": [
+    {
+      "key": "label",
+      "type": "text",
+      "label": "Label",
+      "default": "Count",
+      "max": 12
+    }
+  ],
+  "controls": [
+    {
+      "key": "count",
+      "type": "stepper",
+      "label": "{label}",
+      "min": 0,
+      "max": 9999
+    },
+    {
+      "key": "add",
+      "type": "button",
+      "label": "+10",
+      "arg": 10
+    },
+    {
+      "key": "reset",
+      "type": "button",
+      "label": "Reset"
+    },
+    {
+      "key": "done",
+      "type": "button",
+      "label": "Done"
+    }
+  ]
+}
