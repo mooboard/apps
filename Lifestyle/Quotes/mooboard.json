@@ -1,0 +1,11 @@
+{
+  "format": 2,
+  "id": "quotes",
+  "name": "Quotes",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "A new quote every hour.",
+  "category": "Lifestyle",
+  "uses": "quotes",
+  "minFirmware": "0.3.2"
+}
