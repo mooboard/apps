@@ -1,0 +1,35 @@
+{
+  "format": 2,
+  "id": "light-cycles",
+  "name": "Light Cycles",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "Light trails race to box each other in.",
+  "category": "Games",
+  "uses": "cycles",
+  "minFirmware": "0.3.2",
+  "settings": [
+    {
+      "key": "riders",
+      "type": "choice",
+      "label": "Riders",
+      "default": "Four",
+      "options": [
+        "Two",
+        "Three",
+        "Four"
+      ]
+    },
+    {
+      "key": "speed",
+      "type": "choice",
+      "label": "Speed",
+      "default": "Normal",
+      "options": [
+        "Slow",
+        "Normal",
+        "Fast"
+      ]
+    }
+  ]
+}
