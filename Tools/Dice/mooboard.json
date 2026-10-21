@@ -7,7 +7,7 @@
   "description": "Roll dice or flip a coin from your phone.",
   "category": "Tools",
   "uses": "dice",
-  "minFirmware": "0.3.2",
+  "minFirmware": "0.3.1",
   "settings": [
     {
       "key": "dice",

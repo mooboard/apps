@@ -7,7 +7,7 @@
   "description": "A cozy cabin under falling snow.",
   "category": "Ambiance",
   "uses": "snowglobe",
-  "minFirmware": "0.3.2",
+  "minFirmware": "0.3.1",
   "settings": [
     {
       "key": "scene",

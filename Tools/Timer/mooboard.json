@@ -7,7 +7,7 @@
   "description": "A countdown or a stopwatch you run from your phone.",
   "category": "Tools",
   "uses": "timer",
-  "minFirmware": "0.3.2",
+  "minFirmware": "0.3.1",
   "controls": [
     {
       "key": "countdown",

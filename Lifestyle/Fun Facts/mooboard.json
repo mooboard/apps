@@ -7,5 +7,5 @@
   "description": "A new fun fact every hour.",
   "category": "Lifestyle",
   "uses": "facts",
-  "minFirmware": "0.3.2"
+  "minFirmware": "0.3.1"
 }

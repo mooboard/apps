@@ -294,7 +294,7 @@ class Rules(unittest.TestCase):
 
 def scoreboard(**changes):
     """a catalog tool app with settings and controls u517 + written in an order the board does not keep"""
-    out = manifest(id="scoreboard", name="Scoreboard", uses="scoreboard", category="Tools", minFirmware="0.3.2",
+    out = manifest(id="scoreboard", name="Scoreboard", uses="scoreboard", category="Tools", minFirmware="0.3.1",
                    description="Two scores you keep from your phone.")
     out["settings"] = [{"type": "text", "key": "left", "label": "Left name", "max": 8, "default": "Home"},
                        {"key": "right", "type": "text", "label": "Right name", "default": "Guest", "max": 8},
@@ -334,7 +334,7 @@ class Catalog(unittest.TestCase):
         self.assertEqual(row["uses"], "scoreboard")
 
     def test_every_catalog_renderer_is_known(self):
-        # both waves u517 u523 + a card takes its turn a hold holds the panel and ok to wake does both e6
+        # both waves u517 u532 + a card takes its turn a hold holds the panel and ok to wake does both e6
         self.assertEqual(len(build.CATALOG_USES), 32)
         self.assertEqual(list(build.RENDERER_KEYS), list(build.CATALOG_USES))
         self.assertEqual(build.USES[7:], build.CATALOG_USES)
@@ -353,12 +353,12 @@ class Catalog(unittest.TestCase):
                                 controls=[]), "scoreboard takes no color setting tint")
         self.refused(scoreboard(settings=[{"key": "left", "type": "text", "label": "Left", "default": "Home",
                                            "max": 9}], controls=[]), "setting left is 8 characters at most")
-        pong = manifest(id="pong-clock", name="Pong Clock", uses="pong", category="Games", minFirmware="0.3.2",
+        pong = manifest(id="pong-clock", name="Pong Clock", uses="pong", category="Games", minFirmware="0.3.1",
                         description="Two paddles play, and the score is the time.",
                         settings=[{"key": "speed", "type": "choice", "label": "Speed", "default": "Slow",
                                    "options": ["Slow", "Fast"]}])
         self.refused(pong, "setting speed needs 3 options", category="Games", folder="Pong Clock")
-        habits = manifest(id="habit-streaks", name="Habit Streaks", uses="habits", minFirmware="0.3.2",
+        habits = manifest(id="habit-streaks", name="Habit Streaks", uses="habits", minFirmware="0.3.1",
                           description="Tap a habit on your phone and watch the streak grow.",
                           controls=[{"key": "habits", "type": "list", "label": "Habits", "max": 7, "chars": 12,
                                      "add": "Add habit"}])
@@ -370,7 +370,7 @@ class Catalog(unittest.TestCase):
 
     def test_controls_out_of_their_rules(self):
         presets = [{"key": "start", "type": "button", "label": "Go", "arg": i} for i in range(17)]
-        timer = manifest(id="timer", name="Timer", uses="timer", minFirmware="0.3.2", category="Tools",
+        timer = manifest(id="timer", name="Timer", uses="timer", minFirmware="0.3.1", category="Tools",
                          description="A countdown or a stopwatch you run from your phone.")
         self.refused(dict(timer, controls=presets), "controls must be a list of at most 16", folder="Timer")
         self.tree(dict(timer, controls=presets[:16]), folder="Timer").build()
@@ -391,10 +391,10 @@ class Catalog(unittest.TestCase):
                      "arg must be 0 to 86400", folder="Timer")
 
     def test_a_catalog_app_needs_the_firmware_that_reads_it(self):
-        # the firmware with the renderers is 0.3.2 u523
-        self.refused(scoreboard(minFirmware="0.3.1"), "a scoreboard app needs minFirmware 0.3.2 or later")
-        self.refused(scoreboard(minFirmware=None), "needs minFirmware 0.3.2")
-        self.tree(scoreboard(minFirmware="0.3.2")).build()
+        # the firmware with the renderers is 0.3.1 u534
+        self.refused(scoreboard(minFirmware="0.3.0"), "a scoreboard app needs minFirmware 0.3.1 or later")
+        self.refused(scoreboard(minFirmware=None), "needs minFirmware 0.3.1")
+        self.tree(scoreboard(minFirmware="0.3.1")).build()
 
     def test_settings_out_of_their_rules(self):
         self.refused(scoreboard(settings=[{"key": "left", "type": "text", "label": "Left", "default": "Home"}],
@@ -403,7 +403,7 @@ class Catalog(unittest.TestCase):
                                            "default": "blue"}], controls=[]), "default must be a color")
 
     def test_word_and_quotes_carry_their_list(self):
-        word = manifest(id="word-of-the-day", name="Word of the Day", uses="word", minFirmware="0.3.2",
+        word = manifest(id="word-of-the-day", name="Word of the Day", uses="word", minFirmware="0.3.1",
                         description="A new word and what it means, every day.")
         good = {"list.json": json.dumps({"format": 1, "items": [["petrichor", "noun", "the smell of rain"]]}).encode()}
         out = self.tree(word, good, "Lifestyle", "Word of the Day").build()
@@ -424,7 +424,7 @@ class Catalog(unittest.TestCase):
 
     def test_the_words_are_checked(self):
         # u517 c2948 + a word of 12 letters at most, one of four kinds, a meaning of 44 characters, each once
-        word = manifest(id="word-of-the-day", name="Word of the Day", uses="word", minFirmware="0.3.2",
+        word = manifest(id="word-of-the-day", name="Word of the Day", uses="word", minFirmware="0.3.1",
                         description="A new word and what it means, every day.")
         good = [["petrichor", "noun", "the smell of rain on dry ground"], ["jaunt", "noun", "a short trip for fun"]]
         self.tree(word, self.word_list(good), "Lifestyle", "Word of the Day").build()
@@ -441,7 +441,7 @@ class Catalog(unittest.TestCase):
     def test_the_quotes_are_checked_and_carry_text_and_who(self):
         # u517 c2948 + public domain by its year, text of 72 characters and who of 24, each once + the package keeps
         # the text and who the board shows and the repo keeps the work and year that show it is free to use
-        quotes = manifest(id="quotes", name="Quotes", uses="quotes", minFirmware="0.3.2",
+        quotes = manifest(id="quotes", name="Quotes", uses="quotes", minFirmware="0.3.1",
                           description="A new quote every hour.")
         good = [["Confine thyself to the present.", "Marcus Aurelius", "Meditations", 180],
                 ["A friend in need is a friend indeed.", "Proverb", "Traditional", 0]]
@@ -465,11 +465,11 @@ class Catalog(unittest.TestCase):
                 self.refused(quotes, words, self.word_list(items), "Lifestyle", "Quotes")
 
     def test_facts_and_jokes_carry_their_list_too(self):
-        # u523 e7 + their own checks of the words are the second lifestyle batch's
+        # u532 e7 + their own checks of the words are the second lifestyle batch's
         for app_id, name, uses, folder in (("fun-facts", "Fun Facts", "facts", "Fun Facts"),
                                            ("joke-of-the-day", "Joke of the Day", "jokes", "Joke of the Day")):
             with self.subTest(uses=uses):
-                man = manifest(id=app_id, name=name, uses=uses, minFirmware="0.3.2", description="One a day.")
+                man = manifest(id=app_id, name=name, uses=uses, minFirmware="0.3.1", description="One a day.")
                 good = {"list.json": json.dumps({"format": 1, "items": [["a", "b"]]}).encode()}
                 out = self.tree(man, good, "Lifestyle", folder).build()
                 names = zipfile.ZipFile(os.path.join(out, "%s-1.0.0.mooboard" % app_id)).namelist()
@@ -477,11 +477,11 @@ class Catalog(unittest.TestCase):
                 self.refused(man, "its data/ is list.json alone", {}, "Lifestyle", folder)
 
     def facts_man(self):
-        return manifest(id="fun-facts", name="Fun Facts", uses="facts", minFirmware="0.3.2",
+        return manifest(id="fun-facts", name="Fun Facts", uses="facts", minFirmware="0.3.1",
                         description="A new fun fact every hour.")
 
     def jokes_man(self):
-        return manifest(id="joke-of-the-day", name="Joke of the Day", uses="jokes", minFirmware="0.3.2",
+        return manifest(id="joke-of-the-day", name="Joke of the Day", uses="jokes", minFirmware="0.3.1",
                         description="A new joke every day, punchline included.")
 
     @staticmethod
@@ -489,7 +489,7 @@ class Catalog(unittest.TestCase):
         return {"list.json": json.dumps({"format": 1, "items": items}).encode()}
 
     def test_a_facts_source_stays_in_the_repo(self):
-        # u523 e7 c3135 + the board gets the fact alone
+        # u532 e7 c3135 + the board gets the fact alone
         items = [["An octopus has three hearts.", "https://en.wikipedia.org/wiki/Octopus"],
                  ["Zero is an even number.", "https://en.wikipedia.org/wiki/Parity_of_zero"]]
         out = self.tree(self.facts_man(), self.listed(items), "Lifestyle", "Fun Facts").build()
@@ -531,23 +531,23 @@ class Catalog(unittest.TestCase):
 
     def test_the_second_waves_keys(self):
         cycles = manifest(id="light-cycles", name="Light Cycles", uses="cycles", category="Games",
-                          minFirmware="0.3.2", description="Light trails race to box each other in.",
+                          minFirmware="0.3.1", description="Light trails race to box each other in.",
                           settings=[{"key": "riders", "type": "choice", "label": "Riders", "default": "Four",
                                      "options": ["Two", "Three", "Four"]}])
         self.tree(cycles, category="Games", folder="Light Cycles").build()
         wake = manifest(id="ok-to-wake", name="OK to Wake", uses="oktowake", category="Lifestyle",
-                        minFirmware="0.3.2", description="A sleep light.",
+                        minFirmware="0.3.1", description="A sleep light.",
                         settings=[{"key": "clock", "type": "toggle", "label": "Show clock", "default": False}])
         self.tree(wake, category="Lifestyle", folder="OK to Wake").build()
         wheel = manifest(id="spin-the-wheel", name="Spin the Wheel", uses="wheel", category="Tools",
-                         minFirmware="0.3.2", description="Can't decide? Spin the wheel.",
+                         minFirmware="0.3.1", description="Can't decide? Spin the wheel.",
                          controls=[{"key": "items", "type": "list", "label": "Choices", "max": 9, "chars": 14,
                                     "add": "Add choice"}])
         self.refused(wheel, "max must be 1 to 8", category="Tools", folder="Spin the Wheel")
         wheel["controls"][0]["max"] = 8
         self.tree(wheel, category="Tools", folder="Spin the Wheel").build()
         chores = manifest(id="chore-chart", name="Chore Chart", uses="chores", category="Lifestyle",
-                          minFirmware="0.3.2", description="Whose turn it is.",
+                          minFirmware="0.3.1", description="Whose turn it is.",
                           settings=[{"key": "people", "type": "text", "label": "People", "default": "Ana, Ben",
                                      "max": 32}])
         self.tree(chores, category="Lifestyle", folder="Chore Chart").build()

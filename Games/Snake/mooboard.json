@@ -7,7 +7,7 @@
   "description": "A snake that plays itself, one apple at a time.",
   "category": "Games",
   "uses": "snake",
-  "minFirmware": "0.3.2",
+  "minFirmware": "0.3.1",
   "settings": [
     {
       "key": "speed",

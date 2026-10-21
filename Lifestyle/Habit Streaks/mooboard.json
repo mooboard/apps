@@ -7,7 +7,7 @@
   "description": "Tap a habit on your phone and watch the streak grow.",
   "category": "Lifestyle",
   "uses": "habits",
-  "minFirmware": "0.3.2",
+  "minFirmware": "0.3.1",
   "controls": [
     {
       "key": "habits",

@@ -7,7 +7,7 @@
   "description": "Columns of glowing code falling down.",
   "category": "Ambiance",
   "uses": "raincode",
-  "minFirmware": "0.3.2",
+  "minFirmware": "0.3.1",
   "settings": [
     {
       "key": "color",

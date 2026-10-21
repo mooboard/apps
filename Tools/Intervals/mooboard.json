@@ -7,7 +7,7 @@
   "description": "Work and rest rounds for your workout.",
   "category": "Tools",
   "uses": "intervals",
-  "minFirmware": "0.3.2",
+  "minFirmware": "0.3.1",
   "settings": [
     {
       "key": "work",

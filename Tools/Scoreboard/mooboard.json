@@ -7,7 +7,7 @@
   "description": "Two scores you keep from your phone.",
   "category": "Tools",
   "uses": "scoreboard",
-  "minFirmware": "0.3.2",
+  "minFirmware": "0.3.1",
   "settings": [
     {
       "key": "left",

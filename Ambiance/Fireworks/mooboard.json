@@ -7,7 +7,7 @@
   "description": "Fireworks over your wall, all night long.",
   "category": "Ambiance",
   "uses": "fireworks",
-  "minFirmware": "0.3.2",
+  "minFirmware": "0.3.1",
   "settings": [
     {
       "key": "colors",

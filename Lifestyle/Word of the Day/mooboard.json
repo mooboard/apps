@@ -7,5 +7,5 @@
   "description": "A new word and what it means, every day.",
   "category": "Lifestyle",
   "uses": "word",
-  "minFirmware": "0.3.2"
+  "minFirmware": "0.3.1"
 }

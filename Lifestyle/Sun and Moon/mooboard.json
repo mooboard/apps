@@ -7,5 +7,5 @@
   "description": "Sunrise, sunset, and the moon's phase where you live.",
   "category": "Lifestyle",
   "uses": "sunmoon",
-  "minFirmware": "0.3.2"
+  "minFirmware": "0.3.1"
 }

@@ -7,7 +7,7 @@
   "description": "Rain on the glass and the city glowing behind it.",
   "category": "Ambiance",
   "uses": "rain",
-  "minFirmware": "0.3.2",
+  "minFirmware": "0.3.1",
   "settings": [
     {
       "key": "rain",

@@ -41,7 +41,7 @@ def read_categories(root):
 
 
 CATEGORIES = read_categories(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-# the catalog's renderers u517 u523 + their sheet is their manifest's settings and controls + the firmware's
+# the catalog's renderers u517 u532 + their sheet is their manifest's settings and controls + the firmware's
 # pw_model/store/Keys.h lists the keys each takes and tools/tests/test_store_keys.py there holds this table to it +
 # kind is card (takes its turn) hold (holds the panel while it runs) or night (ok to wake: a card by day that holds
 # the panel at night) + the firmware's keys are [a-z]+ so digital rain is raincode and ok to wake oktowake
@@ -87,7 +87,7 @@ RENDERER_KEYS = {
                                 "right_color": ("color", 0)},
                        dict({"left": ("stepper", 0), "right": ("stepper", 0)}, **_buttons("reset", "done"))),
     "dice": _row("hold", {"dice": ("choice", 2)}, dict(_buttons("roll", "flip"), result=("readout", 0))),
-    # the second wave u523
+    # the second wave u532
     "breakout": _row("card", SPEED),
     "invaders": _row("card", SPEED_COLORS),
     "flappy": _row("card", SPEED),
@@ -109,7 +109,7 @@ RENDERER_KEYS = {
     "wheel": _row("hold", controls=dict({"items": ("list", 8)}, **_buttons("spin"))),
     "tally": _row("hold", {"label": ("text", 12)}, dict({"count": ("stepper", 0)}, **_buttons("add", "reset", "done"))),
 }
-CATALOG_FIRMWARE = (0, 3, 2)   # the first firmware that carries the catalog's renderers u523
+CATALOG_FIRMWARE = (0, 3, 1)   # the first firmware that carries the catalog's renderers u534
 BOARDS = ("s3", "p4")
 BOARD_CAP = {"s3": 2 * 1024 * 1024, "p4": 8 * 1024 * 1024}
 ENTRY_CAP = 512 * 1024
@@ -490,7 +490,7 @@ JOKE_MAX = 60
 
 
 def check_facts(data, where):
-    """fun facts u523 e7 c3135 + each item [fact, source] with the fact 1 to 96 characters on one line and once in
+    """fun facts u532 e7 c3135 + each item [fact, source] with the fact 1 to 96 characters on one line and once in
     the list + the source a url or a book that stays in the repo (LIST_KEEP)"""
     check_list(data, where)
     seen = set()
@@ -509,7 +509,7 @@ def check_facts(data, where):
 
 
 def check_jokes(data, where):
-    """joke of the day u523 e7 c3135 + each item [setup, punchline] each 1 to 60 characters on one line + a joke
+    """joke of the day u532 e7 c3135 + each item [setup, punchline] each 1 to 60 characters on one line + a joke
     once in the list"""
     check_list(data, where)
     seen = set()
@@ -544,9 +544,9 @@ LIST_CAP = 64 * 1024
 USES_CHECKS = {"prayer": check_prayer, "countdown": check_no_data("countdown"), "sketch": check_no_data("sketch")}
 # the live renders u487 + their settings live on the board too
 USES_CHECKS.update({uses: check_no_data(uses) for uses in ("life", "plasma", "starfield", "fireplace")})
-# the catalog apps u517 u523 + their settings live on the board and the four list apps carry their list
+# the catalog apps u517 u532 + their settings live on the board and the four list apps carry their list
 USES_CHECKS.update({uses: check_no_data(uses) for uses in CATALOG_USES})
-USES_CHECKS.update({uses: check_list for uses in ("word", "quotes", "facts", "jokes")})   # u523 e7
+USES_CHECKS.update({uses: check_list for uses in ("word", "quotes", "facts", "jokes")})   # u532 e7
 USES_CHECKS.update({"word": check_words, "quotes": check_quotes})   # c2948
 USES_CHECKS.update({"facts": check_facts, "jokes": check_jokes})   # c3135
 

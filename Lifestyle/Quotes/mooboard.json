@@ -7,5 +7,5 @@
   "description": "A new quote every hour.",
   "category": "Lifestyle",
   "uses": "quotes",
-  "minFirmware": "0.3.2"
+  "minFirmware": "0.3.1"
 }

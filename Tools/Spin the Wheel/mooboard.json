@@ -7,7 +7,7 @@
   "description": "Can't decide? Spin the wheel.",
   "category": "Tools",
   "uses": "wheel",
-  "minFirmware": "0.3.2",
+  "minFirmware": "0.3.1",
   "controls": [
     {
       "key": "items",

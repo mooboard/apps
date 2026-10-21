@@ -7,7 +7,7 @@
   "description": "Focus for 25 minutes, then take a break.",
   "category": "Tools",
   "uses": "pomodoro",
-  "minFirmware": "0.3.2",
+  "minFirmware": "0.3.1",
   "settings": [
     {
       "key": "focus",

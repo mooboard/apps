@@ -7,5 +7,5 @@
   "description": "A skyline whose sky follows the time of day.",
   "category": "Ambiance",
   "uses": "nightcity",
-  "minFirmware": "0.3.2"
+  "minFirmware": "0.3.1"
 }

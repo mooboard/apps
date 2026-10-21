@@ -7,7 +7,7 @@
   "description": "Count anything with a tap on your phone.",
   "category": "Tools",
   "uses": "tally",
-  "minFirmware": "0.3.2",
+  "minFirmware": "0.3.1",
   "settings": [
     {
       "key": "label",

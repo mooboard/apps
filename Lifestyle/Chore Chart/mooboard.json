@@ -7,7 +7,7 @@
   "description": "Whose turn it is for each chore, tapped done on your phone.",
   "category": "Lifestyle",
   "uses": "chores",
-  "minFirmware": "0.3.2",
+  "minFirmware": "0.3.1",
   "settings": [
     {
       "key": "people",
