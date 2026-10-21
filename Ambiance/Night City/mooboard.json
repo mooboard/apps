@@ -1,0 +1,11 @@
+{
+  "format": 2,
+  "id": "night-city",
+  "name": "Night City",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "A skyline whose sky follows the time of day.",
+  "category": "Ambiance",
+  "uses": "nightcity",
+  "minFirmware": "0.3.2"
+}
