@@ -1,0 +1,82 @@
+{
+  "format": 2,
+  "id": "focus",
+  "name": "Focus",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "Focus for 25 minutes, then take a break.",
+  "category": "Tools",
+  "uses": "pomodoro",
+  "minFirmware": "0.3.2",
+  "settings": [
+    {
+      "key": "focus",
+      "type": "choice",
+      "label": "Focus",
+      "default": "25 min",
+      "options": [
+        "15 min",
+        "20 min",
+        "25 min",
+        "30 min",
+        "45 min",
+        "50 min"
+      ]
+    },
+    {
+      "key": "break",
+      "type": "choice",
+      "label": "Break",
+      "default": "5 min",
+      "options": [
+        "3 min",
+        "5 min",
+        "10 min"
+      ]
+    },
+    {
+      "key": "long_break",
+      "type": "choice",
+      "label": "Long break every fourth",
+      "default": "15 min",
+      "options": [
+        "Off",
+        "15 min",
+        "20 min",
+        "30 min"
+      ]
+    }
+  ],
+  "controls": [
+    {
+      "key": "left",
+      "type": "readout",
+      "label": "Time left"
+    },
+    {
+      "key": "start",
+      "type": "button",
+      "label": "Start"
+    },
+    {
+      "key": "pause",
+      "type": "button",
+      "label": "Pause"
+    },
+    {
+      "key": "resume",
+      "type": "button",
+      "label": "Resume"
+    },
+    {
+      "key": "skip",
+      "type": "button",
+      "label": "Skip"
+    },
+    {
+      "key": "stop",
+      "type": "button",
+      "label": "Stop"
+    }
+  ]
+}
