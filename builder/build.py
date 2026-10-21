@@ -485,8 +485,49 @@ def check_quotes(data, where):
         seen.add(text)
 
 
-# the fields of each item a package carries + the rest stays in the repo c2946
-LIST_KEEP = {"quotes": 2}
+FACT_MAX = 96
+JOKE_MAX = 60
+
+
+def check_facts(data, where):
+    """fun facts u523 e7 c3135 + each item [fact, source] with the fact 1 to 96 characters on one line and once in
+    the list + the source a url or a book that stays in the repo (LIST_KEEP)"""
+    check_list(data, where)
+    seen = set()
+    for n, item in enumerate(_list_items(data, where), 1):
+        what = "%s/data/list.json item %d" % (where, n)
+        if len(item) != 2:
+            raise Refused("%s must be [fact, source]" % what)
+        fact, source = item
+        if not _text(fact, FACT_MAX):
+            raise Refused("%s: the fact must be 1 to %d characters on one line" % (what, FACT_MAX))
+        if not source.strip():
+            raise Refused("%s needs its source" % what)
+        if fact in seen:
+            raise Refused("%s repeats a fact" % what)
+        seen.add(fact)
+
+
+def check_jokes(data, where):
+    """joke of the day u523 e7 c3135 + each item [setup, punchline] each 1 to 60 characters on one line + a joke
+    once in the list"""
+    check_list(data, where)
+    seen = set()
+    for n, item in enumerate(_list_items(data, where), 1):
+        what = "%s/data/list.json item %d" % (where, n)
+        if len(item) != 2:
+            raise Refused("%s must be [setup, punchline]" % what)
+        for part, text in zip(("setup", "punchline"), item):
+            if not _text(text, JOKE_MAX):
+                raise Refused("%s: the %s must be 1 to %d characters on one line" % (what, part, JOKE_MAX))
+        if tuple(item) in seen:
+            raise Refused("%s repeats a joke" % what)
+        seen.add(tuple(item))
+
+
+# the fields of each item a package carries + the rest stays in the repo c2946 + a fact's source never reaches the
+# board c3135
+LIST_KEEP = {"quotes": 2, "facts": 1}
 
 
 def package_data(uses, data):
@@ -507,6 +548,7 @@ USES_CHECKS.update({uses: check_no_data(uses) for uses in ("life", "plasma", "st
 USES_CHECKS.update({uses: check_no_data(uses) for uses in CATALOG_USES})
 USES_CHECKS.update({uses: check_list for uses in ("word", "quotes", "facts", "jokes")})   # u523 e7
 USES_CHECKS.update({"word": check_words, "quotes": check_quotes})   # c2948
+USES_CHECKS.update({"facts": check_facts, "jokes": check_jokes})   # c3135
 
 
 def check_size(app_id, size, boards):

@@ -476,6 +476,59 @@ class Catalog(unittest.TestCase):
                 self.assertEqual(names, ["mooboard.json", "icon.png", "data/list.json"])
                 self.refused(man, "its data/ is list.json alone", {}, "Lifestyle", folder)
 
+    def facts_man(self):
+        return manifest(id="fun-facts", name="Fun Facts", uses="facts", minFirmware="0.3.2",
+                        description="A new fun fact every hour.")
+
+    def jokes_man(self):
+        return manifest(id="joke-of-the-day", name="Joke of the Day", uses="jokes", minFirmware="0.3.2",
+                        description="A new joke every day, punchline included.")
+
+    @staticmethod
+    def listed(items):
+        return {"list.json": json.dumps({"format": 1, "items": items}).encode()}
+
+    def test_a_facts_source_stays_in_the_repo(self):
+        # u523 e7 c3135 + the board gets the fact alone
+        items = [["An octopus has three hearts.", "https://en.wikipedia.org/wiki/Octopus"],
+                 ["Zero is an even number.", "https://en.wikipedia.org/wiki/Parity_of_zero"]]
+        out = self.tree(self.facts_man(), self.listed(items), "Lifestyle", "Fun Facts").build()
+        package = zipfile.ZipFile(os.path.join(out, "fun-facts-1.0.0.mooboard"))
+        body = package.read("data/list.json").decode()
+        self.assertEqual(json.loads(body), {"format": 1, "items": [["An octopus has three hearts."],
+                                                                    ["Zero is an even number."]]})
+        self.assertNotIn("wikipedia", body)
+        # the same folder builds the same bytes
+        again = self.tree(self.facts_man(), self.listed(items), "Lifestyle", "Fun Facts").build()
+        self.assertEqual(read(os.path.join(out, "fun-facts-1.0.0.mooboard")),
+                         read(os.path.join(again, "fun-facts-1.0.0.mooboard")))
+
+    def test_facts_out_of_their_rules(self):
+        man, src = self.facts_man(), "https://example.org/a"
+        bad = {"must be [fact, source]": [["A fact."]],
+               "the fact must be 1 to 96 characters on one line": [["x" * 97, src]],
+               "needs its source": [["A fact.", " "]],
+               "repeats a fact": [["A fact.", src], ["A fact.", src + "b"]]}
+        for words, items in bad.items():
+            with self.subTest(words=words):
+                self.refused(man, words, self.listed(items), "Lifestyle", "Fun Facts")
+        self.refused(man, "the fact must be 1 to 96", self.listed([["Two\nlines.", src]]), "Lifestyle", "Fun Facts")
+        self.tree(man, self.listed([["x" * 96, src]]), "Lifestyle", "Fun Facts").build()
+
+    def test_jokes_out_of_their_rules(self):
+        man = self.jokes_man()
+        bad = {"must be [setup, punchline]": [["Why?", "Because.", "Extra."]],
+               "the setup must be 1 to 60 characters on one line": [["x" * 61, "Because."]],
+               "the punchline must be 1 to 60 characters on one line": [["Why?", ""]],
+               "repeats a joke": [["Why?", "Because."], ["Why?", "Because."]]}
+        for words, items in bad.items():
+            with self.subTest(words=words):
+                self.refused(man, words, self.listed(items), "Lifestyle", "Joke of the Day")
+        out = self.tree(man, self.listed([["x" * 60, "y" * 60], ["Why?", "Because."]]), "Lifestyle",
+                        "Joke of the Day").build()
+        body = zipfile.ZipFile(os.path.join(out, "joke-of-the-day-1.0.0.mooboard")).read("data/list.json")
+        self.assertEqual(json.loads(body)["items"][1], ["Why?", "Because."])
+
     def test_the_second_waves_keys(self):
         cycles = manifest(id="light-cycles", name="Light Cycles", uses="cycles", category="Games",
                           minFirmware="0.3.2", description="Light trails race to box each other in.",
