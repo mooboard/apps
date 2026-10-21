@@ -1,0 +1,30 @@
+{
+  "format": 2,
+  "id": "lava-lamp",
+  "name": "Lava Lamp",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "Slow blobs of lava in a color you pick.",
+  "category": "Ambiance",
+  "uses": "lava",
+  "minFirmware": "0.3.2",
+  "settings": [
+    {
+      "key": "color",
+      "type": "color",
+      "label": "Color",
+      "default": "#FF5A1F"
+    },
+    {
+      "key": "speed",
+      "type": "choice",
+      "label": "Speed",
+      "default": "Normal",
+      "options": [
+        "Slow",
+        "Normal",
+        "Fast"
+      ]
+    }
+  ]
+}
