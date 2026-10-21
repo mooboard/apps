@@ -1,0 +1,21 @@
+{
+  "format": 2,
+  "id": "habit-streaks",
+  "name": "Habit Streaks",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "Tap a habit on your phone and watch the streak grow.",
+  "category": "Lifestyle",
+  "uses": "habits",
+  "minFirmware": "0.3.2",
+  "controls": [
+    {
+      "key": "habits",
+      "type": "list",
+      "label": "Habits",
+      "max": 6,
+      "chars": 12,
+      "add": "Add habit"
+    }
+  ]
+}
