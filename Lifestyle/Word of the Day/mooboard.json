@@ -1,0 +1,11 @@
+{
+  "format": 2,
+  "id": "word-of-the-day",
+  "name": "Word of the Day",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "A new word and what it means, every day.",
+  "category": "Lifestyle",
+  "uses": "word",
+  "minFirmware": "0.3.2"
+}
