@@ -1,0 +1,40 @@
+{
+  "format": 2,
+  "id": "dice",
+  "name": "Dice",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "Roll dice or flip a coin from your phone.",
+  "category": "Tools",
+  "uses": "dice",
+  "minFirmware": "0.3.2",
+  "settings": [
+    {
+      "key": "dice",
+      "type": "choice",
+      "label": "Dice",
+      "default": "Two",
+      "options": [
+        "One",
+        "Two"
+      ]
+    }
+  ],
+  "controls": [
+    {
+      "key": "roll",
+      "type": "button",
+      "label": "Roll"
+    },
+    {
+      "key": "flip",
+      "type": "button",
+      "label": "Flip a coin"
+    },
+    {
+      "key": "result",
+      "type": "readout",
+      "label": "Result"
+    }
+  ]
+}
