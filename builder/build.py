@@ -55,8 +55,10 @@ SPEED_COLORS = dict(SPEED, colors=("choice", 2))
 COLOR_SPEED = dict({"color": ("color", 0)}, **SPEED)
 
 
-def _row(kind, settings=None, controls=None):
-    return {"kind": kind, "settings": dict(settings or {}), "controls": dict(controls or {})}
+def _row(kind, settings=None, controls=None, needs=()):
+    """needs is what a card waits for before its turn, as the board's table has it (clock, entries, item, place)"""
+    return {"kind": kind, "needs": tuple(sorted(needs)), "settings": dict(settings or {}),
+            "controls": dict(controls or {})}
 
 
 def _buttons(*keys):
@@ -72,10 +74,10 @@ RENDERER_KEYS = {
     "lava": _row("card", COLOR_SPEED),
     "aurora": _row("card", dict({"colors": ("choice", 3)}, **SPEED)),
     "rain": _row("card", {"rain": ("choice", 3), "city": ("choice", 2)}),
-    "sunmoon": _row("card"),
-    "word": _row("card"),
-    "quotes": _row("card"),
-    "habits": _row("card", controls={"habits": ("list", 6)}),
+    "sunmoon": _row("card", needs=("clock", "place")),
+    "word": _row("card", needs=("clock", "item")),
+    "quotes": _row("card", needs=("clock", "item")),
+    "habits": _row("card", controls={"habits": ("list", 6)}, needs=("clock", "entries")),
     "timer": _row("hold", controls=dict(_buttons("start", "add", "pause", "resume", "cancel", "sw_start", "sw_stop",
                                                  "sw_reset"), countdown=("readout", 0), stopwatch=("readout", 0))),
     "pomodoro": _row("hold", {"focus": ("choice", 6), "break": ("choice", 3), "long_break": ("choice", 4)},
@@ -93,10 +95,12 @@ RENDERER_KEYS = {
     "nightcity": _row("card"),
     "snowglobe": _row("card", {"scene": ("choice", 3)}),
     "raincode": _row("card", COLOR_SPEED),
-    "oktowake": _row("night", {"bedtime": ("choice", 5), "wake": ("choice", 5), "clock": ("toggle", 0)}),
-    "chores": _row("card", {"people": ("text", 32), "rotate": ("choice", 2)}, {"chores": ("list", 6)}),
-    "facts": _row("card"),
-    "jokes": _row("card"),
+    "oktowake": _row("night", {"bedtime": ("choice", 5), "wake": ("choice", 5), "clock": ("toggle", 0)},
+                     needs=("clock",)),
+    "chores": _row("card", {"people": ("text", 32), "rotate": ("choice", 2)}, {"chores": ("list", 6)},
+                   needs=("clock", "entries")),
+    "facts": _row("card", needs=("clock", "item")),
+    "jokes": _row("card", needs=("clock", "item")),
     "intervals": _row("hold", {"work": ("choice", 5), "rest": ("choice", 4), "rounds": ("choice", 5)},
                       dict(_buttons("start", "pause", "resume", "skip", "stop"), phase=("readout", 0))),
     "chessclock": _row("hold", {"time": ("choice", 6), "increment": ("choice", 5)},
