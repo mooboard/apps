@@ -1,0 +1,65 @@
+{
+  "format": 2,
+  "id": "scoreboard",
+  "name": "Scoreboard",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "Two scores you keep from your phone.",
+  "category": "Tools",
+  "uses": "scoreboard",
+  "minFirmware": "0.3.2",
+  "settings": [
+    {
+      "key": "left",
+      "type": "text",
+      "label": "Left name",
+      "default": "Home",
+      "max": 8
+    },
+    {
+      "key": "right",
+      "type": "text",
+      "label": "Right name",
+      "default": "Guest",
+      "max": 8
+    },
+    {
+      "key": "left_color",
+      "type": "color",
+      "label": "Left color",
+      "default": "#3C9DFF"
+    },
+    {
+      "key": "right_color",
+      "type": "color",
+      "label": "Right color",
+      "default": "#FF3B30"
+    }
+  ],
+  "controls": [
+    {
+      "key": "left",
+      "type": "stepper",
+      "label": "{left}",
+      "min": 0,
+      "max": 999
+    },
+    {
+      "key": "right",
+      "type": "stepper",
+      "label": "{right}",
+      "min": 0,
+      "max": 999
+    },
+    {
+      "key": "reset",
+      "type": "button",
+      "label": "Reset"
+    },
+    {
+      "key": "done",
+      "type": "button",
+      "label": "Done"
+    }
+  ]
+}
