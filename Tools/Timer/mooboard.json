@@ -1,0 +1,95 @@
+{
+  "format": 2,
+  "id": "timer",
+  "name": "Timer",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "A countdown or a stopwatch you run from your phone.",
+  "category": "Tools",
+  "uses": "timer",
+  "minFirmware": "0.3.2",
+  "controls": [
+    {
+      "key": "countdown",
+      "type": "readout",
+      "label": "Timer"
+    },
+    {
+      "key": "start",
+      "type": "button",
+      "label": "1 min",
+      "arg": 60
+    },
+    {
+      "key": "start",
+      "type": "button",
+      "label": "3 min",
+      "arg": 180
+    },
+    {
+      "key": "start",
+      "type": "button",
+      "label": "5 min",
+      "arg": 300
+    },
+    {
+      "key": "start",
+      "type": "button",
+      "label": "10 min",
+      "arg": 600
+    },
+    {
+      "key": "start",
+      "type": "button",
+      "label": "15 min",
+      "arg": 900
+    },
+    {
+      "key": "start",
+      "type": "button",
+      "label": "30 min",
+      "arg": 1800
+    },
+    {
+      "key": "add",
+      "type": "button",
+      "label": "+1 min",
+      "arg": 60
+    },
+    {
+      "key": "pause",
+      "type": "button",
+      "label": "Pause"
+    },
+    {
+      "key": "resume",
+      "type": "button",
+      "label": "Resume"
+    },
+    {
+      "key": "cancel",
+      "type": "button",
+      "label": "Cancel"
+    },
+    {
+      "key": "stopwatch",
+      "type": "readout",
+      "label": "Stopwatch"
+    },
+    {
+      "key": "sw_start",
+      "type": "button",
+      "label": "Start"
+    },
+    {
+      "key": "sw_stop",
+      "type": "button",
+      "label": "Stop"
+    },
+    {
+      "key": "sw_reset",
+      "type": "button",
+      "label": "Reset"
+    }
+  ]
+}
