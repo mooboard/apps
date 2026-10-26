@@ -1,0 +1,30 @@
+{
+  "format": 2,
+  "id": "dune",
+  "name": "Dune",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "Windswept desert dunes under shifting golden hour light.",
+  "category": "Ambiance",
+  "uses": "lava",
+  "minFirmware": "0.3.1",
+  "settings": [
+    {
+      "key": "color",
+      "type": "color",
+      "label": "Sand tone",
+      "default": "#E68A38"
+    },
+    {
+      "key": "speed",
+      "type": "choice",
+      "label": "Wind speed",
+      "default": "Normal",
+      "options": [
+        "Slow",
+        "Normal",
+        "Fast"
+      ]
+    }
+  ]
+}
