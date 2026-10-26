@@ -1,0 +1,65 @@
+{
+  "format": 2,
+  "id": "print-glance",
+  "name": "3D Print Glance",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "Print progress, nozzle temp, and remaining time on your desk.",
+  "category": "Tools",
+  "uses": "scoreboard",
+  "minFirmware": "0.3.1",
+  "settings": [
+    {
+      "key": "left",
+      "type": "text",
+      "label": "Nozzle",
+      "default": "Nozzle",
+      "max": 8
+    },
+    {
+      "key": "right",
+      "type": "text",
+      "label": "Bed",
+      "default": "Bed",
+      "max": 8
+    },
+    {
+      "key": "left_color",
+      "type": "color",
+      "label": "Nozzle color",
+      "default": "#FF5A1F"
+    },
+    {
+      "key": "right_color",
+      "type": "color",
+      "label": "Bed color",
+      "default": "#3C9DFF"
+    }
+  ],
+  "controls": [
+    {
+      "key": "left",
+      "type": "stepper",
+      "label": "Nozzle \u00b0C",
+      "min": 0,
+      "max": 300
+    },
+    {
+      "key": "right",
+      "type": "stepper",
+      "label": "Bed \u00b0C",
+      "min": 0,
+      "max": 120
+    },
+    {
+      "key": "reset",
+      "type": "button",
+      "label": "Clear"
+    },
+    {
+      "key": "done",
+      "type": "button",
+      "label": "Done"
+    }
+  ]
+}
