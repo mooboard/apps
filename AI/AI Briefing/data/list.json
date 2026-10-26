@@ -1,0 +1,85 @@
+{
+  "format": 1,
+  "items": [
+    [
+      "Deep learning models process tokens in parallel using self-attention mechanisms.",
+      "https://mooboard.co/ai"
+    ],
+    [
+      "Autonomous agents reason step-by-step using chain-of-thought prompting.",
+      "https://mooboard.co/ai"
+    ],
+    [
+      "Diffusion models generate high fidelity visuals by reversing Gaussian noise.",
+      "https://mooboard.co/ai"
+    ],
+    [
+      "Quantization compresses 16-bit weights to 4-bit integers with minimal loss.",
+      "https://mooboard.co/ai"
+    ],
+    [
+      "Speculative decoding drafts tokens with a small model to speed up generation.",
+      "https://mooboard.co/ai"
+    ],
+    [
+      "Mixture of Experts activates only sparse sub-networks for each generated token.",
+      "https://mooboard.co/ai"
+    ],
+    [
+      "Reinforcement Learning from Human Feedback aligns model outputs with intent.",
+      "https://mooboard.co/ai"
+    ],
+    [
+      "Retrieval Augmented Generation grounds neural model responses in live facts.",
+      "https://mooboard.co/ai"
+    ],
+    [
+      "Direct Preference Optimization steers language models without a reward model.",
+      "https://mooboard.co/ai"
+    ],
+    [
+      "Vector embeddings map semantic relationships into high-dimensional vector spaces.",
+      "https://mooboard.co/ai"
+    ],
+    [
+      "FlashAttention optimizes GPU memory bandwidth using online softmax tiling.",
+      "https://mooboard.co/ai"
+    ],
+    [
+      "In-context learning allows language models to adapt from prompt demonstrations.",
+      "https://mooboard.co/ai"
+    ],
+    [
+      "Rotary position embeddings encode token distance with complex rotation matrices.",
+      "https://mooboard.co/ai"
+    ],
+    [
+      "Multimodal neural networks fuse vision, audio, and language into one joint space.",
+      "https://mooboard.co/ai"
+    ],
+    [
+      "Self-correcting code agents iteratively test, lint, and repair software builds.",
+      "https://mooboard.co/ai"
+    ],
+    [
+      "Constitutional AI trains harmless models using written self-critique principles.",
+      "https://mooboard.co/ai"
+    ],
+    [
+      "Knowledge distillation transfers reasoning capabilities to edge microcontrollers.",
+      "https://mooboard.co/ai"
+    ],
+    [
+      "Synthetic data generation curates diverse reasoning trajectories for fine-tuning.",
+      "https://mooboard.co/ai"
+    ],
+    [
+      "Neural network scaling laws accurately predict loss from compute and dataset size.",
+      "https://mooboard.co/ai"
+    ],
+    [
+      "Sparse autoencoders decompose black-box activations into interpretable features.",
+      "https://mooboard.co/ai"
+    ]
+  ]
+}

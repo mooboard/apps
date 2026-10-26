@@ -1,0 +1,44 @@
+{
+  "format": 2,
+  "id": "ai-companion",
+  "name": "AI Companion",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "An emotive desktop AI pet with interactive mood bonding.",
+  "category": "AI",
+  "uses": "tally",
+  "minFirmware": "0.3.1",
+  "settings": [
+    {
+      "key": "label",
+      "type": "text",
+      "label": "Happiness",
+      "default": "Happiness",
+      "max": 12
+    }
+  ],
+  "controls": [
+    {
+      "key": "count",
+      "type": "stepper",
+      "label": "Energy",
+      "min": 0,
+      "max": 20
+    },
+    {
+      "key": "add",
+      "type": "button",
+      "label": "Feed"
+    },
+    {
+      "key": "reset",
+      "type": "button",
+      "label": "Nap"
+    },
+    {
+      "key": "done",
+      "type": "button",
+      "label": "Pet"
+    }
+  ]
+}

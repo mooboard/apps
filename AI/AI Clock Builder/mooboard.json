@@ -1,0 +1,30 @@
+{
+  "format": 2,
+  "id": "ai-builder",
+  "name": "AI Clock Builder",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "Procedural matrix HUD clock from digital rain prompts.",
+  "category": "AI",
+  "uses": "raincode",
+  "minFirmware": "0.3.1",
+  "settings": [
+    {
+      "key": "color",
+      "type": "color",
+      "label": "Color",
+      "default": "#34C759"
+    },
+    {
+      "key": "speed",
+      "type": "choice",
+      "label": "Speed",
+      "default": "Normal",
+      "options": [
+        "Slow",
+        "Normal",
+        "Fast"
+      ]
+    }
+  ]
+}
