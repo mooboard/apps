@@ -1,0 +1,35 @@
+{
+  "format": 2,
+  "id": "micro-racer",
+  "name": "Micro Racer",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "Retro arcade racer with drift trails.",
+  "category": "Games",
+  "uses": "cycles",
+  "minFirmware": "0.3.1",
+  "settings": [
+    {
+      "key": "speed",
+      "type": "choice",
+      "label": "Race speed",
+      "default": "Normal",
+      "options": [
+        "Slow",
+        "Normal",
+        "Fast"
+      ]
+    },
+    {
+      "key": "riders",
+      "type": "choice",
+      "label": "Racer count",
+      "default": "2 Cars",
+      "options": [
+        "2 Cars",
+        "3 Cars",
+        "4 Cars"
+      ]
+    }
+  ]
+}
