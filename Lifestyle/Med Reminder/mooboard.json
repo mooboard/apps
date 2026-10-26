@@ -1,0 +1,21 @@
+{
+  "format": 2,
+  "id": "med-reminder",
+  "name": "Med Reminder",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "Daily prescription and vitamin habit tracker with phone log.",
+  "category": "Lifestyle",
+  "uses": "habits",
+  "minFirmware": "0.3.1",
+  "controls": [
+    {
+      "key": "habits",
+      "type": "list",
+      "label": "Medications",
+      "add": "Add med",
+      "chars": 12,
+      "max": 6
+    }
+  ]
+}
