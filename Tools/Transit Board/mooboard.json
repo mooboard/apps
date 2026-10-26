@@ -1,0 +1,40 @@
+{
+  "format": 2,
+  "id": "transit-board",
+  "name": "Transit Board",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "Next bus and train arrival countdowns for your daily stop.",
+  "category": "Tools",
+  "uses": "chores",
+  "minFirmware": "0.3.1",
+  "settings": [
+    {
+      "key": "people",
+      "type": "text",
+      "label": "Lines",
+      "default": "Subway, Bus, Ferry",
+      "max": 32
+    },
+    {
+      "key": "rotate",
+      "type": "choice",
+      "label": "Order",
+      "default": "Next",
+      "options": [
+        "Next",
+        "Line"
+      ]
+    }
+  ],
+  "controls": [
+    {
+      "key": "chores",
+      "type": "list",
+      "label": "Arrivals",
+      "add": "Add stop",
+      "chars": 16,
+      "max": 6
+    }
+  ]
+}
