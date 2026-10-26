@@ -1,0 +1,11 @@
+{
+  "format": 2,
+  "id": "launch-pad",
+  "name": "Rocket Launch Pad",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "Rocket launch tracker and countdown.",
+  "category": "Tools",
+  "uses": "countdown",
+  "minFirmware": "0.3.1"
+}
