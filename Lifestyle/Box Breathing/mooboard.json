@@ -1,0 +1,82 @@
+{
+  "format": 2,
+  "id": "breathe",
+  "name": "Box Breathing",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "Guided 4-4-4-4 box breathing and calm relaxation companion.",
+  "category": "Lifestyle",
+  "uses": "pomodoro",
+  "minFirmware": "0.3.1",
+  "settings": [
+    {
+      "key": "focus",
+      "type": "choice",
+      "label": "Inhale",
+      "default": "25 min",
+      "options": [
+        "15 min",
+        "20 min",
+        "25 min",
+        "30 min",
+        "45 min",
+        "50 min"
+      ]
+    },
+    {
+      "key": "break",
+      "type": "choice",
+      "label": "Hold",
+      "default": "5 min",
+      "options": [
+        "3 min",
+        "5 min",
+        "10 min"
+      ]
+    },
+    {
+      "key": "long_break",
+      "type": "choice",
+      "label": "Exhale",
+      "default": "15 min",
+      "options": [
+        "Off",
+        "15 min",
+        "20 min",
+        "30 min"
+      ]
+    }
+  ],
+  "controls": [
+    {
+      "key": "left",
+      "type": "readout",
+      "label": "Phase"
+    },
+    {
+      "key": "start",
+      "type": "button",
+      "label": "Start"
+    },
+    {
+      "key": "pause",
+      "type": "button",
+      "label": "Pause"
+    },
+    {
+      "key": "resume",
+      "type": "button",
+      "label": "Resume"
+    },
+    {
+      "key": "skip",
+      "type": "button",
+      "label": "Next"
+    },
+    {
+      "key": "stop",
+      "type": "button",
+      "label": "Stop"
+    }
+  ]
+}
