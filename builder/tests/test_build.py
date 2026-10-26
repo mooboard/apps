@@ -135,7 +135,7 @@ class Package(unittest.TestCase):
         index = json.loads(raw)
         self.assertEqual(list(index), ["format", "generated", "categories", "apps"])
         self.assertEqual((index["format"], index["generated"], index["categories"]),
-                         (1, GENERATED, ["Lifestyle", "Ambiance", "Games", "Tools"]))
+                         (1, GENERATED, list(build.CATEGORIES)))
         row = index["apps"][0]
         self.assertEqual(list(row), ["id", "name", "category", "by", "description", "version", "uses", "minFirmware",
                                      "boards", "file", "size", "sha256", "icon"])
