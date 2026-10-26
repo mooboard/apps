@@ -1,0 +1,40 @@
+{
+  "format": 2,
+  "id": "mailbox",
+  "name": "Mailbox",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "Package deliveries and incoming mail glance with carrier tags.",
+  "category": "Tools",
+  "uses": "chores",
+  "minFirmware": "0.3.1",
+  "settings": [
+    {
+      "key": "people",
+      "type": "text",
+      "label": "Carriers",
+      "default": "USPS, Amazon, UPS, FedEx",
+      "max": 32
+    },
+    {
+      "key": "rotate",
+      "type": "choice",
+      "label": "Check cycle",
+      "default": "Daily",
+      "options": [
+        "Daily",
+        "Weekly"
+      ]
+    }
+  ],
+  "controls": [
+    {
+      "key": "chores",
+      "type": "list",
+      "label": "Active packages",
+      "max": 6,
+      "chars": 16,
+      "add": "Add package"
+    }
+  ]
+}
