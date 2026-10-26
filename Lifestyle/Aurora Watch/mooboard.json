@@ -1,0 +1,35 @@
+{
+  "format": 2,
+  "id": "aurora-watch",
+  "name": "Aurora Watch",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "Geomagnetic storm gauge and aurora alerts.",
+  "category": "Lifestyle",
+  "uses": "aurora",
+  "minFirmware": "0.3.1",
+  "settings": [
+    {
+      "key": "colors",
+      "type": "choice",
+      "label": "Aurora colors",
+      "default": "Green Ribbon",
+      "options": [
+        "Green Ribbon",
+        "Solar Violet",
+        "Arctic Cyan"
+      ]
+    },
+    {
+      "key": "speed",
+      "type": "choice",
+      "label": "Storm activity",
+      "default": "Normal",
+      "options": [
+        "Slow",
+        "Normal",
+        "Fast"
+      ]
+    }
+  ]
+}
