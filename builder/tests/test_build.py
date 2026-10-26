@@ -244,6 +244,10 @@ class Rules(unittest.TestCase):
         out = tree.build()
         self.assertGreater(os.path.getsize(os.path.join(out, "prayer-1.0.0.mooboard")), build.BOARD_CAP["s3"])
 
+    def test_more_apps_than_a_board_reads(self):   # u570
+        with unittest.mock.patch.object(build, "APPS_MAX", 0):
+            self.refused(lambda t: None, "1 apps, over the 0 a board reads")
+
     def test_too_many_entries(self):
         data = {"g/%d.bin" % i: b"" for i in range(build.MAX_ENTRIES - 1)}
         self.refused(lambda t: self.replace(t, data=data), "more than 200 entries")

@@ -118,6 +118,9 @@ MAX_DEPTH = 3
 MANIFEST_CAP = 8 * 1024
 ICON_CAP = 8 * 1024
 INDEX_CAP = 64 * 1024
+# the most apps a board reads in one index (pw_apps kCatalogAppsMax) + more and every board on 0.3.1 and 0.3.2-alpha.1
+# refuses the whole catalog as bad-package (89 on 2026-10-26) u570
+APPS_MAX = 64
 ICON = 32
 NAME_MAX = 24
 DESCRIPTION_MAX = 80
@@ -741,6 +744,8 @@ def build(root, out, generated=None, key=None, openssl="openssl", say=lambda lin
             raise Refused("two apps have the id %s" % row["id"])
         seen.add(row["id"])
     packages.update(event_packages)
+    if len(rows) > APPS_MAX:
+        raise Refused("%d apps, over the %d a board reads (pw_apps kCatalogAppsMax)" % (len(rows), APPS_MAX))
     index = index_bytes(rows, generated, events)
     if len(index) > INDEX_CAP:
         raise Refused("index.json is %d bytes, over 64 KB" % len(index))
