@@ -1,0 +1,65 @@
+{
+  "format": 2,
+  "id": "uptime-ping",
+  "name": "Uptime Ping",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "Server response latency and network gateway ping health.",
+  "category": "Tools",
+  "uses": "scoreboard",
+  "minFirmware": "0.3.1",
+  "settings": [
+    {
+      "key": "left",
+      "type": "text",
+      "label": "Gateway",
+      "default": "Gateway",
+      "max": 8
+    },
+    {
+      "key": "right",
+      "type": "text",
+      "label": "DNS",
+      "default": "DNS",
+      "max": 8
+    },
+    {
+      "key": "left_color",
+      "type": "color",
+      "label": "GW color",
+      "default": "#5AC8FA"
+    },
+    {
+      "key": "right_color",
+      "type": "color",
+      "label": "DNS color",
+      "default": "#34C759"
+    }
+  ],
+  "controls": [
+    {
+      "key": "left",
+      "type": "stepper",
+      "label": "GW ms",
+      "min": 0,
+      "max": 999
+    },
+    {
+      "key": "right",
+      "type": "stepper",
+      "label": "DNS ms",
+      "min": 0,
+      "max": 999
+    },
+    {
+      "key": "reset",
+      "type": "button",
+      "label": "Reset"
+    },
+    {
+      "key": "done",
+      "type": "button",
+      "label": "Done"
+    }
+  ]
+}
