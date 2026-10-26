@@ -1,0 +1,78 @@
+{
+  "format": 2,
+  "id": "delivery-glance",
+  "name": "Delivery Glance",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "Package tracking and delivery countdown.",
+  "category": "Tools",
+  "uses": "intervals",
+  "minFirmware": "0.3.1",
+  "settings": [
+    {
+      "key": "work",
+      "type": "choice",
+      "label": "Carrier",
+      "default": "UPS",
+      "options": [
+        "UPS",
+        "FedEx",
+        "USPS",
+        "DHL",
+        "Amazon"
+      ]
+    },
+    {
+      "key": "rest",
+      "type": "choice",
+      "label": "Window",
+      "default": "Morning",
+      "options": [
+        "Morning",
+        "Noon",
+        "Evening",
+        "Night"
+      ]
+    },
+    {
+      "key": "rounds",
+      "type": "choice",
+      "label": "Packages",
+      "default": "1 Pkg",
+      "options": [
+        "1 Pkg",
+        "2 Pkgs",
+        "3 Pkgs",
+        "4 Pkgs",
+        "5+ Pkgs"
+      ]
+    }
+  ],
+  "controls": [
+    {
+      "key": "start",
+      "type": "button",
+      "label": "Track"
+    },
+    {
+      "key": "pause",
+      "type": "button",
+      "label": "Pause"
+    },
+    {
+      "key": "resume",
+      "type": "button",
+      "label": "Resume"
+    },
+    {
+      "key": "skip",
+      "type": "button",
+      "label": "Next"
+    },
+    {
+      "key": "stop",
+      "type": "button",
+      "label": "Delivered"
+    }
+  ]
+}
