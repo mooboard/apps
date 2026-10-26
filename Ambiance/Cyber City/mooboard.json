@@ -1,0 +1,11 @@
+{
+  "format": 2,
+  "id": "cyber-city",
+  "name": "Cyber City",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "Rainy cyberpunk metropolis with glowing neon signs.",
+  "category": "Ambiance",
+  "uses": "nightcity",
+  "minFirmware": "0.3.1"
+}
