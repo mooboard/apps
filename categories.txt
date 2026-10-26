@@ -2,4 +2,3 @@ Lifestyle
 Ambiance
 Games
 Tools
-Clock
