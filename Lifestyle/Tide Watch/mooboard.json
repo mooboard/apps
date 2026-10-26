@@ -1,0 +1,11 @@
+{
+  "format": 2,
+  "id": "tide-watch",
+  "name": "Tide Watch",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "Ocean tides, water height, and next high and low water times.",
+  "category": "Lifestyle",
+  "uses": "sunmoon",
+  "minFirmware": "0.3.1"
+}
