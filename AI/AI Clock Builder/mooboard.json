@@ -1,0 +1,20 @@
+{
+  "format": 2,
+  "id": "ai-clock-builder",
+  "name": "AI Clock Builder",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "Describe a clock in a few words and AI designs it.",
+  "category": "AI",
+  "uses": "aiface",
+  "minFirmware": "0.3.2",
+  "settings": [
+    {
+      "key": "describe",
+      "type": "text",
+      "label": "Describe your clock",
+      "default": "A calm starry night",
+      "max": 32
+    }
+  ]
+}

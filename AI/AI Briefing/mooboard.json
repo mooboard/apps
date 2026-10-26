@@ -1,0 +1,36 @@
+{
+  "format": 2,
+  "id": "ai-briefing",
+  "name": "AI Briefing",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "A short glance at your day, written by AI every hour.",
+  "category": "AI",
+  "uses": "aibrief",
+  "minFirmware": "0.3.2",
+  "settings": [
+    {
+      "key": "tone",
+      "type": "choice",
+      "label": "Tone",
+      "default": "Friendly",
+      "options": [
+        "Brief",
+        "Friendly",
+        "Funny"
+      ]
+    },
+    {
+      "key": "personal",
+      "type": "toggle",
+      "label": "Calendar and tasks",
+      "default": true
+    },
+    {
+      "key": "accent",
+      "type": "color",
+      "label": "Color",
+      "default": "#FFF4E0"
+    }
+  ]
+}

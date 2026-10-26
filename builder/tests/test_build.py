@@ -135,7 +135,7 @@ class Package(unittest.TestCase):
         index = json.loads(raw)
         self.assertEqual(list(index), ["format", "generated", "categories", "apps"])
         self.assertEqual((index["format"], index["generated"], index["categories"]),
-                         (1, GENERATED, ["Lifestyle", "Ambiance", "Games", "Tools"]))
+                         (1, GENERATED, ["Lifestyle", "Ambiance", "Games", "Tools", "AI"]))   # ai u574
         row = index["apps"][0]
         self.assertEqual(list(row), ["id", "name", "category", "by", "description", "version", "uses", "minFirmware",
                                      "boards", "file", "size", "sha256", "icon"])
@@ -338,8 +338,9 @@ class Catalog(unittest.TestCase):
         self.assertEqual(row["uses"], "scoreboard")
 
     def test_every_catalog_renderer_is_known(self):
-        # both waves u517 u532 + a card takes its turn a hold holds the panel and ok to wake does both e6
-        self.assertEqual(len(build.CATALOG_USES), 32)
+        # both waves u517 u532 and the ai apps u574 + a card takes its turn a hold holds the panel and ok to wake does both
+        # e6
+        self.assertEqual(len(build.CATALOG_USES), 36)
         self.assertEqual(list(build.RENDERER_KEYS), list(build.CATALOG_USES))
         self.assertEqual(build.USES[7:], build.CATALOG_USES)
         kinds = {uses: row["kind"] for uses, row in build.RENDERER_KEYS.items()}
@@ -399,6 +400,15 @@ class Catalog(unittest.TestCase):
         self.refused(scoreboard(minFirmware="0.3.0"), "a scoreboard app needs minFirmware 0.3.1 or later")
         self.refused(scoreboard(minFirmware=None), "needs minFirmware 0.3.1")
         self.tree(scoreboard(minFirmware="0.3.1")).build()
+
+    def test_an_ai_app_needs_the_firmware_that_draws_it(self):   # u574 c3247
+        face = manifest(id="ai-clock-builder", name="AI Clock Builder", uses="aiface", category="AI",
+                        minFirmware="0.3.1", description="A clock face from your own words.")
+        face["settings"] = [{"key": "describe", "type": "text", "label": "Describe your clock", "max": 32,
+                             "default": "A calm starry night"}]
+        self.refused(face, "aiface app needs minFirmware 0.3.2 or later", category="AI", folder="AI Clock Builder")
+        face["minFirmware"] = "0.3.2"
+        self.tree(face, category="AI", folder="AI Clock Builder").build()
 
     def test_settings_out_of_their_rules(self):
         self.refused(scoreboard(settings=[{"key": "left", "type": "text", "label": "Left", "default": "Home"}],

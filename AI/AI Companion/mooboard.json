@@ -1,0 +1,38 @@
+{
+  "format": 2,
+  "id": "ai-companion",
+  "name": "AI Companion",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "A pixel cow that lives on your board and has thoughts of its own.",
+  "category": "AI",
+  "uses": "aipet",
+  "minFirmware": "0.3.2",
+  "settings": [
+    {
+      "key": "name",
+      "type": "text",
+      "label": "Name",
+      "default": "Moo",
+      "max": 12
+    },
+    {
+      "key": "color",
+      "type": "color",
+      "label": "Spots",
+      "default": "#6E4628"
+    },
+    {
+      "key": "persona",
+      "type": "choice",
+      "label": "Personality",
+      "default": "Cheerful",
+      "options": [
+        "Cheerful",
+        "Calm",
+        "Snarky",
+        "Wise"
+      ]
+    }
+  ]
+}

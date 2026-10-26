@@ -1,0 +1,42 @@
+{
+  "format": 2,
+  "id": "ai-dreamscape",
+  "name": "AI Dreamscape",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "A new picture for your board, made by AI.",
+  "category": "AI",
+  "uses": "aiscene",
+  "minFirmware": "0.3.2",
+  "settings": [
+    {
+      "key": "scene",
+      "type": "text",
+      "label": "Scene, or Auto",
+      "default": "Auto",
+      "max": 32
+    },
+    {
+      "key": "style",
+      "type": "choice",
+      "label": "Style",
+      "default": "Pixel art",
+      "options": [
+        "Pixel art",
+        "Painted",
+        "Neon"
+      ]
+    },
+    {
+      "key": "refresh",
+      "type": "choice",
+      "label": "New picture",
+      "default": "Every 3 hours",
+      "options": [
+        "Hourly",
+        "Every 3 hours",
+        "Daily"
+      ]
+    }
+  ]
+}

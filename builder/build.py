@@ -48,7 +48,8 @@ CATEGORIES = read_categories(os.path.dirname(os.path.dirname(os.path.abspath(__f
 CATALOG_USES = ("pong", "snake", "blocks", "maze", "aquarium", "lava", "aurora", "rain", "sunmoon", "word", "quotes",
                 "habits", "timer", "pomodoro", "scoreboard", "dice",
                 "breakout", "invaders", "flappy", "cycles", "fireworks", "nightcity", "snowglobe", "raincode",
-                "oktowake", "chores", "facts", "jokes", "intervals", "chessclock", "wheel", "tally")
+                "oktowake", "chores", "facts", "jokes", "intervals", "chessclock", "wheel", "tally",
+                "aibrief", "aipet", "aiscene", "aiface")   # the ai apps u574 c3247
 USES = ("prayer", "countdown", "sketch", "life", "plasma", "starfield", "fireplace") + CATALOG_USES   # the firmware's renderers (pw::AppRenderer), in its order
 SPEED = {"speed": ("choice", 3)}
 SPEED_COLORS = dict(SPEED, colors=("choice", 2))
@@ -108,8 +109,16 @@ RENDERER_KEYS = {
                        _buttons("left", "right", "pause", "reset", "done")),
     "wheel": _row("hold", controls=dict({"items": ("list", 8)}, **_buttons("spin"))),
     "tally": _row("hold", {"label": ("text", 12)}, dict({"count": ("stepper", 0)}, **_buttons("add", "reset", "done"))),
+    # the ai apps u574 c3247 + the briefing and the dreamscape wait for an answer from api.mooboard.co/ai
+    "aibrief": _row("card", {"tone": ("choice", 3), "personal": ("toggle", 0), "accent": ("color", 0)},
+                    needs=("ai", "clock")),
+    "aipet": _row("card", {"name": ("text", 12), "color": ("color", 0), "persona": ("choice", 4)}, needs=("clock",)),
+    "aiscene": _row("card", {"scene": ("text", 32), "style": ("choice", 3), "refresh": ("choice", 3)}, needs=("ai",)),
+    "aiface": _row("card", {"describe": ("text", 32)}, needs=("clock",)),
 }
 CATALOG_FIRMWARE = (0, 3, 1)   # the first firmware that carries the catalog's renderers u534
+# a renderer added after the first catalog firmware and the firmware that first draws it u574 c3247
+USES_FIRMWARE = {"aibrief": (0, 3, 2), "aipet": (0, 3, 2), "aiscene": (0, 3, 2), "aiface": (0, 3, 2)}
 BOARDS = ("s3", "p4")
 BOARD_CAP = {"s3": 2 * 1024 * 1024, "p4": 8 * 1024 * 1024}
 ENTRY_CAP = 512 * 1024
@@ -320,8 +329,9 @@ def check_sheet(man, where):
         if "settings" in man or "controls" in man:
             raise Refused("%s: a %s app takes no settings or controls" % (where, man["uses"]))
         return
-    need = ".".join(map(str, CATALOG_FIRMWARE))
-    if tuple(int(n) for n in man.get("minFirmware", "0.0.0").split(".")) < CATALOG_FIRMWARE:
+    first = max(CATALOG_FIRMWARE, USES_FIRMWARE.get(man["uses"], CATALOG_FIRMWARE))
+    need = ".".join(map(str, first))
+    if tuple(int(n) for n in man.get("minFirmware", "0.0.0").split(".")) < first:
         raise Refused("%s: a %s app needs minFirmware %s or later" % (where, man["uses"], need))
     check_settings(settings, where)
     check_controls(controls, settings, where)
