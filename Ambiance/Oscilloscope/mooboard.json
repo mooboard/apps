@@ -1,0 +1,11 @@
+{
+  "format": 2,
+  "id": "oscilloscope",
+  "name": "Oscilloscope",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "Vintage green phosphor audio oscilloscope and waveform trace.",
+  "category": "Ambiance",
+  "uses": "plasma",
+  "minFirmware": "0.3.1"
+}
