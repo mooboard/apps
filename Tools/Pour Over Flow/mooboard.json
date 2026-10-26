@@ -1,0 +1,33 @@
+{
+  "format": 2,
+  "id": "pourover-flow",
+  "name": "Pour Over Flow",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "Coffee brewing guide with pour timer.",
+  "category": "Tools",
+  "uses": "timer",
+  "minFirmware": "0.3.1",
+  "controls": [
+    {
+      "key": "start",
+      "type": "button",
+      "label": "Start"
+    },
+    {
+      "key": "pause",
+      "type": "button",
+      "label": "Pause"
+    },
+    {
+      "key": "resume",
+      "type": "button",
+      "label": "Resume"
+    },
+    {
+      "key": "cancel",
+      "type": "button",
+      "label": "Cancel"
+    }
+  ]
+}
