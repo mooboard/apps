@@ -1,0 +1,83 @@
+{
+  "format": 2,
+  "id": "brew-companion",
+  "name": "Brew Companion",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "Barista steep timers for pourover, french press, and tea.",
+  "category": "Tools",
+  "uses": "intervals",
+  "minFirmware": "0.3.1",
+  "settings": [
+    {
+      "key": "work",
+      "type": "choice",
+      "label": "Steep",
+      "default": "40 s",
+      "options": [
+        "20 s",
+        "30 s",
+        "40 s",
+        "45 s",
+        "60 s"
+      ]
+    },
+    {
+      "key": "rest",
+      "type": "choice",
+      "label": "Pour/Rest",
+      "default": "20 s",
+      "options": [
+        "10 s",
+        "15 s",
+        "20 s",
+        "30 s"
+      ]
+    },
+    {
+      "key": "rounds",
+      "type": "choice",
+      "label": "Stages",
+      "default": "8",
+      "options": [
+        "4",
+        "6",
+        "8",
+        "10",
+        "12"
+      ]
+    }
+  ],
+  "controls": [
+    {
+      "key": "phase",
+      "type": "readout",
+      "label": "Stage"
+    },
+    {
+      "key": "start",
+      "type": "button",
+      "label": "Start"
+    },
+    {
+      "key": "pause",
+      "type": "button",
+      "label": "Pause"
+    },
+    {
+      "key": "resume",
+      "type": "button",
+      "label": "Resume"
+    },
+    {
+      "key": "skip",
+      "type": "button",
+      "label": "Next"
+    },
+    {
+      "key": "stop",
+      "type": "button",
+      "label": "Stop"
+    }
+  ]
+}
