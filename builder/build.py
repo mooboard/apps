@@ -4,8 +4,8 @@
 Usage: python3 builder/build.py [--out DIR] [--key PEM] [--generated YYYY-MM-DDTHH:MM:SSZ] [--previous INDEX]
                                [--openssl PATH]
 
-Apps live in <Category>/<App>/: mooboard.json (package format 2), icon.png (32x32), README.md, LICENSE and
-data/. A package is a ZIP of stored entries with fixed headers and times, in a fixed order (mooboard.json,
+Apps live in <Category>/<App>/: mooboard.json (package format 2), icon.png (32x32), README.md, LICENSE,
+data/ and, for Word Guess, words.txt (its guess list, kept beside the package as <id>-<version>.words). A package is a ZIP of stored entries with fixed headers and times, in a fixed order (mooboard.json,
 icon.png, then data/ sorted), so the same folder always builds the same bytes. index.sig is the base64 of the
 DER ECDSA P-256 signature over index.json's exact bytes, as the firmware's OTA release statement is signed.
 Python 3 standard library and the openssl command only.
@@ -167,6 +167,14 @@ CONTROLS_MAX = 16
 LABEL_MAX = 24
 NEEDED_KEYS = ("format", "id", "name", "version", "by", "description", "category")
 REPO_ONLY = ("README.md", "LICENSE")
+# u644 c3587 + Word Guess's guess list stays on the catalog's release beside its package and never in the package or
+# the firmware + words.txt holds one lowercase five-letter word a line a to z once each + it goes out as
+# <id>-<version>.words of three bytes a word (its letters in base 26 a = 0 most significant first) so a board finds a
+# word by binary search + the index row names it with its size and sha256 + the board's cap (pw_model GuessWords.h)
+WORDS_FILE = "words.txt"
+WORDS_USES = ("wordguess",)
+WORDS_MAX = 16384
+WORD = re.compile(r"[a-z]{5}")
 NOT_APPS = ("builder", "dist", "Seasonal")
 
 ID = re.compile(r"[a-z0-9-]{1,32}")
@@ -620,6 +628,30 @@ def read_data(folder, where):
     return data
 
 
+def read_words(body, where):
+    """words.txt as the .words file a board fetches"""
+    text = body.decode("ascii", "replace")
+    if not text:
+        raise Refused("%s/words.txt holds no words" % where)
+    if not text.endswith("\n"):
+        raise Refused("%s/words.txt line %d does not end with a newline" % (where, text.count("\n") + 1))
+    lines = text[:-1].split("\n")
+    if len(lines) > WORDS_MAX:
+        raise Refused("%s/words.txt has more than %d words" % (where, WORDS_MAX))
+    out, last = bytearray(), None
+    for n, word in enumerate(lines, 1):
+        if not WORD.fullmatch(word):
+            raise Refused("%s/words.txt line %d is not five letters a to z" % (where, n))
+        if last is not None and word <= last:
+            raise Refused("%s/words.txt line %d is not after the line before" % (where, n))
+        value = 0
+        for ch in word:
+            value = value * 26 + ord(ch) - ord("a")
+        out += value.to_bytes(3, "big")
+        last = word
+    return bytes(out)
+
+
 def manifest_bytes(man):
     """the one way a manifest is laid out in a package + boards always written as the index row has them"""
     man = dict(man, boards=man.get("boards", list(BOARDS)))
@@ -650,13 +682,18 @@ def load_app(root, category, folder):
     where = "%s/%s" % (category, folder)
     base = os.path.join(root, category, folder)
     for name in _visible(os.listdir(base)):
-        if name not in REPO_ONLY + ("mooboard.json", "icon.png", "data"):
+        if name not in REPO_ONLY + ("mooboard.json", "icon.png", "data", WORDS_FILE):
             raise Refused("%s/%s is not part of an app (mooboard.json, icon.png, data/, README.md, LICENSE)"
                           % (where, name))
     for name in ("mooboard.json", "icon.png"):
         if not os.path.isfile(os.path.join(base, name)):
             raise Refused("%s/%s is missing" % (where, name))
     man = check_manifest(_read(os.path.join(base, "mooboard.json")), category, folder)
+    words = None
+    if os.path.isfile(os.path.join(base, WORDS_FILE)):
+        if man["uses"] not in WORDS_USES:
+            raise Refused("%s/%s is not part of a %s app" % (where, WORDS_FILE, man["uses"]))
+        words = read_words(_read(os.path.join(base, WORDS_FILE)), where)
     icon = _read(os.path.join(base, "icon.png"))
     check_icon(icon, where + "/icon.png")
     data = read_data(os.path.join(base, "data"), where) if os.path.isdir(os.path.join(base, "data")) else {}
@@ -669,7 +706,7 @@ def load_app(root, category, folder):
     package = write_zip(entries)
     boards = man.get("boards", list(BOARDS))
     check_size(man["id"], len(package), boards)
-    return man, icon, package, boards, len(entries)
+    return man, icon, package, boards, len(entries), words
 
 
 def find_apps(root):
@@ -760,7 +797,7 @@ def build(root, out, generated=None, key=None, openssl="openssl", say=lambda lin
     check_generated(generated, previous, now)
     rows, packages, seen = [], {}, set()
     for category, folder in find_apps(root):
-        man, icon, package, boards, count = load_app(root, category, folder)
+        man, icon, package, boards, count, words = load_app(root, category, folder)
         if man["id"] in seen:
             raise Refused("two apps have the id %s" % man["id"])
         seen.add(man["id"])
@@ -770,6 +807,11 @@ def build(root, out, generated=None, key=None, openssl="openssl", say=lambda lin
                                              "minFirmware") if key_ in man}
         row.update(boards=boards, file=name, size=len(package), sha256=hashlib.sha256(package).hexdigest(),
                    icon=base64.b64encode(icon).decode("ascii"))
+        if words is not None:
+            hosted = "%s-%s.words" % (man["id"], man["version"])
+            packages[hosted] = words
+            row["words"] = {"file": hosted, "size": len(words), "sha256": hashlib.sha256(words).hexdigest()}
+            say("%s/%s: %s, %d words" % (category, folder, hosted, len(words) // 3))
         rows.append(row)
         say("%s/%s: %s, %d bytes, %d entries" % (category, folder, name, len(package), count))
     import seasonal
@@ -787,7 +829,7 @@ def build(root, out, generated=None, key=None, openssl="openssl", say=lambda lin
     signature = sign(openssl, key, index) if key else None
     os.makedirs(out, exist_ok=True)
     for name in os.listdir(out):
-        if name.endswith(".mooboard") or name in ("index.json", "index.sig"):
+        if name.endswith((".mooboard", ".words")) or name in ("index.json", "index.sig"):
             os.remove(os.path.join(out, name))
     for name, package in packages.items():
         with open(os.path.join(out, name), "wb") as f:

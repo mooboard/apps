@@ -617,6 +617,89 @@ class Signature(unittest.TestCase):
             self.tree.build(key=other)
 
 
+def word_guess(**changes):
+    out = dict(manifest(id="word-guess", name="Word Guess", uses="wordguess", category="Games", minFirmware="0.4.0",
+                        description="Find the five-letter word in six tries."),
+               settings=[{"key": "speed", "type": "choice", "label": "Speed", "default": "Normal",
+                          "options": ["Slow", "Normal", "Fast"]}])
+    out.update(changes)
+    return {key: value for key, value in out.items() if value is not None}
+
+
+def packed(word):
+    value = 0
+    for ch in word:
+        value = value * 26 + ord(ch) - ord("a")
+    return value.to_bytes(3, "big")
+
+
+class Words(unittest.TestCase):
+    """u644 c3587 + Word Guess's guess list is kept beside its package on the catalog's release and never in a package
+    or the firmware + its row in the index names it with its size and sha256 + three bytes a word"""
+
+    def tree(self, words, man=None):
+        tree = Tree(self)
+        tree.app("Games", "Word Guess", man or word_guess(), {})
+        if words is not None:
+            tree.write("Games/Word Guess/words.txt", words)
+        return tree
+
+    def refused(self, words, said, man=None):
+        with self.assertRaises(build.Refused) as caught:
+            self.tree(words, man).build()
+        self.assertIn(said, str(caught.exception))
+
+    def test_the_list_goes_beside_the_package_and_its_row_names_it(self):
+        out = self.tree("cramp\ncrane\nzebra\n").build()
+        body = read(os.path.join(out, "word-guess-1.0.0.words"))
+        self.assertEqual(body, packed("cramp") + packed("crane") + packed("zebra"))
+        row = [a for a in json.loads(read(os.path.join(out, "index.json")))["apps"] if a["id"] == "word-guess"][0]
+        self.assertEqual(row["words"], {"file": "word-guess-1.0.0.words", "size": 9,
+                                        "sha256": hashlib.sha256(body).hexdigest()})
+        self.assertEqual(list(row)[-1], "words")
+        # the package carries no list + the board fetches it
+        names = zipfile.ZipFile(os.path.join(out, row["file"])).namelist()
+        self.assertEqual(names, ["mooboard.json", "icon.png"])
+
+    def test_an_app_without_a_list_has_no_words_and_an_old_list_goes(self):
+        tree = self.tree("crane\n")
+        out = tree.build()
+        os.remove(os.path.join(tree.root, "Games/Word Guess/words.txt"))
+        tree.build()
+        self.assertFalse(os.path.exists(os.path.join(out, "word-guess-1.0.0.words")))
+        row = [a for a in json.loads(read(os.path.join(out, "index.json")))["apps"] if a["id"] == "word-guess"][0]
+        self.assertNotIn("words", row)
+
+    def test_a_list_is_lowercase_five_letter_words_a_to_z_once_each(self):
+        self.refused("", "words.txt holds no words")
+        self.refused("crane", "words.txt line 1 does not end")
+        self.refused("Crane\n", "words.txt line 1 is not five letters a to z")
+        self.refused("cranes\n", "words.txt line 1 is not five letters a to z")
+        self.refused("crane\r\n", "words.txt line 1 is not five letters a to z")
+        self.refused("zebra\ncrane\n", "words.txt line 2 is not after the line before")
+        self.refused("crane\ncrane\n", "words.txt line 2 is not after the line before")
+        self.refused("".join("%s\n" % w for w in self.words(16385)), "more than 16384 words")
+        self.tree("".join("%s\n" % w for w in self.words(16384))).build()
+
+    def test_only_word_guess_takes_a_list(self):
+        tree = Tree(self)
+        tree.write("Lifestyle/Prayer/words.txt", "crane\n")
+        with self.assertRaises(build.Refused) as caught:
+            tree.build()
+        self.assertIn("Lifestyle/Prayer/words.txt is not part of a prayer app", str(caught.exception))
+
+    @staticmethod
+    def words(count):
+        out = []
+        for n in range(count):
+            word = ""
+            for _ in range(5):
+                word = chr(ord("a") + n % 26) + word
+                n //= 26
+            out.append(word)
+        return out
+
+
 class TheRepo(unittest.TestCase):
     def test_this_repo_builds_and_fits_the_s3(self):
         out = tempfile.mkdtemp()
