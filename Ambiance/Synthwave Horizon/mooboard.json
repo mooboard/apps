@@ -1,0 +1,35 @@
+{
+  "format": 2,
+  "id": "synthwave-horizon",
+  "name": "Synthwave Horizon",
+  "version": "1.1.0",
+  "by": "mooboard",
+  "description": "A neon grid racing toward a striped sunset.",
+  "category": "Ambiance",
+  "uses": "synthwave",
+  "minFirmware": "0.3.2",
+  "settings": [
+    {
+      "key": "speed",
+      "type": "choice",
+      "label": "Speed",
+      "default": "Normal",
+      "options": [
+        "Slow",
+        "Normal",
+        "Fast"
+      ]
+    },
+    {
+      "key": "palette",
+      "type": "choice",
+      "label": "Colors",
+      "default": "Neon",
+      "options": [
+        "Neon",
+        "Violet",
+        "Ember"
+      ]
+    }
+  ]
+}
