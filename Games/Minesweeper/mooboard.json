@@ -7,7 +7,7 @@
   "description": "Clear a minefield cell by cell, guided by the numbers.",
   "category": "Games",
   "uses": "minesweeper",
-  "minFirmware": "0.3.2",
+  "minFirmware": "0.4.0",
   "settings": [
     {
       "key": "speed",
