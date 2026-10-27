@@ -1,0 +1,35 @@
+{
+  "format": 2,
+  "id": "micro-rogue",
+  "name": "Tiny Dungeon Crawler",
+  "version": "1.1.0",
+  "by": "mooboard",
+  "description": "A retro dungeon crawl with monsters and loot.",
+  "category": "Games",
+  "uses": "microrogue",
+  "minFirmware": "0.3.2",
+  "settings": [
+    {
+      "key": "speed",
+      "type": "choice",
+      "label": "Speed",
+      "default": "Normal",
+      "options": [
+        "Slow",
+        "Normal",
+        "Fast"
+      ]
+    },
+    {
+      "key": "theme",
+      "type": "choice",
+      "label": "Dungeon",
+      "default": "Crypt",
+      "options": [
+        "Crypt",
+        "Lava Dungeon",
+        "Ice Cavern"
+      ]
+    }
+  ]
+}

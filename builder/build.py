@@ -49,7 +49,7 @@ CATALOG_USES = ("pong", "snake", "blocks", "maze", "aquarium", "lava", "aurora",
                 "habits", "timer", "pomodoro", "scoreboard", "dice",
                 "breakout", "invaders", "flappy", "cycles", "fireworks", "nightcity", "snowglobe", "raincode",
                 "oktowake", "chores", "facts", "jokes", "intervals", "chessclock", "wheel", "tally", "vfdstereo",
-                "microracer", "pixelpinball",
+                "microracer", "pixelpinball", "microrogue",
                 "aibrief", "aipet", "aiscene", "aiface")   # the ai apps u574 c3247
 USES = ("prayer", "countdown", "sketch", "life", "plasma", "starfield", "fireplace") + CATALOG_USES   # the firmware's renderers (pw::AppRenderer), in its order
 SPEED = {"speed": ("choice", 3)}
@@ -113,6 +113,7 @@ RENDERER_KEYS = {
     "vfdstereo": _row("card", {"mode": ("choice", 2), "colors": ("choice", 3)}),
     "microracer": _row("card", {"speed": ("choice", 3), "track": ("choice", 3)}),
     "pixelpinball": _row("card", {"speed": ("choice", 3), "table": ("choice", 3)}),
+    "microrogue": _row("card", {"speed": ("choice", 3), "theme": ("choice", 3)}),
     # the ai apps u574 c3247 + the briefing and the dreamscape wait for an answer from api.mooboard.co/ai
     "aibrief": _row("card", {"tone": ("choice", 3), "personal": ("toggle", 0), "accent": ("color", 0)},
                     needs=("ai", "clock")),
@@ -122,7 +123,7 @@ RENDERER_KEYS = {
 }
 CATALOG_FIRMWARE = (0, 3, 1)   # the first firmware that carries the catalog's renderers u534
 # a renderer added after the first catalog firmware and the firmware that first draws it u574 c3247
-USES_FIRMWARE = {"vfdstereo": (0, 3, 2), "microracer": (0, 3, 2), "pixelpinball": (0, 3, 2),
+USES_FIRMWARE = {"vfdstereo": (0, 3, 2), "microracer": (0, 3, 2), "pixelpinball": (0, 3, 2), "microrogue": (0, 3, 2),
                  "aibrief": (0, 3, 2), "aipet": (0, 3, 2), "aiscene": (0, 3, 2), "aiface": (0, 3, 2)}
 BOARDS = ("s3", "p4")
 BOARD_CAP = {"s3": 2 * 1024 * 1024, "p4": 8 * 1024 * 1024}
