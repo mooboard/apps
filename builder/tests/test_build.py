@@ -701,6 +701,22 @@ class Words(unittest.TestCase):
 
 
 class TheRepo(unittest.TestCase):
+    def test_word_guess_takes_websters_1934_list(self):
+        # u644 + the 8,506 five-letter words of Webster's Second International (public domain) as macOS ships them
+        out = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, out)
+        build.build(REPO, out, generated=GENERATED)
+        row = [a for a in json.loads(read(os.path.join(out, "index.json")))["apps"] if a["id"] == "word-guess"][0]
+        self.assertEqual(row["minFirmware"], "0.4.0")
+        body = read(os.path.join(out, row["words"]["file"]))
+        self.assertEqual(len(body), 8506 * 3)
+        self.assertEqual(row["words"]["size"], len(body))
+        self.assertEqual(body[:3], packed("aalii"))
+        self.assertIn(packed("cramp"), [body[i:i + 3] for i in range(0, len(body), 3)])
+        for app_id in ("minesweeper", "missile-defense"):
+            self.assertEqual([a for a in json.loads(read(os.path.join(out, "index.json")))["apps"]
+                              if a["id"] == app_id][0]["minFirmware"], "0.4.0")
+
     def test_this_repo_builds_and_fits_the_s3(self):
         out = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, out)

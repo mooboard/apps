@@ -142,7 +142,9 @@ USES_FIRMWARE = {"vfdstereo": (0, 3, 2), "microracer": (0, 3, 2), "pixelpinball"
                  "spacelander": (0, 3, 2),
                  "aibrief": (0, 3, 2), "aipet": (0, 3, 2), "aiscene": (0, 3, 2), "aiface": (0, 3, 2),
                  "flightglance": (0, 3, 2),
-                 "dinorunner": (0, 3, 2), "missiledefense": (0, 3, 2), "minesweeper": (0, 3, 2), "wordguess": (0, 3, 2),
+                 "dinorunner": (0, 3, 2),
+                 # u643 c3588 + the app-lab review's fixes and word guess's hosted list come with 0.4.0
+                 "missiledefense": (0, 4, 0), "minesweeper": (0, 4, 0), "wordguess": (0, 4, 0),
                  "waterfall": (0, 3, 2), "cybercity": (0, 3, 2), "synthwave": (0, 3, 2), "dune": (0, 3, 2)}
 BOARDS = ("s3", "p4")
 BOARD_CAP = {"s3": 2 * 1024 * 1024, "p4": 8 * 1024 * 1024}
