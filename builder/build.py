@@ -50,7 +50,8 @@ CATALOG_USES = ("pong", "snake", "blocks", "maze", "aquarium", "lava", "aurora",
                 "breakout", "invaders", "flappy", "cycles", "fireworks", "nightcity", "snowglobe", "raincode",
                 "oktowake", "chores", "facts", "jokes", "intervals", "chessclock", "wheel", "tally", "vfdstereo",
                 "microracer", "pixelpinball", "microrogue", "spacelander",
-                "aibrief", "aipet", "aiscene", "aiface")   # the ai apps u574 c3247
+                "aibrief", "aipet", "aiscene", "aiface",   # the ai apps u574 c3247
+                "flightglance")
 USES = ("prayer", "countdown", "sketch", "life", "plasma", "starfield", "fireplace") + CATALOG_USES   # the firmware's renderers (pw::AppRenderer), in its order
 SPEED = {"speed": ("choice", 3)}
 SPEED_COLORS = dict(SPEED, colors=("choice", 2))
@@ -121,12 +122,15 @@ RENDERER_KEYS = {
     "aipet": _row("card", {"name": ("text", 12), "color": ("color", 0), "persona": ("choice", 4)}, needs=("clock",)),
     "aiscene": _row("card", {"scene": ("text", 32), "style": ("choice", 3), "refresh": ("choice", 3)}, needs=("ai",)),
     "aiface": _row("card", {"describe": ("text", 32)}, needs=("clock",)),
+    "flightglance": _row("card", {"radius": ("choice", 5), "units": ("choice", 2), "follow": ("text", 32),
+                                  "follow2": ("text", 32), "cycle": ("choice", 3), "layout": ("choice", 2)}),
 }
 CATALOG_FIRMWARE = (0, 3, 1)   # the first firmware that carries the catalog's renderers u534
 # a renderer added after the first catalog firmware and the firmware that first draws it u574 c3247
 USES_FIRMWARE = {"vfdstereo": (0, 3, 2), "microracer": (0, 3, 2), "pixelpinball": (0, 3, 2), "microrogue": (0, 3, 2),
                  "spacelander": (0, 3, 2),
-                 "aibrief": (0, 3, 2), "aipet": (0, 3, 2), "aiscene": (0, 3, 2), "aiface": (0, 3, 2)}
+                 "aibrief": (0, 3, 2), "aipet": (0, 3, 2), "aiscene": (0, 3, 2), "aiface": (0, 3, 2),
+                 "flightglance": (0, 3, 2)}
 BOARDS = ("s3", "p4")
 BOARD_CAP = {"s3": 2 * 1024 * 1024, "p4": 8 * 1024 * 1024}
 ENTRY_CAP = 512 * 1024
