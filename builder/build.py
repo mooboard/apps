@@ -51,7 +51,9 @@ CATALOG_USES = ("pong", "snake", "blocks", "maze", "aquarium", "lava", "aurora",
                 "oktowake", "chores", "facts", "jokes", "intervals", "chessclock", "wheel", "tally", "vfdstereo",
                 "microracer", "pixelpinball", "microrogue", "spacelander",
                 "aibrief", "aipet", "aiscene", "aiface",   # the ai apps u574 c3247
-                "flightglance")
+                "flightglance",
+                "dinorunner", "missiledefense", "minesweeper", "wordguess",   # app-lab's games and ambiances c3506
+                "waterfall", "cybercity", "synthwave", "dune")
 USES = ("prayer", "countdown", "sketch", "life", "plasma", "starfield", "fireplace") + CATALOG_USES   # the firmware's renderers (pw::AppRenderer), in its order
 SPEED = {"speed": ("choice", 3)}
 SPEED_COLORS = dict(SPEED, colors=("choice", 2))
@@ -124,13 +126,24 @@ RENDERER_KEYS = {
     "aiface": _row("card", {"describe": ("text", 32)}, needs=("clock",)),
     "flightglance": _row("card", {"radius": ("choice", 5), "units": ("choice", 2), "follow": ("text", 32),
                                   "follow2": ("text", 32), "cycle": ("choice", 3), "layout": ("choice", 2)}),
+    # app-lab's four games and four ambiances c3506 + their renderers only, no app of the catalog names them yet
+    "dinorunner": _row("card", SPEED),
+    "missiledefense": _row("card", SPEED),
+    "minesweeper": _row("card", SPEED),
+    "wordguess": _row("card", SPEED),
+    "waterfall": _row("card", {"flow": ("choice", 3), "mist": ("toggle", 0)}),
+    "cybercity": _row("card", {"rain": ("choice", 3), "palette": ("choice", 3)}),
+    "synthwave": _row("card", {"speed": ("choice", 3), "palette": ("choice", 3)}),
+    "dune": _row("card", COLOR_SPEED),
 }
 CATALOG_FIRMWARE = (0, 3, 1)   # the first firmware that carries the catalog's renderers u534
 # a renderer added after the first catalog firmware and the firmware that first draws it u574 c3247
 USES_FIRMWARE = {"vfdstereo": (0, 3, 2), "microracer": (0, 3, 2), "pixelpinball": (0, 3, 2), "microrogue": (0, 3, 2),
                  "spacelander": (0, 3, 2),
                  "aibrief": (0, 3, 2), "aipet": (0, 3, 2), "aiscene": (0, 3, 2), "aiface": (0, 3, 2),
-                 "flightglance": (0, 3, 2)}
+                 "flightglance": (0, 3, 2),
+                 "dinorunner": (0, 3, 2), "missiledefense": (0, 3, 2), "minesweeper": (0, 3, 2), "wordguess": (0, 3, 2),
+                 "waterfall": (0, 3, 2), "cybercity": (0, 3, 2), "synthwave": (0, 3, 2), "dune": (0, 3, 2)}
 BOARDS = ("s3", "p4")
 BOARD_CAP = {"s3": 2 * 1024 * 1024, "p4": 8 * 1024 * 1024}
 ENTRY_CAP = 512 * 1024
