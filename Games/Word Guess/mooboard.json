@@ -2,12 +2,12 @@
   "format": 2,
   "id": "word-guess",
   "name": "Word Guess",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "by": "mooboard",
   "description": "Deducing secret five-letter words tile by tile.",
   "category": "Games",
-  "uses": "blocks",
-  "minFirmware": "0.3.1",
+  "uses": "wordguess",
+  "minFirmware": "0.3.2",
   "settings": [
     {
       "key": "speed",
