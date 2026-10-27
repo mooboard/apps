@@ -7,7 +7,7 @@
   "description": "Find the five-letter word in six tries.",
   "category": "Games",
   "uses": "wordguess",
-  "minFirmware": "0.3.2",
+  "minFirmware": "0.4.0",
   "settings": [
     {
       "key": "speed",
