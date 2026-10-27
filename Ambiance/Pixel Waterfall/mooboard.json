@@ -1,0 +1,30 @@
+{
+  "format": 2,
+  "id": "pixel-waterfall",
+  "name": "Pixel Waterfall",
+  "version": "1.1.0",
+  "by": "mooboard",
+  "description": "A mountain waterfall with rising mist and mossy stones.",
+  "category": "Ambiance",
+  "uses": "waterfall",
+  "minFirmware": "0.3.2",
+  "settings": [
+    {
+      "key": "flow",
+      "type": "choice",
+      "label": "Flow",
+      "default": "Steady",
+      "options": [
+        "Gentle",
+        "Steady",
+        "Powerful"
+      ]
+    },
+    {
+      "key": "mist",
+      "type": "toggle",
+      "label": "Mist",
+      "default": true
+    }
+  ]
+}
