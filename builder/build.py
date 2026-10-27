@@ -49,7 +49,7 @@ CATALOG_USES = ("pong", "snake", "blocks", "maze", "aquarium", "lava", "aurora",
                 "habits", "timer", "pomodoro", "scoreboard", "dice",
                 "breakout", "invaders", "flappy", "cycles", "fireworks", "nightcity", "snowglobe", "raincode",
                 "oktowake", "chores", "facts", "jokes", "intervals", "chessclock", "wheel", "tally", "vfdstereo",
-                "microracer", "pixelpinball", "microrogue", "spacelander", "dinorunner", "missiledefense", "minesweeper", "wordguess")
+                "microracer", "pixelpinball", "microrogue", "spacelander", "dinorunner", "missiledefense", "minesweeper", "wordguess", "waterfall", "cybercity")
 USES = ("prayer", "countdown", "sketch", "life", "plasma", "starfield", "fireplace") + CATALOG_USES   # the firmware's renderers (pw::AppRenderer), in its order
 SPEED = {"speed": ("choice", 3)}
 SPEED_COLORS = dict(SPEED, colors=("choice", 2))
@@ -118,6 +118,8 @@ RENDERER_KEYS = {
     "missiledefense": _row("card", SPEED),
     "minesweeper": _row("card", SPEED),
     "wordguess": _row("card", SPEED),
+    "waterfall": _row("card", {"flow": ("choice", 3), "mist": ("toggle", 0)}),
+    "cybercity": _row("card", {"rain": ("choice", 3), "palette": ("choice", 3)}),
 }
 CATALOG_FIRMWARE = (0, 3, 1)   # the first firmware that carries the catalog's renderers u534
 BOARDS = ("s3", "p4")

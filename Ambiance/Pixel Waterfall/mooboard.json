@@ -2,33 +2,29 @@
   "format": 2,
   "id": "pixel-waterfall",
   "name": "Pixel Waterfall",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "by": "mooboard",
   "description": "Cascading mountain waterfall with rising mist and mossy stones.",
   "category": "Ambiance",
-  "uses": "rain",
-  "minFirmware": "0.3.1",
+  "uses": "waterfall",
+  "minFirmware": "0.3.2",
   "settings": [
     {
-      "key": "rain",
+      "key": "flow",
       "type": "choice",
-      "label": "Cascade",
+      "label": "Flow",
       "default": "Steady",
       "options": [
         "Gentle",
         "Steady",
-        "Downpour"
+        "Powerful"
       ]
     },
     {
-      "key": "city",
-      "type": "choice",
-      "label": "Mist spray",
-      "default": "Show",
-      "options": [
-        "Show",
-        "Hide"
-      ]
+      "key": "mist",
+      "type": "toggle",
+      "label": "Mist",
+      "default": true
     }
   ]
 }

@@ -2,10 +2,34 @@
   "format": 2,
   "id": "cyber-city",
   "name": "Cyber City",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "by": "mooboard",
   "description": "Rainy cyberpunk metropolis with glowing neon signs.",
   "category": "Ambiance",
-  "uses": "nightcity",
-  "minFirmware": "0.3.1"
+  "uses": "cybercity",
+  "minFirmware": "0.3.2",
+  "settings": [
+    {
+      "key": "rain",
+      "type": "choice",
+      "label": "Rain",
+      "default": "Drizzle",
+      "options": [
+        "Off",
+        "Drizzle",
+        "Downpour"
+      ]
+    },
+    {
+      "key": "palette",
+      "type": "choice",
+      "label": "Neon palette",
+      "default": "Neon",
+      "options": [
+        "Neon",
+        "Violet",
+        "Amber"
+      ]
+    }
+  ]
 }
