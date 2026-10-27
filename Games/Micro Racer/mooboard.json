@@ -1,0 +1,35 @@
+{
+  "format": 2,
+  "id": "micro-racer",
+  "name": "Micro Racer",
+  "version": "1.1.0",
+  "by": "mooboard",
+  "description": "A retro highway racer with nitro boost.",
+  "category": "Games",
+  "uses": "microracer",
+  "minFirmware": "0.3.2",
+  "settings": [
+    {
+      "key": "speed",
+      "type": "choice",
+      "label": "Speed",
+      "default": "Normal",
+      "options": [
+        "Slow",
+        "Normal",
+        "Fast"
+      ]
+    },
+    {
+      "key": "track",
+      "type": "choice",
+      "label": "Track",
+      "default": "Neon Highway",
+      "options": [
+        "Neon Highway",
+        "Sunset Coast",
+        "Midnight City"
+      ]
+    }
+  ]
+}
