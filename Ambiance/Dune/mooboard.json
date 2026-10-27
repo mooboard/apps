@@ -1,0 +1,30 @@
+{
+  "format": 2,
+  "id": "dune",
+  "name": "Dune",
+  "version": "1.1.0",
+  "by": "mooboard",
+  "description": "Windswept dunes under shifting golden light.",
+  "category": "Ambiance",
+  "uses": "dune",
+  "minFirmware": "0.3.2",
+  "settings": [
+    {
+      "key": "color",
+      "type": "color",
+      "label": "Sand",
+      "default": "#E68A38"
+    },
+    {
+      "key": "speed",
+      "type": "choice",
+      "label": "Wind",
+      "default": "Normal",
+      "options": [
+        "Slow",
+        "Normal",
+        "Fast"
+      ]
+    }
+  ]
+}
