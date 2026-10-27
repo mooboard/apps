@@ -1,0 +1,24 @@
+{
+  "format": 2,
+  "id": "minesweeper",
+  "name": "Minesweeper",
+  "version": "1.1.0",
+  "by": "mooboard",
+  "description": "Clear a minefield cell by cell, guided by the numbers.",
+  "category": "Games",
+  "uses": "minesweeper",
+  "minFirmware": "0.3.2",
+  "settings": [
+    {
+      "key": "speed",
+      "type": "choice",
+      "label": "Speed",
+      "default": "Normal",
+      "options": [
+        "Slow",
+        "Normal",
+        "Fast"
+      ]
+    }
+  ]
+}
