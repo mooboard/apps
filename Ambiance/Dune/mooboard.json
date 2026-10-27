@@ -2,12 +2,12 @@
   "format": 2,
   "id": "dune",
   "name": "Dune",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "by": "mooboard",
   "description": "Windswept desert dunes under shifting golden hour light.",
   "category": "Ambiance",
-  "uses": "lava",
-  "minFirmware": "0.3.1",
+  "uses": "dune",
+  "minFirmware": "0.3.2",
   "settings": [
     {
       "key": "color",

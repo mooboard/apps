@@ -2,10 +2,34 @@
   "format": 2,
   "id": "synthwave-horizon",
   "name": "Synthwave Horizon",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "by": "mooboard",
   "description": "Outrun perspective neon grid and sunset.",
   "category": "Ambiance",
-  "uses": "starfield",
-  "minFirmware": "0.3.1"
+  "uses": "synthwave",
+  "minFirmware": "0.3.2",
+  "settings": [
+    {
+      "key": "speed",
+      "type": "choice",
+      "label": "Travel speed",
+      "default": "Normal",
+      "options": [
+        "Slow",
+        "Normal",
+        "Fast"
+      ]
+    },
+    {
+      "key": "palette",
+      "type": "choice",
+      "label": "Palette",
+      "default": "Neon",
+      "options": [
+        "Neon",
+        "Violet",
+        "Ember"
+      ]
+    }
+  ]
 }
