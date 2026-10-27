@@ -1,0 +1,24 @@
+{
+  "format": 2,
+  "id": "word-guess",
+  "name": "Word Guess",
+  "version": "1.1.0",
+  "by": "mooboard",
+  "description": "Find the five-letter word in six tries.",
+  "category": "Games",
+  "uses": "wordguess",
+  "minFirmware": "0.3.2",
+  "settings": [
+    {
+      "key": "speed",
+      "type": "choice",
+      "label": "Speed",
+      "default": "Normal",
+      "options": [
+        "Slow",
+        "Normal",
+        "Fast"
+      ]
+    }
+  ]
+}
