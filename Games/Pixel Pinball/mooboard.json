@@ -1,0 +1,35 @@
+{
+  "format": 2,
+  "id": "pixel-pinball",
+  "name": "Pixel Pinball",
+  "version": "1.1.0",
+  "by": "mooboard",
+  "description": "Arcade pinball with bumpers, drop targets, and flippers.",
+  "category": "Games",
+  "uses": "pixelpinball",
+  "minFirmware": "0.3.2",
+  "settings": [
+    {
+      "key": "speed",
+      "type": "choice",
+      "label": "Speed",
+      "default": "Normal",
+      "options": [
+        "Slow",
+        "Normal",
+        "Fast"
+      ]
+    },
+    {
+      "key": "table",
+      "type": "choice",
+      "label": "Table",
+      "default": "Cyber Neon",
+      "options": [
+        "Cyber Neon",
+        "Classic Arcade",
+        "Emerald Casino"
+      ]
+    }
+  ]
+}
