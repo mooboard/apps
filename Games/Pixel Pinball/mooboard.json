@@ -4,10 +4,10 @@
   "name": "Pixel Pinball",
   "version": "1.0.0",
   "by": "mooboard",
-  "description": "Arcade pinball with bumpers and ramps.",
+  "description": "Arcade pinball table with bumpers and ramps.",
   "category": "Games",
-  "uses": "breakout",
-  "minFirmware": "0.3.1",
+  "uses": "pixelpinball",
+  "minFirmware": "0.3.2",
   "settings": [
     {
       "key": "speed",
@@ -18,6 +18,17 @@
         "Slow",
         "Normal",
         "Fast"
+      ]
+    },
+    {
+      "key": "table",
+      "type": "choice",
+      "label": "Table style",
+      "default": "Cyber Neon",
+      "options": [
+        "Cyber Neon",
+        "Classic Arcade",
+        "Emerald Casino"
       ]
     }
   ]

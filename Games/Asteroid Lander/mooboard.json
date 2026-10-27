@@ -4,20 +4,31 @@
   "name": "Asteroid Lander",
   "version": "1.0.0",
   "by": "mooboard",
-  "description": "Pilot a thrust rocket to landing pads.",
+  "description": "Thrust rocket pilot across jagged lunar caverns.",
   "category": "Games",
-  "uses": "flappy",
-  "minFirmware": "0.3.1",
+  "uses": "spacelander",
+  "minFirmware": "0.3.2",
   "settings": [
     {
       "key": "speed",
       "type": "choice",
-      "label": "Flight pace",
+      "label": "Gravity pull",
       "default": "Normal",
       "options": [
         "Slow",
         "Normal",
         "Fast"
+      ]
+    },
+    {
+      "key": "planet",
+      "type": "choice",
+      "label": "Planet world",
+      "default": "Lunar Grey",
+      "options": [
+        "Lunar Grey",
+        "Mars Red",
+        "Europa Ice"
       ]
     }
   ]
