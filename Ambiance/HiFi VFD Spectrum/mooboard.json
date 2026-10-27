@@ -6,6 +6,30 @@
   "by": "mooboard",
   "description": "Vacuum fluorescent audio equalizer stack.",
   "category": "Ambiance",
-  "uses": "plasma",
-  "minFirmware": "0.3.1"
+  "uses": "vfdstereo",
+  "minFirmware": "0.3.2",
+  "settings": [
+    {
+      "key": "mode",
+      "type": "choice",
+      "label": "Display style",
+      "default": "Stereo Split",
+      "options": [
+        "Stereo Split",
+        "Full Spectrum",
+        "Peak Dots"
+      ]
+    },
+    {
+      "key": "colors",
+      "type": "choice",
+      "label": "Phosphor tone",
+      "default": "Classic Teal",
+      "options": [
+        "Classic Teal",
+        "Amber Gold",
+        "Cobalt Blue"
+      ]
+    }
+  ]
 }

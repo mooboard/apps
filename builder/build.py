@@ -48,7 +48,7 @@ CATEGORIES = read_categories(os.path.dirname(os.path.dirname(os.path.abspath(__f
 CATALOG_USES = ("pong", "snake", "blocks", "maze", "aquarium", "lava", "aurora", "rain", "sunmoon", "word", "quotes",
                 "habits", "timer", "pomodoro", "scoreboard", "dice",
                 "breakout", "invaders", "flappy", "cycles", "fireworks", "nightcity", "snowglobe", "raincode",
-                "oktowake", "chores", "facts", "jokes", "intervals", "chessclock", "wheel", "tally")
+                "oktowake", "chores", "facts", "jokes", "intervals", "chessclock", "wheel", "tally", "vfdstereo")
 USES = ("prayer", "countdown", "sketch", "life", "plasma", "starfield", "fireplace") + CATALOG_USES   # the firmware's renderers (pw::AppRenderer), in its order
 SPEED = {"speed": ("choice", 3)}
 SPEED_COLORS = dict(SPEED, colors=("choice", 2))
@@ -108,6 +108,7 @@ RENDERER_KEYS = {
                        _buttons("left", "right", "pause", "reset", "done")),
     "wheel": _row("hold", controls=dict({"items": ("list", 8)}, **_buttons("spin"))),
     "tally": _row("hold", {"label": ("text", 12)}, dict({"count": ("stepper", 0)}, **_buttons("add", "reset", "done"))),
+    "vfdstereo": _row("card", {"mode": ("choice", 3), "colors": ("choice", 3)}),
 }
 CATALOG_FIRMWARE = (0, 3, 1)   # the first firmware that carries the catalog's renderers u534
 BOARDS = ("s3", "p4")
