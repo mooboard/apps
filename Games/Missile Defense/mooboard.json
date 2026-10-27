@@ -2,32 +2,22 @@
   "format": 2,
   "id": "missile-command",
   "name": "Missile Defense",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "by": "mooboard",
-  "description": "Protect coastal cities from missiles.",
+  "description": "Protect three cities with interceptors and chain reactions.",
   "category": "Games",
-  "uses": "invaders",
-  "minFirmware": "0.3.1",
+  "uses": "missiledefense",
+  "minFirmware": "0.3.2",
   "settings": [
     {
       "key": "speed",
       "type": "choice",
-      "label": "Salvo pace",
+      "label": "Pace",
       "default": "Normal",
       "options": [
         "Slow",
         "Normal",
         "Fast"
-      ]
-    },
-    {
-      "key": "colors",
-      "type": "choice",
-      "label": "Color palette",
-      "default": "Neon",
-      "options": [
-        "Classic",
-        "Neon"
       ]
     }
   ]

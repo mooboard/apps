@@ -2,7 +2,7 @@
   "format": 2,
   "id": "minesweeper",
   "name": "Minesweeper",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "by": "mooboard",
   "description": "Autonomous logic solver clearing minefields cell by cell.",
   "category": "Games",

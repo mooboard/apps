@@ -2,7 +2,7 @@
   "format": 2,
   "id": "word-guess",
   "name": "Word Guess",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "by": "mooboard",
   "description": "Deducing secret five-letter words tile by tile.",
   "category": "Games",

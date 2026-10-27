@@ -2,12 +2,12 @@
   "format": 2,
   "id": "dino-run",
   "name": "Chrome Dino Runner",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "by": "mooboard",
-  "description": "Pixel desert runner jumping cacti and pterodactyls.",
+  "description": "A desert runner that jumps cacti and ducks under swooping birds.",
   "category": "Games",
-  "uses": "flappy",
-  "minFirmware": "0.3.1",
+  "uses": "dinorunner",
+  "minFirmware": "0.3.2",
   "settings": [
     {
       "key": "speed",

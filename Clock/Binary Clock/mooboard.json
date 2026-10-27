@@ -2,7 +2,7 @@
   "format": 2,
   "id": "binary-clock",
   "name": "Binary Clock",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "by": "mooboard",
   "description": "Matrix BCD binary dot clock with glowing phosphor columns.",
   "category": "Clock",
