@@ -1,0 +1,24 @@
+{
+  "format": 2,
+  "id": "bomberman",
+  "name": "Bomberman",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "Blast crates, chain bombs, defeat roaming enemies, and uncover the exit.",
+  "category": "Games",
+  "uses": "bomberman",
+  "minFirmware": "0.4.0",
+  "settings": [
+    {
+      "key": "speed",
+      "type": "choice",
+      "label": "Game speed",
+      "default": "Normal",
+      "options": [
+        "Slow",
+        "Normal",
+        "Fast"
+      ]
+    }
+  ]
+}

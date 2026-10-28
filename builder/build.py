@@ -53,7 +53,7 @@ CATALOG_USES = ("pong", "snake", "blocks", "maze", "aquarium", "lava", "aurora",
                 "aibrief", "aipet", "aiscene", "aiface",   # the ai apps u574 c3247
                 "flightglance",
                 "dinorunner", "missiledefense", "minesweeper", "wordguess",   # app-lab's games and ambiances c3506
-                "waterfall", "cybercity", "synthwave", "dune", "pacman")
+                "waterfall", "cybercity", "synthwave", "dune", "pacman", "frogger", "bomberman", "centipede")
 USES = ("prayer", "countdown", "sketch", "life", "plasma", "starfield", "fireplace") + CATALOG_USES   # the firmware's renderers (pw::AppRenderer), in its order
 SPEED = {"speed": ("choice", 3)}
 SPEED_COLORS = dict(SPEED, colors=("choice", 2))
@@ -137,6 +137,9 @@ RENDERER_KEYS = {
     "synthwave": _row("card", {"speed": ("choice", 3), "palette": ("choice", 3)}),
     "dune": _row("card", COLOR_SPEED),
     "pacman": _row("card", SPEED),
+    "frogger": _row("card", SPEED),
+    "bomberman": _row("card", SPEED),
+    "centipede": _row("card", SPEED),
 }
 CATALOG_FIRMWARE = (0, 3, 1)   # the first firmware that carries the catalog's renderers u534
 # a renderer added after the first catalog firmware and the firmware that first draws it u574 c3247
@@ -147,7 +150,7 @@ USES_FIRMWARE = {"vfdstereo": (0, 3, 2), "microracer": (0, 3, 2), "pixelpinball"
                  "dinorunner": (0, 3, 2),
                  # u643 c3588 + the app-lab review's fixes and word guess's hosted list come with 0.4.0
                  "missiledefense": (0, 4, 0), "minesweeper": (0, 4, 0), "wordguess": (0, 4, 0),
-                 "waterfall": (0, 3, 2), "cybercity": (0, 3, 2), "synthwave": (0, 3, 2), "dune": (0, 3, 2), "pacman": (0, 4, 0)}
+                 "waterfall": (0, 3, 2), "cybercity": (0, 3, 2), "synthwave": (0, 3, 2), "dune": (0, 3, 2), "pacman": (0, 4, 0), "frogger": (0, 4, 0), "bomberman": (0, 4, 0), "centipede": (0, 4, 0)}
 BOARDS = ("s3", "p4")
 BOARD_CAP = {"s3": 2 * 1024 * 1024, "p4": 8 * 1024 * 1024}
 ENTRY_CAP = 512 * 1024
