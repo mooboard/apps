@@ -125,7 +125,7 @@ RENDERER_KEYS = {
     "aiscene": _row("card", {"scene": ("text", 32), "style": ("choice", 3), "refresh": ("choice", 3)}, needs=("ai",)),
     "aiface": _row("card", {"describe": ("text", 32)}, needs=("clock",)),
     "flightglance": _row("card", {"radius": ("choice", 5), "units": ("choice", 2), "follow": ("text", 32),
-                                  "follow2": ("text", 32), "cycle": ("choice", 3), "layout": ("choice", 8),
+                                  "follow2": ("text", 32), "cycle": ("choice", 4), "layout": ("choice", 8),
                                   "quiet": ("choice", 4), "title": ("choice", 2)}),
     # app-lab's four games and four ambiances c3506 + their renderers only, no app of the catalog names them yet
     "dinorunner": _row("card", SPEED),

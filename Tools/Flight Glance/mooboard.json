@@ -2,9 +2,9 @@
   "format": 2,
   "id": "flight-glance",
   "name": "Flight Glance",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "by": "mooboard",
-  "description": "Flights, routes and radar. Data: adsb.lol (ODbL).",
+  "description": "Flights, airline logos, areas, and crew schedules. Data by adsb.lol (ODbL).",
   "category": "Tools",
   "uses": "flightglance",
   "minFirmware": "0.4.0",
@@ -52,6 +52,7 @@
       "label": "Time per aircraft",
       "default": "5 seconds",
       "options": [
+        "2 seconds",
         "3 seconds",
         "5 seconds",
         "8 seconds"
