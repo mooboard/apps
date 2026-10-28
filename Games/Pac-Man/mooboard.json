@@ -1,0 +1,20 @@
+{
+  "format": 2,
+  "id": "pacman",
+  "name": "Pac-Man",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "Chase pellets and dodge four ghosts through a maze that spells MOOBOARD.",
+  "category": "Games",
+  "uses": "pacman",
+  "minFirmware": "0.4.0",
+  "settings": [
+    {
+      "key": "speed",
+      "type": "choice",
+      "label": "Game speed",
+      "default": "Normal",
+      "options": ["Slow", "Normal", "Fast"]
+    }
+  ]
+}
