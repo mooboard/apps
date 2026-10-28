@@ -24,4 +24,4 @@ Routes come from [adsb.lol](https://api.adsb.lol/docs) standing data, are marked
 
 ## Data
 
-Positions come from [adsb.lol](https://www.adsb.lol/) under [ODbL 1.0](https://opendatacommons.org/licenses/odbl/1-0/). The app asks only while it is open or locked, so in the rotation it takes a turn only with flights from the last minute. Nearby mode asks every 15 seconds and followed aircraft one every 3 seconds. A refused or failed request rests a minute. Nearby mode sends the board's location to adsb.lol, and a logo request sends only the airline code. Needs mooboard 0.4.0 or later.
+Positions come from [adsb.lol](https://www.adsb.lol/) under [ODbL 1.0](https://opendatacommons.org/licenses/odbl/1-0/), through mooboard's server when it answers and straight from adsb.lol when it doesn't. The app asks only while it is on screen, starting a few seconds before its turn. A refused or failed request rests a minute. Nearby mode sends the board's location to mooboard's server and adsb.lol, and a logo request sends only the airline code. Needs mooboard 0.4.0 or later.
