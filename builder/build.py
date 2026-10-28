@@ -53,7 +53,7 @@ CATALOG_USES = ("pong", "snake", "blocks", "maze", "aquarium", "lava", "aurora",
                 "aibrief", "aipet", "aiscene", "aiface",   # the ai apps u574 c3247
                 "flightglance",
                 "dinorunner", "missiledefense", "minesweeper", "wordguess",   # app-lab's games and ambiances c3506
-                "waterfall", "cybercity", "synthwave", "dune", "pacman", "frogger", "bomberman", "centipede")
+                "waterfall", "cybercity", "synthwave", "dune", "pacman", "frogger", "bomberman", "centipede", "game")
 USES = ("prayer", "countdown", "sketch", "life", "plasma", "starfield", "fireplace") + CATALOG_USES   # the firmware's renderers (pw::AppRenderer), in its order
 SPEED = {"speed": ("choice", 3)}
 SPEED_COLORS = dict(SPEED, colors=("choice", 2))
@@ -140,6 +140,7 @@ RENDERER_KEYS = {
     "frogger": _row("card", SPEED),
     "bomberman": _row("card", SPEED),
     "centipede": _row("card", SPEED),
+    "game": _row("card", SPEED),
 }
 CATALOG_FIRMWARE = (0, 3, 1)   # the first firmware that carries the catalog's renderers u534
 # a renderer added after the first catalog firmware and the firmware that first draws it u574 c3247
@@ -150,7 +151,7 @@ USES_FIRMWARE = {"vfdstereo": (0, 3, 2), "microracer": (0, 3, 2), "pixelpinball"
                  "dinorunner": (0, 3, 2),
                  # u643 c3588 + the app-lab review's fixes and word guess's hosted list come with 0.4.0
                  "missiledefense": (0, 4, 0), "minesweeper": (0, 4, 0), "wordguess": (0, 4, 0),
-                 "waterfall": (0, 3, 2), "cybercity": (0, 3, 2), "synthwave": (0, 3, 2), "dune": (0, 3, 2), "pacman": (0, 4, 0), "frogger": (0, 4, 0), "bomberman": (0, 4, 0), "centipede": (0, 4, 0)}
+                 "waterfall": (0, 3, 2), "cybercity": (0, 3, 2), "synthwave": (0, 3, 2), "dune": (0, 3, 2), "pacman": (0, 4, 0), "frogger": (0, 4, 0), "bomberman": (0, 4, 0), "centipede": (0, 4, 0), "game": (0, 4, 1)}
 BOARDS = ("s3", "p4")
 BOARD_CAP = {"s3": 2 * 1024 * 1024, "p4": 8 * 1024 * 1024}
 ENTRY_CAP = 512 * 1024
@@ -585,12 +586,26 @@ LIST_KEEP = {"quotes": 2, "facts": 1}
 
 def package_data(uses, data):
     """data/ as the package carries it + a list cut to the fields the board shows"""
+    if uses == "game":
+        import game
+        return {"game.bin": game.compile_game(data["game.json"]) if "game.json" in data else game.validate_binary(data["game.bin"])}
     keep = LIST_KEEP.get(uses)
     if keep is None:
         return data
     items = json.loads(data["list.json"].decode("utf-8"))["items"]
     rows = ",\n".join(json.dumps(item[:keep], ensure_ascii=False) for item in items)
     return dict(data, **{"list.json": ('{"format": 1, "items": [\n%s\n]}\n' % rows).encode()})
+
+
+def check_game(data, where):
+    import game
+    if set(data) not in ({"game.json"}, {"game.bin"}):
+        raise Refused(where + ": a game needs data/game.json or data/game.bin alone")
+    try:
+        if "game.json" in data: game.compile_game(data["game.json"])
+        else: game.validate_binary(data["game.bin"])
+    except (ValueError, UnicodeError, TypeError) as e:
+        raise Refused(where + ": " + str(e)) from e
 
 
 LIST_CAP = 64 * 1024
@@ -601,7 +616,7 @@ USES_CHECKS.update({uses: check_no_data(uses) for uses in ("life", "plasma", "st
 USES_CHECKS.update({uses: check_no_data(uses) for uses in CATALOG_USES})
 USES_CHECKS.update({uses: check_list for uses in ("word", "quotes", "facts", "jokes")})   # u532 e7
 USES_CHECKS.update({"word": check_words, "quotes": check_quotes})   # c2948
-USES_CHECKS.update({"facts": check_facts, "jokes": check_jokes})   # c3135
+USES_CHECKS.update({"facts": check_facts, "jokes": check_jokes, "game": check_game})   # c3135
 
 
 def check_size(app_id, size, boards):
