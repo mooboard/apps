@@ -6,8 +6,10 @@ Apps for mooboard
 | --- |
 | Lifestyle |
 | Ambiance |
+| Clock Faces |
 | Games |
 | Tools |
+| AI |
 
 Install apps from your board's web app.
 From Home, tap Add.

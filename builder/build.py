@@ -35,7 +35,7 @@ def read_categories(root):
     if not names or len(set(names)) != len(names):
         raise SystemExit("categories.txt needs one name a line, none twice")
     for name in names:   # the board's own rule (pw_apps validCategory): a capital then letters, 1 to 24
-        if not re.fullmatch(r"[A-Z][A-Za-z]{0,23}", name):
+        if len(name)>24 or not re.fullmatch(r"[A-Z][A-Za-z]*(?: [A-Z][A-Za-z]*)*", name):
             raise SystemExit("categories.txt: %r is not a capital then letters, 24 at most" % name)
     return names
 
@@ -684,6 +684,16 @@ def write_zip(entries):
 def load_app(root, category, folder):
     where = "%s/%s" % (category, folder)
     base = os.path.join(root, category, folder)
+    try:
+        kind=json.loads(_read(os.path.join(base,"mooboard.json")))
+    except (OSError,ValueError):
+        kind=None
+    if isinstance(kind,dict) and kind.get("format")==3:
+        import importlib.util
+        import types
+        spec=importlib.util.spec_from_file_location("store_runtime",os.path.join(os.path.dirname(__file__),"runtime.py"))
+        runtime=importlib.util.module_from_spec(spec);spec.loader.exec_module(runtime)
+        return runtime.load(base,category,types.SimpleNamespace(CATEGORIES=CATEGORIES,Refused=Refused,USES=USES,check_icon=check_icon))
     for name in _visible(os.listdir(base)):
         if name not in REPO_ONLY + ("mooboard.json", "icon.png", "data", WORDS_FILE):
             raise Refused("%s/%s is not part of an app (mooboard.json, icon.png, data/, README.md, LICENSE)"
