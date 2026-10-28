@@ -2,12 +2,12 @@
   "format": 2,
   "id": "flight-glance",
   "name": "Flight Glance",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "by": "mooboard",
-  "description": "Live aircraft, callsigns and flight metrics. Data: adsb.lol (ODbL).",
+  "description": "Flights, routes and radar. Data: adsb.lol (ODbL).",
   "category": "Tools",
   "uses": "flightglance",
-  "minFirmware": "0.3.2",
+  "minFirmware": "0.4.0",
   "settings": [
     {
       "key": "radius",
@@ -61,10 +61,38 @@
       "key": "layout",
       "type": "choice",
       "label": "Layout",
-      "default": "Details",
+      "default": "All screens",
       "options": [
         "Details",
-        "Radar"
+        "Radar",
+        "All screens",
+        "Airline",
+        "Route",
+        "Progress",
+        "Instruments",
+        "Flight board"
+      ]
+    },
+    {
+      "key": "quiet",
+      "type": "choice",
+      "label": "When the sky is quiet",
+      "default": "Clock",
+      "options": [
+        "Clock",
+        "No flights",
+        "Dots",
+        "Blank"
+      ]
+    },
+    {
+      "key": "title",
+      "type": "choice",
+      "label": "Flight title",
+      "default": "Callsign",
+      "options": [
+        "Callsign",
+        "Tail number"
       ]
     }
   ]
