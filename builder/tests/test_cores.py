@@ -262,6 +262,65 @@ class Cores(unittest.TestCase):
             self.assertEqual(build.main(["--out", out, "--generated", LATER]), 1)
 
 
+class BuiltInCores(unittest.TestCase):
+    """the firmware's own cores (pw_apps Cores.h kBuiltInCores) + named with no .core and never in cores.json"""
+    def refused(self, edit, words):
+        tree = Tree(self)
+        edit(tree)
+        with self.assertRaises(build.Refused) as caught:
+            tree.build()
+        self.assertIn(words, str(caught.exception))
+        self.assertFalse(os.path.exists(os.path.join(tree.root, "dist")))
+
+    def test_the_builder_knows_the_firmwares_two(self):
+        self.assertEqual(build.BUILT_IN_CORES, {"font-nunito": "1.0.0", "font-product-sans": "1.0.0"})
+
+    def test_an_app_names_a_built_in_core_with_no_core_file(self):
+        tree = Tree(self)
+        uses(tree, {"font-nunito": "1.0.0", "font-product-sans": "1.0.0"})
+        out = tree.build()
+        row = load(out, "index2.json")["apps"][0]
+        # the row names them as the manifest does, which the board holds the two to (Package.cpp sameCores)
+        self.assertEqual(row["cores"], {"font-nunito": "1.0.0", "font-product-sans": "1.0.0"})
+        package = zipfile.ZipFile(os.path.join(out, row["file"]))
+        self.assertEqual(json.loads(package.read("mooboard.json"))["cores"], row["cores"])
+        self.assertEqual(load(out, "cores.json")["cores"], [])
+        self.assertEqual([n for n in os.listdir(out) if n.endswith(".core")], [])
+        self.assertEqual(load(out, "index.json")["apps"], [])   # older firmware never sees it
+
+    def test_a_built_in_core_beside_a_downloaded_one_leaves_cores_json_to_the_downloaded(self):
+        tree = Tree(self)
+        add_core(tree)
+        uses(tree, {"font-nunito": "1.0.0", "font-test": "1.0.0"})
+        out = tree.build()
+        self.assertEqual(load(out, "index2.json")["apps"][0]["cores"], {"font-nunito": "1.0.0", "font-test": "1.0.0"})
+        self.assertEqual([r["id"] for r in load(out, "cores.json")["cores"]], ["font-test"])
+        self.assertEqual(sorted(n for n in os.listdir(out) if n.endswith(".core")), ["font-test-1.0.0.core"])
+
+    def test_a_built_in_core_adds_nothing_to_the_size_check(self):
+        tree = Tree(self)
+        uses(tree, {"font-nunito": "1.0.0"})
+        out = tree.build()
+        size = os.path.getsize(os.path.join(out, load(out, "index2.json")["apps"][0]["file"]))
+        with unittest.mock.patch.dict(build.BOARD_CAP, s3=size):
+            tree.build(previous=None)
+
+    def test_a_built_in_core_above_the_firmwares_version_is_refused(self):
+        for least in ("1.0.1", "1.1.0", "2.0.0"):
+            self.refused(lambda tree, least=least: uses(tree, {"font-nunito": least}),
+                         "prayer: font-nunito is built into the firmware at 1.0.0, below the %s it names" % least)
+        self.refused(lambda tree: uses(tree, {"font-product-sans": "1.2.0"}),
+                     "font-product-sans is built into the firmware at 1.0.0")
+
+    def test_an_unknown_core_with_no_core_file_is_still_refused(self):
+        self.refused(lambda tree: uses(tree, {"font-nunito": "1.0.0", "font-other": "1.0.0"}),
+                     "prayer: cores.json has no font-other from 1.0.0 below 2.0.0")
+
+    def test_a_core_folder_for_a_built_in_id_is_refused(self):
+        self.refused(lambda tree: add_core(tree, core_json(id="font-nunito")),
+                     "Cores/font-nunito is built into the firmware and has no .core")
+
+
 class Signed(unittest.TestCase):
     def test_index2_and_cores_are_signed_with_the_catalogs_key(self):
         tree = Tree(self)

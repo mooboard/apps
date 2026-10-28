@@ -13,6 +13,7 @@ index2.sig and cores.sig the same over theirs. index.json is the legacy catalog 
 index2.json lists every app with its icon as a slice of icons2.bin (256 apps, 192 KB). A core is a shared data
 package (a font family) apps name in "cores"; Cores/<id>/ holds core.json and data/ and cores.json lists every
 version, the ones --previous-cores lists too, so older pins still resolve.
+The firmware carries font-nunito and font-product-sans (BUILT_IN_CORES), so an app names them with no .core.
 Python 3 standard library and the openssl command only.
 """
 import argparse
@@ -197,6 +198,11 @@ WORD = re.compile(r"[a-z]{5}")
 NOT_APPS = ("builder", "dist", "Seasonal", "Cores")
 # cores u652 + Cores/<id>/ is core.json and data/ + a core is never listed as an app and has no icon
 CORES_DIR = "Cores"
+# the cores the firmware carries, as pw_apps Cores.h kBuiltInCores lists them + an app names one with no .core at a
+# version it meets (its major, its version or lower) and cores.json never lists one + index2's row keeps it as the
+# manifest names it, since the board holds the two to the same cores (Package.cpp sameCores) and downloads nothing for
+# a built-in id (Cores.cpp planCores)
+BUILT_IN_CORES = {"font-nunito": "1.0.0", "font-product-sans": "1.0.0"}
 CORE_KEYS = ("format", "kind", "id", "version", "type", "minFirmware", "boards", "roles", "files")
 CORE_NEEDED = ("format", "kind", "id", "version", "type", "files")
 CORE_TYPES = ("font", "data")
@@ -920,6 +926,8 @@ def build_cores(root, previous=None, say=lambda line: None):
     for folder in _visible(os.listdir(top)) if os.path.isdir(top) else []:
         if not os.path.isdir(os.path.join(top, folder)):
             raise Refused("%s/%s is not a core folder" % (CORES_DIR, folder))
+        if folder in BUILT_IN_CORES:
+            raise Refused("%s/%s is built into the firmware and has no .core" % (CORES_DIR, folder))
         core, package = load_core(root, folder)
         name = "%s-%s.core" % (core["id"], core["version"])
         packages[name] = package
@@ -949,6 +957,12 @@ def resolve_cores(man, size, boards, cores):
     floor = firmware_floor(man.get("minFirmware", "0.0.0"))
     for core_id, least in sorted(man.get("cores", {}).items()):
         low = _semver(least)
+        if core_id in BUILT_IN_CORES:
+            have = BUILT_IN_CORES[core_id]
+            if low[0] != _semver(have)[0] or low > _semver(have):
+                raise Refused("%s: %s is built into the firmware at %s, below the %s it names"
+                              % (man["id"], core_id, have, least))
+            continue
         fits = [r for r in cores if r["id"] == core_id and low <= _semver(r["version"]) < (low[0] + 1, 0, 0)
                 and all(b in r["boards"] for b in boards) and firmware_floor(r["minFirmware"]) <= floor]
         if not fits:
