@@ -1,0 +1,20 @@
+{
+  "format": 1,
+  "kind": "core",
+  "id": "font-outfit",
+  "version": "1.0.0",
+  "type": "font",
+  "roles": {
+    "SfMedium": "data/outfit-medium.ttf",
+    "SfSemibold": "data/outfit-semibold.ttf",
+    "SfSemiboldClock": "data/outfit-semibold.ttf",
+    "SfrSemibold": "data/outfit-semibold.ttf",
+    "SfrBold": "data/outfit-bold.ttf"
+  },
+  "files": {
+    "data/OFL.txt": "c676351bf8576b9aba743cd5eaa8c0e7ee0d51f805d720447b4df4ddb6a2e416",
+    "data/outfit-bold.ttf": "8254b29538b63f47c6df8131044ea5536bd7bb5d3c76b705b7652a7acd8a7767",
+    "data/outfit-medium.ttf": "e98512f74bb860bd8ec5b6be1199d88dacd8235cd593d702f5df4d2be003f013",
+    "data/outfit-semibold.ttf": "7afdcf1f5342f372cd419f932b54dd21caa13746176c4b1066710eab800c9adc"
+  }
+}

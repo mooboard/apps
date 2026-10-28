@@ -1,0 +1,21 @@
+{
+  "format": 1,
+  "kind": "core",
+  "id": "font-inter",
+  "version": "1.0.0",
+  "type": "font",
+  "roles": {
+    "SfMedium": "data/inter-medium.ttf",
+    "SfSemibold": "data/inter-semibold.ttf",
+    "SfSemiboldClock": "data/inter-clock.ttf",
+    "SfrSemibold": "data/inter-semibold.ttf",
+    "SfrBold": "data/inter-bold.ttf"
+  },
+  "files": {
+    "data/OFL.txt": "5b9321a4298cfeb6b34354164a1c3afc3db114569984c502b9b35d988fd58c57",
+    "data/inter-bold.ttf": "53cf5992d14249602b37c6fa5b1e25c69c6c95afc3a642f673dcb9d7ee3fcc4a",
+    "data/inter-clock.ttf": "8a3a00dc4be7cb58605aeeac87fdd94049256c897f0d05d6d75edc71684b8d7e",
+    "data/inter-medium.ttf": "183f04873d09e3a3e4e1404c7a3cb076208fcae9d5ce3970b4e414a8f5b9f4f0",
+    "data/inter-semibold.ttf": "75f074f5114c9bb7a7f5035d78ed2d3567f66d27d04f161d6e6fde387a3f5791"
+  }
+}

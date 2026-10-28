@@ -1,0 +1,20 @@
+{
+  "format": 1,
+  "kind": "core",
+  "id": "font-figtree",
+  "version": "1.0.0",
+  "type": "font",
+  "roles": {
+    "SfMedium": "data/figtree-semibold.ttf",
+    "SfSemibold": "data/figtree-bold.ttf",
+    "SfSemiboldClock": "data/figtree-bold.ttf",
+    "SfrSemibold": "data/figtree-bold.ttf",
+    "SfrBold": "data/figtree-extrabold.ttf"
+  },
+  "files": {
+    "data/OFL.txt": "140d37233e7f3ce7313798befa9600893bcceaf41a55fa0fa5ad52f7f657a268",
+    "data/figtree-bold.ttf": "9dcb7c8bd7062e2dc422e7101714ef3d25e987bbc9664486e2c8ae2f88d94d71",
+    "data/figtree-extrabold.ttf": "97560c874a6bbebf7cc0569e09967c412cf492156201dd0ec4a36b2a8d31fbf9",
+    "data/figtree-semibold.ttf": "d1f593cf26a685d440108822f121522b5274eff83e48b38ed9dfccdf666417f8"
+  }
+}

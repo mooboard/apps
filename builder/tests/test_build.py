@@ -91,7 +91,7 @@ class Reproducible(unittest.TestCase):
         shutil.rmtree(first)
         second = tree.build()
         b = {name: read(os.path.join(second, name)) for name in os.listdir(second)}
-        self.assertEqual(sorted(a), ["index.json", "prayer-1.0.0.mooboard"])
+        self.assertEqual(sorted(a), ["cores.json", "icons2.bin", "index.json", "index2.json", "prayer-1.0.0.mooboard"])
         self.assertEqual(a, b)
 
     def test_files_written_in_another_order_same_bytes(self):
@@ -165,7 +165,8 @@ class Rules(unittest.TestCase):
         with self.assertRaises(build.Refused) as caught:
             build.build(tree.root, out, generated=GENERATED)
         self.assertIn(words, str(caught.exception))
-        self.assertFalse(os.path.exists(os.path.join(out, "index.json")))
+        for name in ("index.json", "index2.json", "icons2.bin", "cores.json"):
+            self.assertFalse(os.path.exists(os.path.join(out, name)))
 
     def replace(self, tree, man=None, data=None, icon=None, folder="Prayer", category="Lifestyle"):
         shutil.rmtree(os.path.join(tree.root, "Lifestyle"))
@@ -340,7 +341,7 @@ class Catalog(unittest.TestCase):
     def test_every_catalog_renderer_is_known(self):
         # both waves u517 u532 and the ai apps u574 + a card takes its turn a hold holds the panel and ok to wake does both
         # e6
-        self.assertEqual(len(build.CATALOG_USES), 50)   # + flight glance and app-lab's eight
+        self.assertEqual(len(build.CATALOG_USES), 51)   # + flight glance, app-lab's eight, and the game vm u653
         self.assertEqual(list(build.RENDERER_KEYS), list(build.CATALOG_USES))
         self.assertEqual(build.USES[7:], build.CATALOG_USES)
         kinds = {uses: row["kind"] for uses, row in build.RENDERER_KEYS.items()}

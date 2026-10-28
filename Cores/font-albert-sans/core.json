@@ -1,0 +1,20 @@
+{
+  "format": 1,
+  "kind": "core",
+  "id": "font-albert-sans",
+  "version": "1.0.0",
+  "type": "font",
+  "roles": {
+    "SfMedium": "data/albert-semibold.ttf",
+    "SfSemibold": "data/albert-bold.ttf",
+    "SfSemiboldClock": "data/albert-bold.ttf",
+    "SfrSemibold": "data/albert-bold.ttf",
+    "SfrBold": "data/albert-extrabold.ttf"
+  },
+  "files": {
+    "data/OFL.txt": "5c856c086e8743b84932aae46ced424729a703932b601e9eb8aaeac15a617ec6",
+    "data/albert-bold.ttf": "6f90dc6d60e510db6fdbf9de920852511866b9bb9966bef69141e9b16186cebf",
+    "data/albert-extrabold.ttf": "fdac8d64eddb997628b91595766b6cf69db5897adfe5805bab344469dd10b5bf",
+    "data/albert-semibold.ttf": "facbf8ccd1ac8152a2281e54547c7108f7aa9da503f2994ed92d0de90b3ad90c"
+  }
+}
