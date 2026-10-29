@@ -1,0 +1,4 @@
+[
+  {"version": "1.1", "date": "2026-10-27", "notes": "Rebuilt with ten mines in a 16 by 4 field and a safe first cell. Play it with the game pad on your phone, A to open and B to flag."},
+  {"version": "1.0", "date": "2026-10-26", "notes": "First release. The classic logic puzzle, a minefield cleared cell by cell."}
+]
