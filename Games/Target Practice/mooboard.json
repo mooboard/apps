@@ -4,7 +4,7 @@
   "name": "Target Practice",
   "version": "1.0.0",
   "by": "mooboard",
-  "description": "Track a moving target and time your shots before three misses.",
+  "description": "A cosmic shooting gallery: chain saucer hits for bonuses before three misses.",
   "category": "Games",
   "uses": "game",
   "minFirmware": "0.4.1",

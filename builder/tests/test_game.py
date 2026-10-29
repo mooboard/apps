@@ -25,7 +25,7 @@ class GameCompiler(unittest.TestCase):
         self.assertEqual(game.validate_binary(a), a)
 
     def test_examples_use_exactly_the_same_renderer(self):
-        for name in ("Pixel Rally", "Target Practice"):
+        for name in ("Pixel Rally", "Target Practice", "Jetpack Run"):
             row = build.load_app(str(ROOT), "Games", name)
             self.assertEqual(row[0]["uses"], "game")
             self.assertEqual(row[0]["minFirmware"], "0.4.1")

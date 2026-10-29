@@ -43,12 +43,14 @@ def hud(a, score, lives):
     a.digits(3, 1, ("m", score))
     a.put(17, 0).label("hearts").put(18, ("m", lives)).op("lt", 19, 17, 18).op("jz", 19, "hearts_done")
     a.put(18, 5).op("mul", 18, 17, 18).put(19, 104).op("add", 18, 18, 19)
-    a.rect(("r", 18), 2, 3, 3, 1).put(18, 1).op("add", 17, 17, 18).op("jump", "hearts")
+    a.rect(("r", 18), 2, 3, 1, 2).rect(("r", 18), 3, 3, 1, 2)
+    a.put(19, 1).op("add", 18, 18, 19).rect(("r", 18), 4, 1, 1, 2)
+    a.put(18, 1).op("add", 17, 17, 18).op("jump", "hearts")
     a.label("hearts_done")
 
 
 def rally():
-    memory = [1, 1160, 0, 0, 3, 0, 0, 1, 0, 0, 0, 0]
+    memory = [1, 1160, 0, 0, 3, 0, 0, 0, 0, 100, 0, 0]
     init = Assembly(); reset(init, memory)
     s = Assembly(); pause_logic(s, memory, 8)
     s.add(10, 1).branch(6, "eq", 0, "flash_done").add(6, -1).label("flash_done")
@@ -58,39 +60,52 @@ def rally():
     s.label("down").put(1, 2).op("and", 2, 0, 1).op("jz", 2, "traffic").branch(0, "eq", 2, "traffic").add(0, 1).set(5, 9)
     s.label("traffic").op("setting", 0, 0).put(1, 2).op("mul", 0, 0, 1).put(1, 6).op("add", 0, 0, 1)
     s.op("load", 1, 1).op("sub", 1, 1, 0).op("store", 1, 1)
-    s.op("input", 0, 0).put(1, 16).op("and", 0, 0, 1).op("jz", 0, "hitcheck").add(1, -4)
+    s.op("input", 0, 0).put(1, 16).op("and", 0, 0, 1).op("jz", 0, "recharge")
+    s.branch(9, "eq", 0, "hitcheck").add(9, -1).add(1, -8).op("jump", "hitcheck")
+    s.label("recharge").branch(9, "eq", 100, "hitcheck").add(9, 1)
     s.label("hitcheck").branch(1, "lt", -80, "pass").branch(1, "lt", 100, "done").branch(1, "lt", 260, "lanecheck").op("jump", "done")
     s.label("lanecheck").op("load", 0, 0).op("load", 1, 2).op("eq", 0, 0, 1).op("jz", 0, "done")
-    s.add(4, -1).set(6, 18).branch(4, "eq", 0, "gameover").op("jump", "spawn")
-    s.label("pass").add(3, 10).label("spawn")
+    s.add(4, -1).set(7, 0).set(6, 18).branch(4, "eq", 0, "gameover").op("jump", "spawn")
+    s.label("pass").add(3, 10).branch(7, "lt", 5, "combo_up").op("jump", "combo_score")
+    s.label("combo_up").add(7, 1).label("combo_score").add(3, ("m", 7)).label("spawn")
     s.put(0, 350).op("random", 0, 0).put(1, 1280).op("add", 0, 0, 1).op("store", 0, 1)
-    s.put(0, 3).op("random", 0, 0).op("store", 0, 2).op("jump", "done")
+    s.put(0, 3).op("random", 0, 0).op("store", 0, 2).put(0, 2).op("random", 0, 0).op("store", 0, 11).op("jump", "done")
     s.label("gameover").set(8, 100).label("done").op("halt")
     d = Assembly().put(0, 0).op("clear", 0).rect(1, 7, 126, 24, 4)
+    d.rect(1, 7, 126, 1, 7).rect(1, 30, 126, 1, 7)
+    d.put(16, ("m", 10)).put(17, 3).op("div", 16, 16, 17).put(17, 24).op("mod", 16, 16, 17).put(17, 24).op("sub", 16, 17, 16)
+    for i in range(6):
+        d.rect(("r", 16), 8, 5, 1, 1).rect(("r", 16), 29, 5, 1, 2).put(17, 24).op("add", 16, 16, 17)
     d.put(17, 0).label("dashes").put(18, 10).op("lt", 19, 17, 18).op("jz", 19, "dashes_done")
     d.put(18, 14).op("mul", 18, 17, 18).put(19, ("m", 10)).put(16, 14).op("mod", 19, 19, 16).op("sub", 18, 18, 19)
     d.rect(("r", 18), 15, 5, 1, 6).rect(("r", 18), 23, 5, 1, 6)
     d.put(18, 1).op("add", 17, 17, 18).op("jump", "dashes").label("dashes_done")
     d.put(16, ("m", 1)).put(17, 10).op("div", 16, 16, 17)
-    d.put(18, ("m", 2)).put(17, 8).op("mul", 18, 18, 17).op("add", 18, 18, 17).sprite(("r", 16), ("r", 18), 1)
+    d.put(18, ("m", 2)).put(17, 8).op("mul", 18, 18, 17).op("add", 18, 18, 17).branch(11, "eq", 0, "sedan").sprite(("r", 16), ("r", 18), 2).op("jump", "traffic_drawn")
+    d.label("sedan").sprite(("r", 16), ("r", 18), 1).label("traffic_drawn")
     d.put(18, ("m", 0)).put(17, 8).op("mul", 18, 18, 17).op("add", 18, 18, 17).sprite(16, ("r", 18), 0)
+    d.op("input", 17, 0).put(19, 16).op("and", 17, 17, 19).op("jz", 17, "no_flame").branch(9, "eq", 0, "no_flame")
+    d.rect(10, ("r", 18), 5, 2, 3).label("no_flame")
+    d.put(18, ("m", 9)).put(17, 5).op("div", 18, 18, 17).rect(51, 2, ("r", 18), 2, 1)
+    d.put(18, ("m", 7)).put(17, 2).op("mul", 18, 18, 17).rect(77, 2, ("r", 18), 2, 3)
     hud(d, 3, 4)
     d.branch(8, "eq", 0, "done").rect(54, 2, 20, 3, 2).label("done").op("halt")
     auto = Assembly().put(0, 0)
-    auto.branch(1, "lt", 600, "near").op("halt").label("near")
+    auto.branch(1, "lt", 600, "near").branch(9, "lt", 60, "done").put(0, 16).op("halt").label("near")
     auto.put(1, ("m", 0)).put(2, ("m", 2)).op("eq", 1, 1, 2).op("jz", 1, "done")
     auto.branch(0, "eq", 0, "down").put(0, 1).op("halt").label("down").put(0, 2).label("done").op("halt")
-    sprites = [["00111100","01155110","11111111","10111101","10111101","11111111","01155110","00111100"],
-               ["00222200","02255220","22222222","20222202","20222202","22222222","02255220","00222200"]]
+    sprites = [["00000000","00111000","01155100","11111111","15511151","11111111","05000500","00000000"],
+               ["00000000","00222000","02255200","22222222","25522252","22222222","05000500","00000000"],
+               ["00000000","77772220","75572220","77772222","77772222","77772222","05000500","00000000"]]
     return {"abi": 1, "palette": PALETTE, "sprites": sprites, "memory": memory,
             "init": init.code, "step": s.code, "draw": d.code, "auto": auto.code}
 
 
 def target():
-    memory = [640, 300, 1, 0, -1, 0, 3, 0, 1, 0, 0, 0]
+    memory = [640, 300, 1, 0, -1, 0, 3, 0, 1, 0, 0, 0, 0, 0, 0]
     init = Assembly(); reset(init, memory)
     s = Assembly(); pause_logic(s, memory, 9)
-    s.add(10, 1).op("input", 0, 0).op("input", 1, 1).op("or", 0, 0, 1)
+    s.add(10, 1).branch(13, "eq", 0, "flash_done").add(13, -1).label("flash_done").op("input", 0, 0).op("input", 1, 1).op("or", 0, 0, 1)
     s.put(1, 4).op("and", 2, 0, 1).op("jz", 2, "right").add(0, -8)
     s.label("right").put(1, 8).op("and", 2, 0, 1).op("jz", 2, "bounds").add(0, 8)
     s.label("bounds").branch(0, "lt", 30, "leftedge").branch(0, "lt", 1240, "target").set(0, 1240).op("jump", "target")
@@ -107,22 +122,31 @@ def target():
     s.branch(4, "lt", 70, "miss").branch(4, "lt", 135, "collision").op("jump", "done")
     s.label("collision").put(0, ("m", 3)).put(1, ("m", 1)).op("sub", 0, 0, 1)
     s.put(1, -65).op("lt", 2, 0, 1).op("jnz", 2, "done").put(1, 65).op("lt", 2, 0, 1).op("jz", 2, "done")
-    s.add(5, 100).set(4, -1).put(0, 800).op("random", 0, 0).put(1, 200).op("add", 0, 0, 1).op("store", 0, 1).op("jump", "done")
-    s.label("miss").set(4, -1).add(6, -1).branch(6, "eq", 0, "gameover").op("jump", "done")
+    s.add(5, 100).add(12, 1).branch(12, "lt", 11, "combo_ok").set(12, 10).label("combo_ok")
+    s.put(0, ("m", 12)).put(1, 10).op("mul", 0, 0, 1).add(5, ("r", 0)).set(13, 12).set(14, ("m", 1)).set(4, -1).put(0, 800).op("random", 0, 0).put(1, 200).op("add", 0, 0, 1).op("store", 0, 1).op("jump", "done")
+    s.label("miss").set(4, -1).set(12, 0).add(6, -1).branch(6, "eq", 0, "gameover").op("jump", "done")
     s.label("gameover").set(9, 100).label("done").op("halt")
     d = Assembly().put(0, 0).op("clear", 0).rect(1, 23, 126, 8, 4)
+    for i in range(18):
+        d.rect(3+i*37%122, 8+i*11%14, 1, 1, 4 if i%3 else 6)
+    for i in range(9):
+        d.rect(2+i*15, 30, 8, 1, 6)
+    d.branch(13, "eq", 0, "no_impact").put(16, ("m", 14)).put(17, 10).op("div", 16, 16, 17)
+    d.put(17, 5).op("sub", 16, 16, 17).rect(("r", 16), 9, 2, 1, 3).rect(("r", 16), 14, 2, 1, 2)
+    d.put(17, 9).op("add", 16, 16, 17).rect(("r", 16), 8, 2, 1, 2).rect(("r", 16), 14, 2, 1, 3).label("no_impact")
     d.put(16, ("m", 1)).put(17, 10).op("div", 16, 16, 17).put(17, 3).op("sub", 16, 16, 17).sprite(("r", 16), 7, 0)
     d.put(16, ("m", 0)).put(17, 10).op("div", 16, 16, 17).put(17, 3).op("sub", 16, 16, 17).sprite(("r", 16), 23, 1)
     d.branch(4, "eq", -1, "hud")
     d.put(16, ("m", 3)).put(17, 10).op("div", 16, 16, 17).put(18, ("m", 4)).op("div", 18, 18, 17).rect(("r", 16), ("r", 18), 1, 3, 3)
-    d.label("hud"); hud(d, 5, 6)
+    d.label("hud").put(18, ("m", 12)).put(17, 2).op("mul", 18, 18, 17).rect(66, 2, ("r", 18), 2, 7)
+    hud(d, 5, 6)
     d.branch(9, "eq", 0, "done").rect(54, 2, 20, 3, 2).label("done").op("halt")
     auto = Assembly().put(0, 0).put(1, ("m", 2)).put(2, 90).op("mul", 1, 1, 2).put(2, ("m", 1)).op("add", 1, 1, 2)
     auto.put(2, ("m", 0)).op("sub", 1, 1, 2).put(2, -8).op("lt", 3, 1, 2).op("jz", 3, "right").put(0, 4).op("jump", "fire")
     auto.label("right").put(2, 8).op("lt", 3, 2, 1).op("jz", 3, "fire").put(0, 8)
     auto.label("fire").put(2, -40).op("lt", 3, 1, 2).op("jnz", 3, "done").put(2, 40).op("lt", 3, 1, 2).op("jz", 3, "done")
     auto.put(2, 16).op("or", 0, 0, 2).label("done").op("halt")
-    sprites = [["00777700","07755770","77533577","77533577","07755770","00777700","00000000","00000000"],
+    sprites = [["00077000","00755700","07755770","77777777","00300300","00000000","00000000","00000000"],
                ["00011000","00111100","01111110","11155111","01111110","00000000","00000000","00000000"]]
     return {"abi": 1, "palette": PALETTE, "sprites": sprites, "memory": memory,
             "init": init.code, "step": s.code, "draw": d.code, "auto": auto.code}
@@ -132,8 +156,8 @@ def main():
     from PIL import Image, ImageDraw
     root = Path(__file__).resolve().parents[2]
     for name, key, description, source in (
-        ("Pixel Rally", "pixel-rally", "Dodge traffic, change lanes, and hold A for turbo.", rally()),
-        ("Target Practice", "target-practice", "Track a moving target and time your shots before three misses.", target()),
+        ("Pixel Rally", "pixel-rally", "Race neon lanes, dodge traffic, chain passes, and manage your A-button nitro.", rally()),
+        ("Target Practice", "target-practice", "A cosmic shooting gallery: chain saucer hits for bonuses before three misses.", target()),
     ):
         path = root / "Games" / name; (path / "data").mkdir(parents=True, exist_ok=True)
         manifest = {"format": 2, "id": key, "name": name, "version": "1.0.0", "by": "mooboard", "description": description,

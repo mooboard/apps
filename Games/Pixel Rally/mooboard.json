@@ -4,7 +4,7 @@
   "name": "Pixel Rally",
   "version": "1.0.0",
   "by": "mooboard",
-  "description": "Dodge traffic, change lanes, and hold A for turbo.",
+  "description": "Race neon lanes, dodge traffic, chain passes, and manage your A-button nitro.",
   "category": "Games",
   "uses": "game",
   "minFirmware": "0.4.1",
