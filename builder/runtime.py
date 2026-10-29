@@ -22,7 +22,7 @@ def _plain(value):
     if isinstance(value,dict):return all(_plain(k) and _plain(v) for k,v in value.items())
     return True
 
-ORDER = ('format', 'id', 'name', 'version', 'by', 'description', 'category', 'runtime', 'minFirmware', 'boards', 'settings', 'controls', 'sources')
+ORDER = ('format', 'id', 'name', 'version', 'by', 'description', 'category', 'runtime', 'font', 'minFirmware', 'boards', 'settings', 'controls', 'sources')
 SETTING_ORDER = ('key', 'type', 'label', 'default', 'max', 'options')
 CONTROL_ORDER = ('key', 'type', 'label', 'arg', 'min', 'max', 'chars', 'add')
 SOURCE_ORDER = ('key', 'url', 'refresh', 'headers')
@@ -36,7 +36,7 @@ def text(value, maximum):
 
 def unique(pairs):
     result = {}
-    for (key, value) in pairs:
+    for key, value in pairs:
         if key in result:
             raise package.Refused('Duplicate manifest field: ' + key)
         result[key] = value
@@ -52,11 +52,12 @@ def check(man):
     refuse(type(man.get('format')) is not int or man['format'] != 3, 'A custom live app uses format 3')
     refuse(not isinstance(man.get('id'), str) or not re.fullmatch('[a-z0-9-]{3,32}', man['id']), 'App id must be 3 to 32 letters, numbers and hyphens')
     refuse(man['id'] in package.RESERVED_IDS, 'Choose your own app id')
-    for (field, limit) in (('name', 24), ('by', 32), ('description', 160)):
+    for field, limit in (('name', 24), ('by', 32), ('description', 160)):
         refuse(not text(man.get(field), limit), '%s must be 1 to %d plain characters' % (field, limit))
     for field in ('version', 'minFirmware'):
         refuse(not isinstance(man.get(field), str) or not VERSION.fullmatch(man[field]), field + ' must be a semantic version')
     refuse(man.get('runtime') != 'lua54', 'The live runtime is lua54')
+    refuse('font' in man and (not (isinstance(man['font'], str) and re.fullmatch('[a-z0-9-]{1,32}', man['font']))), 'font is a family name such as inter')
     refuse(man.get('category') not in categories(), 'Use a current store category: ' + ', '.join(categories()))
     boards = man.get('boards', ['s3', 'p4'])
     refuse(boards not in (['s3'], ['p4'], ['s3', 'p4']), 'Boards must be s3, p4, or both in that order')
@@ -65,7 +66,7 @@ def check(man):
     seen = set()
     for setting in settings:
         refuse(not isinstance(setting, dict) or set(setting) - set(SETTING_ORDER), 'Invalid setting fields')
-        (key, kind, default) = (setting.get('key'), setting.get('type'), setting.get('default'))
+        key, kind, default = (setting.get('key'), setting.get('type'), setting.get('default'))
         refuse(not isinstance(key, str) or not KEY.fullmatch(key) or key in seen, 'Setting keys must be unique')
         seen.add(key)
         refuse(not text(setting.get('label'), 24), 'A setting needs a label of at most 24 characters')
@@ -89,7 +90,7 @@ def check(man):
     seen_controls = set()
     for control in controls:
         refuse(not isinstance(control, dict) or set(control) - set(CONTROL_ORDER), 'Invalid control fields')
-        (key, kind) = (control.get('key'), control.get('type'))
+        key, kind = (control.get('key'), control.get('type'))
         refuse(not isinstance(key, str) or not KEY.fullmatch(key) or key in seen_controls, 'Control keys must be unique')
         seen_controls.add(key)
         refuse(kind not in ('button', 'stepper', 'readout', 'list'), 'Unknown control type')
@@ -99,7 +100,7 @@ def check(man):
         for field in re.findall('\\{([^{}]+)\\}', control['label']):
             refuse(not any((s['key'] == field and s['type'] == 'text' for s in settings)), 'Control labels refer only to text settings')
         if kind == 'stepper':
-            (low, high) = (control.get('min'), control.get('max'))
+            low, high = (control.get('min'), control.get('max'))
             refuse(type(low) is not int or type(high) is not int or (not -99999 <= low < high <= 99999), 'A stepper needs min and max')
         if kind == 'button' and 'arg' in control:
             refuse(type(control['arg']) is not int or not 0 <= control['arg'] <= 86400, 'Button arg must be 0 to 86400')
@@ -110,11 +111,11 @@ def check(man):
     seen_sources = set()
     for source in sources:
         refuse(not isinstance(source, dict) or set(source) - set(SOURCE_ORDER), 'Invalid source fields')
-        (key, url, refresh) = (source.get('key'), source.get('url'), source.get('refresh'))
+        key, url, refresh = (source.get('key'), source.get('url'), source.get('refresh'))
         refuse(not isinstance(key, str) or not KEY.fullmatch(key) or key in seen_sources, 'Data source keys must be unique')
         seen_sources.add(key)
         refuse(not isinstance(url, str) or not 1 <= len(url) <= 512 or (not package._plain(url)), 'A source needs a URL or a setting placeholder')
-        for (group, field) in TOKEN.findall(url):
+        for group, field in TOKEN.findall(url):
             refuse(group != 'settings' or field not in seen, 'Source URLs may refer only to declared settings')
         sample = TOKEN.sub('sample', url)
         refuse('{' in sample or '}' in sample, 'Invalid source URL placeholder')
@@ -122,11 +123,11 @@ def check(man):
         refuse(type(refresh) is not int or not 15 <= refresh <= 86400, 'Source refresh must be 15 to 86400 seconds')
         headers = source.get('headers', {})
         refuse(not isinstance(headers, dict) or len(headers) > 4, 'A source has at most 4 headers')
-        for (key, value) in headers.items():
+        for key, value in headers.items():
             refuse(not re.fullmatch('[A-Za-z][A-Za-z0-9-]{0,47}', key) or key.lower() in ('host', 'content-length', 'connection', 'cookie'), 'Unsupported source header')
             refuse(not isinstance(value, str) or len(value) > 512 or (not package._plain(value)), 'Invalid source header value')
             refuse(not TOKEN.search(value), 'Put API credentials in local secrets, never in the package')
-            for (group, field) in TOKEN.findall(value):
+            for group, field in TOKEN.findall(value):
                 refuse(group == 'settings' and field not in seen, 'Header settings must be declared')
             sample = TOKEN.sub('sample', value)
             refuse('{' in sample or '}' in sample, 'Invalid source header placeholder')
@@ -134,16 +135,16 @@ def check(man):
 
 def canonical(man):
     result = {key: man[key] for key in ORDER if key in man}
-    for (field, order) in (('settings', SETTING_ORDER), ('controls', CONTROL_ORDER), ('sources', SOURCE_ORDER)):
+    for field, order in (('settings', SETTING_ORDER), ('controls', CONTROL_ORDER), ('sources', SOURCE_ORDER)):
         if field in result:
             result[field] = [{key: item[key] for key in order if key in item} for item in result[field]]
     return (json.dumps(result, ensure_ascii=False, indent=2) + '\n').encode('utf-8')
 
 def zip_bytes(entries):
-    (local, central) = (bytearray(), bytearray())
-    for (name, body) in entries:
+    local, central = (bytearray(), bytearray())
+    for name, body in entries:
         encoded = name.encode('ascii')
-        (crc, size, offset) = (zlib.crc32(body), len(body), len(local))
+        crc, size, offset = (zlib.crc32(body), len(body), len(local))
         local.extend(struct.pack('<I5H3I2H', 67324752, 10, 0, 0, 0, 33, crc, size, size, len(encoded), 0) + encoded + body)
         central.extend(struct.pack('<I6H3I5H2I', 33639248, 788, 10, 0, 0, 0, 33, crc, size, size, len(encoded), 0, 0, 0, 0, 33188 << 16, offset) + encoded)
     return bytes(local + central + struct.pack('<I4H2IH', 101010256, 0, 0, len(entries), len(entries), len(central), len(local), 0))
