@@ -3,7 +3,7 @@
 core in Cores/ as <id>-<version>.core with cores.json and, with --key, index.sig, index2.sig and cores.sig.
 
 Usage: python3 builder/build.py [--out DIR] [--key PEM] [--generated YYYY-MM-DDTHH:MM:SSZ] [--previous INDEX]
-                               [--previous-cores CORES] [--openssl PATH]
+                               [--previous-cores CORES] [--openssl PATH] [--floor VERSION]
 
 Apps live in <Category>/<App>/: mooboard.json (package format 2), icon.png (32x32), README.md, LICENSE,
 data/ and, for Word Guess, words.txt (its guess list, kept beside the package as <id>-<version>.words). A package is a ZIP of stored entries with fixed headers and times, in a fixed order (mooboard.json,
@@ -15,6 +15,9 @@ as a second slice, "led", when it has one. A core is a shared data
 package (a font family) apps name in "cores"; Cores/<id>/ holds core.json and data/ and cores.json lists every
 version, the ones --previous-cores lists too, so older pins still resolve.
 The firmware carries font-nunito and font-product-sans (BUILT_IN_CORES), so an app names them with no .core.
+--floor VERSION, a public release (X.Y.Z, X.Y.Z-alpha, or X.Y.Z-beta), raises every app whose minFirmware is an
+internal build (X.Y.Z-alpha.N or X.Y.Z-beta.N) below it to VERSION in its package and its rows; the manifests in git
+stay as they are and every other minimum is left alone.
 Python 3 standard library and the openssl command only.
 """
 import argparse
@@ -277,6 +280,31 @@ def firmware_floor(text):
     if match.group(4) is None:
         return head + (-1, 0)
     return head + (STAGES.index(match.group(4)), int(match.group(5)) if match.group(5) else 1 << 32)
+
+
+def internal(text):
+    """an internal prototype build's version, X.Y.Z-alpha.N or X.Y.Z-beta.N + no board outside the owner's runs one"""
+    match = FIRMWARE.fullmatch(text)
+    return match is not None and match.group(5) is not None
+
+
+def order(text):
+    """a version as a key in pw_ota's order X.Y.Z-alpha.N < X.Y.Z-alpha < X.Y.Z-beta.N < X.Y.Z-beta < X.Y.Z"""
+    match = FIRMWARE.fullmatch(text)
+    if match is None:
+        raise ValueError(text)
+    head = tuple(int(n) for n in match.group(1, 2, 3))
+    if match.group(4) is None:
+        return head + (len(STAGES), 0)
+    return head + (STAGES.index(match.group(4)), int(match.group(5)) if match.group(5) else 1 << 32)
+
+
+def raised(least, floor):
+    """--floor + an internal build's minimum under the public release `floor` becomes `floor`, so a store published
+    with a release asks for that release and never for a .N build no one has + any other minimum stays"""
+    if floor is None or not internal(least) or order(least) >= order(floor):
+        return least
+    return floor
 
 
 def _firmware(version):
@@ -805,7 +833,9 @@ def write_zip(entries):
     return bytes(local + central + end)
 
 
-def load_app(root, category, folder):
+def load_app(root, category, folder, floor=None):
+    """the app's manifest, icon, package, boards, entry count, and words + --floor raises its minimum first, so its
+    packaged mooboard.json and its rows agree as Package.cpp holds them"""
     where = "%s/%s" % (category, folder)
     base = os.path.join(root, category, folder)
     try:
@@ -817,7 +847,8 @@ def load_app(root, category, folder):
         import types
         spec=importlib.util.spec_from_file_location("store_runtime",os.path.join(os.path.dirname(__file__),"runtime.py"))
         runtime=importlib.util.module_from_spec(spec);spec.loader.exec_module(runtime)
-        loaded=runtime.load(base,category,types.SimpleNamespace(CATEGORIES=CATEGORIES,Refused=Refused,USES=USES,check_icon=check_icon))
+        loaded=runtime.load(base,category,types.SimpleNamespace(CATEGORIES=CATEGORIES,Refused=Refused,USES=USES,check_icon=check_icon,
+                                                                floor=lambda least: raised(least, floor)))
         least=loaded[0]["minFirmware"]
         if not FIRMWARE.fullmatch(least) or firmware_floor(least) < firmware_floor(RUNTIME_FIRMWARE):   # u653
             raise Refused("%s: a lua app needs minFirmware %s or later" % (where, RUNTIME_FIRMWARE))
@@ -830,6 +861,8 @@ def load_app(root, category, folder):
         if not os.path.isfile(os.path.join(base, name)):
             raise Refused("%s/%s is missing" % (where, name))
     man = check_manifest(_read(os.path.join(base, "mooboard.json")), category, folder)
+    if "minFirmware" in man:
+        man["minFirmware"] = raised(man["minFirmware"], floor)
     words = None
     if os.path.isfile(os.path.join(base, WORDS_FILE)):
         if man["uses"] not in WORDS_USES:
@@ -1121,8 +1154,15 @@ def check_generated(generated, previous=None, now=None):
 SIGNED = (("index.json", "index.sig"), ("index2.json", "index2.sig"), ("cores.json", "cores.sig"))
 
 
+def check_floor(floor):
+    """--floor names a public release, X.Y.Z, X.Y.Z-alpha, or X.Y.Z-beta"""
+    if floor is not None and (not FIRMWARE.fullmatch(floor) or internal(floor)):
+        raise Refused("--floor must be a public release, X.Y.Z, X.Y.Z-alpha, or X.Y.Z-beta")
+
+
 def build(root, out, generated=None, key=None, openssl="openssl", say=lambda line: None, previous=None, now=None,
-          previous_cores=None):
+          previous_cores=None, floor=None):
+    check_floor(floor)
     generated = generated or default_generated()
     if not STAMP.fullmatch(generated):
         raise Refused("--generated must be YYYY-MM-DDTHH:MM:SSZ")
@@ -1131,7 +1171,7 @@ def build(root, out, generated=None, key=None, openssl="openssl", say=lambda lin
     rows, rows2, icons2, seen, listed_apps = [], [], bytearray(), set(), {}
     for category, folder in find_apps(root):
         try:
-            man, icon, package, boards, count, words = load_app(root, category, folder)
+            man, icon, package, boards, count, words = load_app(root, category, folder, floor)
         except Skipped as skipped:
             say("skipped %s" % skipped)
             continue
@@ -1168,6 +1208,9 @@ def build(root, out, generated=None, key=None, openssl="openssl", say=lambda lin
             icons2 += led
         rows2.append(row)
         say("%s/%s: %s, %d bytes, %d entries" % (category, folder, name, len(package), count))
+        least = json.loads(_read(os.path.join(root, category, folder, "mooboard.json"))).get("minFirmware")
+        if least is not None and least != man.get("minFirmware"):
+            say("floor: %s %s from %s to %s" % (man["name"], man["version"], least, man["minFirmware"]))
     import seasonal
     events, event_packages = seasonal.build_events(root, generated, say)
     for row in events:
@@ -1247,6 +1290,8 @@ def main(argv=None):
     parser.add_argument("--previous-cores", help="the live catalog's cores.json (default: the one beside the previous "
                                                  "index); its earlier core versions stay listed")
     parser.add_argument("--openssl", default="openssl")
+    parser.add_argument("--floor", metavar="VERSION", help="a public release; every app whose minFirmware is an "
+                                                          "internal build (.N) below it asks for it instead")
     parser.add_argument("--listings", action="store_true", help="write listings.json at the repo's top and stop")
     args = parser.parse_args(argv)
     if args.listings:
@@ -1271,7 +1316,7 @@ def main(argv=None):
         return 1
     try:
         build(root, args.out, args.generated, args.key, args.openssl, say=print, previous=previous,
-              previous_cores=previous_cores)
+              previous_cores=previous_cores, floor=args.floor)
     except Refused as refused:
         print("refused: %s" % refused, file=sys.stderr)
         return 1

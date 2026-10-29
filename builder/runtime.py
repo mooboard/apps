@@ -161,6 +161,7 @@ def load(base,category,build):
     try:
         manifest=check(json.loads((folder/"mooboard.json").read_text(encoding="utf-8"),object_pairs_hook=unique))
         if manifest["category"]!=category:raise build.Refused("category must match its store folder")
+        if hasattr(build,"floor"):manifest["minFirmware"]=build.floor(manifest["minFirmware"])   # --floor
         source=(folder/"app.lua").read_bytes()
         if not 0<len(source)<=65536 or source[:1]==b"\x1b":raise build.Refused("live apps require text source of at most 64 KB")
         source.decode("utf-8")

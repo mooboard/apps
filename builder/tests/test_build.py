@@ -762,6 +762,127 @@ class TheRepo(unittest.TestCase):
 
 
 
+class Floor(unittest.TestCase):
+    """--floor at a public release + an internal build's minimum under it asks for the release in the package and both
+    indexes, so a store published with 0.4.0-alpha never asks for a .N build no one outside has (the owner, 2026-10-29)"""
+
+    def tree(self, least):
+        tree = Tree(self)
+        tree.app("Lifestyle", "Prayer", manifest(minFirmware=least), pack_files())
+        return tree
+
+    def apps(self, out, name):
+        return {a["id"]: a for a in json.loads(read(os.path.join(out, name)))["apps"]}
+
+    def packaged(self, out, row):
+        return json.loads(zipfile.ZipFile(os.path.join(out, row["file"])).read("mooboard.json"))
+
+    def test_the_order_is_pw_otas(self):
+        ranked = ["0.3.2", "0.4.0-alpha.1", "0.4.0-alpha.4", "0.4.0-alpha", "0.4.0-beta.2", "0.4.0-beta", "0.4.0",
+                  "0.4.1-alpha.1"]
+        self.assertEqual(sorted(ranked, key=build.order), ranked)
+
+    def test_the_owners_examples(self):
+        for least, want in (("0.4.0-alpha.4", "0.4.0-alpha"), ("0.4.0-alpha.3", "0.4.0-alpha"), ("0.3.2", "0.3.2"),
+                            ("0.4.0", "0.4.0"), ("0.4.0-alpha", "0.4.0-alpha"), ("0.3.2-beta", "0.3.2-beta"),
+                            ("0.4.0-beta.1", "0.4.0-beta.1"), ("0.4.1-alpha.1", "0.4.1-alpha.1")):
+            self.assertEqual(build.raised(least, "0.4.0-alpha"), want, least)
+        self.assertEqual(build.raised("0.4.0-beta.1", "0.4.0"), "0.4.0")
+        self.assertEqual(build.raised("0.4.0-alpha.4", None), "0.4.0-alpha.4")
+
+    def test_a_raised_app_carries_the_floor_in_its_package_and_rows(self):
+        tree = self.tree("0.4.0-alpha.4")
+        plain = tree.build()
+        before = self.apps(plain, "index2.json")["prayer"]
+        before_bytes = read(os.path.join(plain, before["file"]))
+        notes = []
+        out = tree.build(floor="0.4.0-alpha", say=notes.append)
+        row = self.apps(out, "index2.json")["prayer"]
+        self.assertEqual(row["minFirmware"], "0.4.0-alpha")
+        self.assertEqual(self.packaged(out, row)["minFirmware"], "0.4.0-alpha")   # Package.cpp holds the two equal
+        # the same version and file + new bytes, which a board with it installed never takes for an update
+        self.assertEqual((row["version"], row["file"]), (before["version"], before["file"]))
+        self.assertNotEqual(row["sha256"], before["sha256"])
+        self.assertEqual(row["sha256"], hashlib.sha256(read(os.path.join(out, row["file"]))).hexdigest())
+        self.assertNotEqual(before_bytes, read(os.path.join(out, row["file"])))
+        self.assertIn("floor: Prayer 1.0.0 from 0.4.0-alpha.4 to 0.4.0-alpha", notes)
+        # 0.4.0-alpha is a pre-release, so the legacy index still leaves it out
+        self.assertNotIn("prayer", self.apps(out, "index.json"))
+        # the manifest in git stays as it is
+        self.assertEqual(json.loads(read(os.path.join(tree.root, "Lifestyle/Prayer/mooboard.json")))["minFirmware"],
+                         "0.4.0-alpha.4")
+
+    def test_other_minimums_build_the_same_bytes(self):
+        for least in ("0.3.2", "0.4.0", "0.4.0-alpha", "0.4.1-alpha.1"):
+            tree = self.tree(least)
+            plain = tree.build()
+            index2, index = read(os.path.join(plain, "index2.json")), read(os.path.join(plain, "index.json"))
+            notes = []
+            out = tree.build(floor="0.4.0-alpha", say=notes.append)
+            self.assertEqual(read(os.path.join(out, "index2.json")), index2, least)
+            self.assertEqual(read(os.path.join(out, "index.json")), index, least)
+            self.assertFalse([n for n in notes if n.startswith("floor: ")], least)
+
+    def test_a_bare_floor_follows_the_legacy_rule(self):
+        out = self.tree("0.3.2-beta.1").build(floor="0.3.2")
+        row = self.apps(out, "index.json")["prayer"]   # a bare 0.3.2 is a minimum older boards read
+        self.assertEqual((row["minFirmware"], self.packaged(out, row)["minFirmware"]), ("0.3.2", "0.3.2"))
+        out = self.tree("0.3.2-beta.1").build(floor="0.4.0-alpha")
+        self.assertNotIn("prayer", self.apps(out, "index.json"))
+        self.assertEqual(self.apps(out, "index2.json")["prayer"]["minFirmware"], "0.4.0-alpha")
+
+    def test_a_lua_app_is_raised_too(self):
+        tree = Tree(self)
+        live = {"format": 3, "id": "custom-tool", "name": "Custom Tool", "version": "1.0.0", "by": "Developer",
+                "description": "A generic custom tool.", "category": "Tools", "runtime": "lua54",
+                "minFirmware": "0.4.0-alpha.3", "boards": ["s3", "p4"], "settings": [], "controls": [], "sources": []}
+        tree.write("Tools/Custom Tool/mooboard.json", json.dumps(live))
+        tree.write("Tools/Custom Tool/app.lua", "return {frame=function() screen.pixel(1,1,0xffffff) end}\n")
+        out = tree.build(floor="0.4.0-alpha")
+        row = self.apps(out, "index2.json")["custom-tool"]
+        self.assertEqual((row["minFirmware"], self.packaged(out, row)["minFirmware"]), ("0.4.0-alpha", "0.4.0-alpha"))
+
+    def test_the_floor_is_a_public_release(self):
+        tree = self.tree("0.4.0-alpha.4")
+        for floor in ("0.4.0-alpha.5", "0.4.0-beta.1", "0.4", "v0.4.0", "0.4.0-rc"):
+            with self.assertRaises(build.Refused) as caught:
+                tree.build(floor=floor)
+            self.assertIn("--floor must be a public release", str(caught.exception))
+
+    def test_the_command_line_takes_it(self):
+        out = os.path.join(Tree(self).root, "dist")
+        with unittest.mock.patch.object(build, "build") as called:
+            self.assertEqual(build.main(["--out", out, "--generated", GENERATED, "--floor", "0.4.0-alpha"]), 0)
+        self.assertEqual(called.call_args.kwargs["floor"], "0.4.0-alpha")
+        with unittest.mock.patch.object(build, "build") as called:
+            build.main(["--out", out, "--generated", GENERATED])
+        self.assertIsNone(called.call_args.kwargs["floor"])
+
+    def test_this_repo_raises_only_its_internal_minimums(self):
+        notes = []
+        out = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, out)
+        build.build(REPO, out, generated=GENERATED, say=notes.append, floor="0.4.0-alpha")
+        want, changed = {}, []
+        for category in build.CATEGORIES:
+            top = os.path.join(REPO, category)
+            for folder in sorted(os.listdir(top)) if os.path.isdir(top) else []:
+                path = os.path.join(top, folder, "mooboard.json")
+                if os.path.isfile(path):
+                    man = json.loads(read(path))
+                    want[man["id"]] = build.raised(man.get("minFirmware", ""), "0.4.0-alpha") \
+                        if "minFirmware" in man else None
+                    if want[man["id"]] != man.get("minFirmware"):
+                        changed.append("floor: %s %s from %s to 0.4.0-alpha" % (man["name"], man["version"],
+                                                                                man["minFirmware"]))
+        for row in json.loads(read(os.path.join(out, "index2.json")))["apps"]:
+            if row["uses"] != "seasonal":
+                self.assertEqual(row.get("minFirmware"), want[row["id"]], row["id"])
+                self.assertFalse(build.internal(row.get("minFirmware", "0.0.0")) and
+                                 build.order(row["minFirmware"]) < build.order("0.4.0-alpha"), row["id"])
+        self.assertEqual(sorted(n for n in notes if n.startswith("floor: ")), sorted(changed))
+
+
 class Doom(unittest.TestCase):
     """0.4.0-alpha.4's doom renderer c3870 + its package is the shareware WAD's four chunks, never in git, so a build
     without them or with any other WAD skips DOOM with a note and builds the rest c3874"""
