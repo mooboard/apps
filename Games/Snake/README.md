@@ -1,6 +1,6 @@
 # Snake
 
-A snake that plays itself, one apple at a time.
+Classic Snake
 
 It finds its way to each apple without boxing itself in. When it runs out of room, it fades and starts again.
 

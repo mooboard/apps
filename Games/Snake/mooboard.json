@@ -4,7 +4,7 @@
   "name": "Snake",
   "version": "1.0.0",
   "by": "mooboard",
-  "description": "A snake that plays itself, one apple at a time.",
+  "description": "Classic Snake",
   "category": "Games",
   "uses": "snake",
   "minFirmware": "0.3.1",
