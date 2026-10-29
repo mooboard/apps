@@ -1,2 +1,5 @@
 dist/
 __pycache__/
+# the DOOM WAD and its chunks never go in this public repo (builder/doom.py)
+*.[Ww][Aa][Dd]
+Games/DOOM/data/

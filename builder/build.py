@@ -63,7 +63,8 @@ CATALOG_USES = ("pong", "snake", "blocks", "maze", "aquarium", "lava", "aurora",
                 "flightglance",
                 "dinorunner", "missiledefense", "minesweeper", "wordguess",   # app-lab's games and ambiances c3506
                 "waterfall", "cybercity", "synthwave", "dune",
-                "game")   # the game vm's abi 1 programs u653 + after the rest as the firmware's table has it c3741
+                "game",   # the game vm's abi 1 programs u653 + after the rest as the firmware's table has it c3741
+                "doom")   # the real doom engine after the game vm, renderer 62 c3870
 USES = ("prayer", "countdown", "sketch", "life", "plasma", "starfield", "fireplace") + CATALOG_USES   # the firmware's renderers (pw::AppRenderer), in its order
 SPEED = {"speed": ("choice", 3)}
 SPEED_COLORS = dict(SPEED, colors=("choice", 2))
@@ -147,6 +148,7 @@ RENDERER_KEYS = {
     "synthwave": _row("card", {"speed": ("choice", 3), "palette": ("choice", 3)}),
     "dune": _row("card", COLOR_SPEED),
     "game": _row("card", SPEED),   # every game program takes the speed choice alone
+    "doom": _row("card"),   # no settings, the pad or the wad's own demos c3875
 }
 CATALOG_FIRMWARE = (0, 3, 1)   # the first firmware that carries the catalog's renderers u534
 # a renderer added after the first catalog firmware and the firmware that first draws it u574 c3247
@@ -162,6 +164,8 @@ USES_FIRMWARE = {"vfdstereo": (0, 3, 2), "microracer": (0, 3, 2), "pixelpinball"
 RUNTIME_FIRMWARE = "0.4.0-alpha.3"
 USES_FIRMWARE["game"] = RUNTIME_FIRMWARE
 RUNTIMES = {"game": "game", "lua54": "lua"}   # uses to index2's runtime + the legacy index lists neither
+# the first firmware with doom c3870 + its pre-release keeps it out of the legacy index
+USES_FIRMWARE["doom"] = "0.4.0-alpha.4"
 BOARDS = ("s3", "p4")
 BOARD_CAP = {"s3": 2 * 1024 * 1024, "p4": 8 * 1024 * 1024}
 ENTRY_CAP = 512 * 1024
@@ -242,6 +246,11 @@ REGULAR = 0o100644
 PNG = b"\x89PNG\r\n\x1a\n"
 PNG_KEEP = (b"IHDR", b"PLTE", b"tRNS", b"IDAT", b"IEND")
 P256_SPKI_PREFIX = bytes.fromhex("3059301306072a8648ce3d020106082a8648ce3d03010703420004")
+
+
+class Skipped(Exception):
+    """an app the build leaves out with a note while the rest of the catalog builds + only DOOM, whose WAD chunks are
+    never in git (doom.py)"""
 
 
 class Refused(Exception):
@@ -689,6 +698,18 @@ def check_game(data, where):
         raise Refused(where + ": " + str(e)) from e
 
 
+def check_doom(data, where):
+    """DOOM carries the shareware WAD alone as data/wad-0.bin to wad-3.bin + without them or with any other WAD the
+    build skips it with a note and builds the rest c3874"""
+    import doom
+    if not data:
+        raise Skipped("%s: data/ has no WAD chunks, %s" % (where, doom.HOW))
+    try:
+        doom.unpack(data)
+    except ValueError as e:
+        raise Skipped("%s: %s, %s" % (where, e, doom.HOW)) from e
+
+
 LIST_CAP = 64 * 1024
 USES_CHECKS = {"prayer": check_prayer, "countdown": check_no_data("countdown"), "sketch": check_no_data("sketch")}
 # the live renders u487 + their settings live on the board too
@@ -698,7 +719,7 @@ USES_CHECKS.update({uses: check_no_data(uses) for uses in CATALOG_USES})
 USES_CHECKS.update({uses: check_list for uses in ("word", "quotes", "facts", "jokes")})   # u532 e7
 USES_CHECKS.update({"word": check_words, "quotes": check_quotes})   # c2948
 USES_CHECKS.update({"facts": check_facts, "jokes": check_jokes})   # c3135
-USES_CHECKS.update({"game": check_game})   # u653
+USES_CHECKS.update({"game": check_game, "doom": check_doom})   # u653 c3874
 
 
 def check_size(app_id, size, boards, what=""):
@@ -816,7 +837,13 @@ def load_app(root, category, folder):
         words = read_words(_read(os.path.join(base, WORDS_FILE)), where)
     icon = _read(os.path.join(base, "icon.png"))
     check_icon(icon, where + "/icon.png")
-    data = read_data(os.path.join(base, "data"), where) if os.path.isdir(os.path.join(base, "data")) else {}
+    try:
+        data = read_data(os.path.join(base, "data"), where) if os.path.isdir(os.path.join(base, "data")) else {}
+    except Refused as refused:
+        if man["uses"] != "doom":
+            raise
+        import doom
+        raise Skipped("%s, %s" % (refused, doom.HOW)) from refused
     if 2 + len(data) > MAX_ENTRIES:
         raise Refused("%s has more than %d entries" % (where, MAX_ENTRIES))
     USES_CHECKS[man["uses"]](data, where)
@@ -1103,7 +1130,11 @@ def build(root, out, generated=None, key=None, openssl="openssl", say=lambda lin
     cores, packages = build_cores(root, previous_cores, say)
     rows, rows2, icons2, seen, listed_apps = [], [], bytearray(), set(), {}
     for category, folder in find_apps(root):
-        man, icon, package, boards, count, words = load_app(root, category, folder)
+        try:
+            man, icon, package, boards, count, words = load_app(root, category, folder)
+        except Skipped as skipped:
+            say("skipped %s" % skipped)
+            continue
         if man["id"] in seen:
             raise Refused("two apps have the id %s" % man["id"])
         seen.add(man["id"])
@@ -1186,7 +1217,10 @@ def listings_rows(root):
     """every app's listing row by id, checked (listing.py)"""
     rows = {}
     for category, folder in find_apps(root):
-        man, icon = load_app(root, category, folder)[:2]
+        try:
+            man, icon = load_app(root, category, folder)[:2]
+        except Skipped:
+            continue
         shown = listing.check(os.path.join(root, category, folder), man, icon, category, "%s/%s" % (category, folder))
         if shown is not None:
             rows[man["id"]] = shown

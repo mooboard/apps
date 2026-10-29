@@ -205,7 +205,7 @@ class Rules(unittest.TestCase):
         self.refused(lambda t: self.replace(t, manifest(boards=["c6"])), "boards must be")
 
     def test_uses(self):
-        self.refused(lambda t: self.replace(t, manifest(uses="doom")), "uses must be one of")
+        self.refused(lambda t: self.replace(t, manifest(uses="quake")), "uses must be one of")
 
     def test_gif_apps_wait(self):
         self.refused(lambda t: self.replace(t, manifest(uses=None)), "GIF apps")
@@ -341,7 +341,7 @@ class Catalog(unittest.TestCase):
     def test_every_catalog_renderer_is_known(self):
         # both waves u517 u532 and the ai apps u574 + a card takes its turn a hold holds the panel and ok to wake does both
         # e6
-        self.assertEqual(len(build.CATALOG_USES), 51)   # + flight glance, app-lab's eight, and the game vm u653
+        self.assertEqual(len(build.CATALOG_USES), 52)   # + flight glance, app-lab's eight, the game vm u653, and doom
         self.assertEqual(list(build.RENDERER_KEYS), list(build.CATALOG_USES))
         self.assertEqual(build.USES[7:], build.CATALOG_USES)
         kinds = {uses: row["kind"] for uses, row in build.RENDERER_KEYS.items()}
@@ -721,20 +721,31 @@ class TheRepo(unittest.TestCase):
     def test_this_repo_builds_and_fits_the_s3(self):
         out = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, out)
-        build.build(REPO, out, generated=GENERATED)
+        notes = []
+        build.build(REPO, out, generated=GENERATED, say=notes.append)
         index = json.loads(read(os.path.join(out, "index.json")))
+        # only DOOM skips, and only without its WAD chunks, which never go in git
+        skipped = [n for n in notes if n.startswith("skipped ")]
+        self.assertTrue(all(n.startswith("skipped Games/DOOM: ") for n in skipped), skipped)
         # every app folder in the repo in categories.txt's order and a to z by folder + read from the folders so a branch
-        # that adds an app adds nothing here
-        want = []
+        # that adds an app adds nothing here + index.json only what older boards run
+        want, want2 = [], []
         for category in build.CATEGORIES:
             top = os.path.join(REPO, category)
             for folder in sorted(f for f in os.listdir(top) if not f.startswith(".")) if os.path.isdir(top) else []:
                 path = os.path.join(top, folder, "mooboard.json")
                 if os.path.isfile(path):
                     man = json.loads(read(path))
-                    want.append((man["id"], man["name"], category, man["uses"]))
+                    if skipped and man["uses"] == "doom":
+                        continue
+                    want2.append((man["id"], man["name"], category, man["uses"]))
+                    if build.in_legacy_index(man):
+                        want.append(want2[-1])
         got = [(a["id"], a["name"], a["category"], a["uses"]) for a in index["apps"]]
         self.assertEqual(got, want)
+        index2 = json.loads(read(os.path.join(out, "index2.json")))
+        self.assertEqual([(a["id"], a["name"], a["category"], a["uses"]) for a in index2["apps"]], want2)
+        self.assertTrue(all(a["size"] <= build.BOARD_CAP[b] for a in index2["apps"] for b in a["boards"]))
         # the store's own first apps stay in it
         for row in (("prayer", "Pooja", "Lifestyle", "prayer"), ("fireplace", "Fireplace", "Ambiance", "fireplace"),
                     ("plasma", "Plasma", "Ambiance", "plasma"), ("starfield", "Starfield", "Ambiance", "starfield"),
@@ -749,6 +760,126 @@ class TheRepo(unittest.TestCase):
         self.assertIn("data/calendar.json", names)
         self.assertIn("data/glyphs/calendar.bin", names)
 
+
+
+class Doom(unittest.TestCase):
+    """0.4.0-alpha.4's doom renderer c3870 + its package is the shareware WAD's four chunks, never in git, so a build
+    without them or with any other WAD skips DOOM with a note and builds the rest c3874"""
+
+    def setUp(self):
+        import doom
+        self.doom = doom
+        # a stand-in WAD, incompressible so its envelope takes four chunks, and the checks' size and sha256 its own
+        self.raw = __import__("random").Random(1).randbytes(3 * doom.CHUNK_MAX + 1000)
+        for name, value in (("WAD_SIZE", len(self.raw)), ("WAD_SHA256", hashlib.sha256(self.raw).hexdigest())):
+            patcher = unittest.mock.patch.object(doom, name, value)
+            patcher.start()
+            self.addCleanup(patcher.stop)
+
+    @staticmethod
+    def man(**changes):
+        return manifest(**dict(dict(id="doom", name="DOOM", category="Games", uses="doom", boards=["s3"],
+                                    description="The real DOOM engine and its shareware episode.",
+                                    minFirmware="0.4.0-alpha.4"), **changes))
+
+    def tree(self, data):
+        tree = Tree(self)
+        tree.app("Games", "DOOM", self.man(), data)
+        return tree
+
+    def built(self, data):
+        notes = []
+        tree = self.tree(data)
+        out = tree.build(say=notes.append)
+        ids = [a["id"] for a in json.loads(read(os.path.join(out, "index2.json")))["apps"]]
+        return out, ids, [n for n in notes if n.startswith("skipped ")]
+
+    def test_the_script_checks_the_wad_and_cuts_four_chunks(self):
+        parts = self.doom.chunks(self.raw)
+        self.assertEqual(tuple(parts), self.doom.CHUNKS)
+        self.assertTrue(all(0 < len(p) <= build.ENTRY_CAP for p in parts.values()))
+        self.assertEqual(parts["wad-0.bin"][:4], b"MBW1")
+        self.assertEqual(self.doom.unpack(parts), self.raw)
+        for raw in (self.raw[:-1], self.raw[:-1] + b"x", b""):
+            with self.assertRaisesRegex(ValueError, "not the DOOM v1.9 shareware"):
+                self.doom.chunks(raw)
+        folder = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, folder)
+        wad, out = os.path.join(folder, "DOOM1.WAD"), os.path.join(folder, "data")
+        with open(wad, "wb") as f:
+            f.write(self.raw)
+        os.makedirs(out)
+        with open(os.path.join(out, "wad-7.bin"), "wb") as f:
+            f.write(b"stale")
+        with unittest.mock.patch("sys.stdout", io.StringIO()):
+            self.assertEqual(self.doom.main([wad, "--out", out]), 0)
+        self.assertEqual(sorted(os.listdir(out)), list(self.doom.CHUNKS))
+        with open(wad, "ab") as f:
+            f.write(b"x")
+        with unittest.mock.patch("sys.stderr", io.StringIO()) as err:
+            self.assertEqual(self.doom.main([wad, "--out", out]), 1)
+        self.assertIn("not the DOOM v1.9 shareware", err.getvalue())
+
+    def test_the_chunks_build_doom_into_index2_alone(self):
+        out, ids, skipped = self.built(self.doom.chunks(self.raw))
+        self.assertEqual((ids, skipped), (["prayer", "doom"], []))
+        row = json.loads(read(os.path.join(out, "index2.json")))["apps"][1]
+        self.assertEqual((row["uses"], row["minFirmware"], row["boards"]), ("doom", "0.4.0-alpha.4", ["s3"]))
+        self.assertNotIn("runtime", row)
+        self.assertEqual([a["id"] for a in json.loads(read(os.path.join(out, "index.json")))["apps"]], ["prayer"])
+        package = zipfile.ZipFile(os.path.join(out, row["file"]))
+        self.assertEqual(package.namelist(), ["mooboard.json", "icon.png"] + ["data/" + n for n in self.doom.CHUNKS])
+        self.assertNotIn("settings", json.loads(package.read("mooboard.json")))
+        self.assertEqual(row["size"], os.path.getsize(os.path.join(out, row["file"])))
+
+    def test_without_chunks_doom_skips_with_a_note_and_the_rest_builds(self):
+        out, ids, skipped = self.built({})
+        self.assertEqual(ids, ["prayer"])
+        self.assertEqual(skipped, ["skipped Games/DOOM: data/ has no WAD chunks, " + self.doom.HOW])
+        self.assertFalse([n for n in os.listdir(out) if n.startswith("doom-")])
+
+    def test_wrong_chunks_skip_doom_never_half_a_package(self):
+        good = self.doom.chunks(self.raw)
+        body = b"".join(good.values())
+        cut = lambda b: dict(zip(self.doom.CHUNKS, (b[:build.ENTRY_CAP], b[build.ENTRY_CAP:2 * build.ENTRY_CAP],
+                                                    b[2 * build.ENTRY_CAP:3 * build.ENTRY_CAP],
+                                                    b[3 * build.ENTRY_CAP:])))
+        other = __import__("random").Random(2).randbytes(len(self.raw))
+        cases = {
+            "three chunks": ({k: v for k, v in good.items() if k != "wad-3.bin"}, "wad-0.bin to wad-3.bin alone"),
+            "an extra file": (dict(good, **{"wad-4.bin": b"x"}), "wad-0.bin to wad-3.bin alone"),
+            "no envelope": (cut(b"MBW2" + body[4:]), "MBW1 envelope"),
+            "another length": (cut(body[:4] + struct.pack("<I", len(self.raw) + 1) + body[8:]), "bytes, not"),
+            "cut short": (cut(body[:-10]), "cut short"),
+            "a wrong crc": (cut(body[:8] + b"\0\0\0\0" + body[12:]), "CRC-32"),
+            "another wad": (cut(b"MBW1" + struct.pack("<II", len(other), zlib.crc32(other)) + zlib.compress(other)),
+                            "not the DOOM v1.9 shareware"),
+            "a big chunk": (dict(good, **{"wad-3.bin": bytes(build.ENTRY_CAP + 1)}), "over 512 KB"),
+        }
+        for case, (data, why) in cases.items():
+            with self.subTest(case):
+                out, ids, skipped = self.built(data)
+                self.assertEqual(ids, ["prayer"])
+                self.assertEqual(len(skipped), 1)
+                self.assertTrue(skipped[0].startswith("skipped Games/DOOM"), skipped)
+                self.assertIn(why, skipped[0])
+                self.assertTrue(skipped[0].endswith(self.doom.HOW))
+                self.assertFalse([n for n in os.listdir(out) if n.startswith("doom-")])
+
+    def test_doom_needs_alpha4_and_takes_no_settings(self):
+        data = self.doom.chunks(self.raw)
+        for man, why in ((self.man(minFirmware="0.4.0-alpha.3"), "minFirmware 0.4.0-alpha.4"),
+                         (self.man(settings=[{"key": "speed", "type": "choice", "label": "Speed", "default": "Normal",
+                                              "options": ["Slow", "Normal", "Fast"]}]), "takes no choice setting")):
+            tree = Tree(self)
+            tree.app("Games", "DOOM", man, data)
+            with self.subTest(why), self.assertRaisesRegex(build.Refused, why):
+                tree.build()
+
+    def test_the_repo_ignores_the_wad(self):
+        for path in ("Games/DOOM/data/wad-0.bin", "Games/DOOM/DOOM1.WAD", "doom1.wad"):
+            with self.subTest(path):
+                self.assertEqual(subprocess.run(["git", "-C", REPO, "check-ignore", "-q", path]).returncode, 0)
 
 
 class LedSlice(unittest.TestCase):
