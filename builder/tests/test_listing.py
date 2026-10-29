@@ -149,6 +149,19 @@ class ListingTest(unittest.TestCase):
             self.write("history.json", json.dumps(rows).encode())
             self.refused(words)
 
+    def test_a_led_icon_is_two_12_by_12_frames(self):
+        self.write("icon-led.png", png(tile((0, 0, 0), 12, 12) + tile((255, 184, 28), 12, 12)))
+        self.assertTrue(self.check()["led"])
+        for rows, words in ((tile((1, 2, 3), 12, 12), "12 wide and 24 tall"), (tile((1, 2, 3), 32, 64), "12 wide"),
+                            (tile((9, 9, 9), 12, 24), "idle frame is the rest frame")):
+            self.write("icon-led.png", png(rows))
+            self.refused(words)
+
+    def test_no_led_icon_for_apps_with_no_home_tile(self):
+        os.remove(os.path.join(self.base, "listing", "icon-loop.png"))
+        self.write("icon-led.png", png(tile((0, 0, 0), 12, 12) + tile((255, 184, 28), 12, 12)))
+        self.refused("no Home tile", "Ambiance")
+
     def test_other_files_are_refused(self):
         self.write("notes.txt", b"hi")
         self.refused("notes.txt is not part of a listing")

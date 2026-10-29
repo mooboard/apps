@@ -3,8 +3,11 @@
 listing/ is repo only and never goes in a package. The web app reads listings.json and the files beside it from
 raw.githubusercontent.com at the listings tag, never from the board (the owner, 2026-10-29).
 
-  icon-loop.png   Home's icon loop: 32 wide, 32 x N tall (N 2 to 8), frames top to bottom at 200 ms, frame 1 the
-                  app's icon.png, 8 KB at most. Optional, and never for Ambiance or Clock apps (no Home tile).
+  icon-led.png    Home's icon in the built-in icons' LED style (the owner, 2026-10-29): 12 wide, 24 tall, the rest
+                  frame on top and the idle move below, black an off dot, 2 KB at most. Home paints it with the
+                  built-ins' LED painter and flips it as they do. Optional, never for Ambiance or Clock apps.
+  icon-loop.png   the earlier 32 px loop (32 wide, 32 x N tall, N 2 to 8, frame 1 the icon.png), still accepted
+                  but no longer drawn; icon-led.png replaces it.
   clip.webp       the store page's clip: animated lossless WebP, 1024 x 256, 3 to 10 s, 600 KB at most.
   shot-1.png ...  2 or 3 stills, 1024 x 256 PNG, 100 KB at most each.
   history.json    what's new per version, newest first: [{"version": "1.1", "date": "YYYY-MM-DD", "notes": "..."}],
@@ -23,6 +26,8 @@ NO_HOME = ("Ambiance", "Clock", "Faces")   # these install to their pickers with
 ICON = 32
 LOOP_FRAMES = (2, 8)
 LOOP_CAP = 8 * 1024
+LED = (12, 24)
+LED_CAP = 2 * 1024
 CLIP = (1024, 256)
 CLIP_MS = (3000, 10000)
 CLIP_CAP = 600 * 1024
@@ -176,7 +181,7 @@ def check(base, man, icon, category, where):
     where = where + "/" + FOLDER
     names = sorted(n for n in os.listdir(folder) if not n.startswith("."))
     shots = [n for n in names if re.fullmatch(r"shot-[1-9]\.png", n)]
-    known = {"icon-loop.png", "clip.webp", "history.json"} | set(shots)
+    known = {"icon-loop.png", "icon-led.png", "clip.webp", "history.json"} | set(shots)
     for name in names:
         if name not in known or os.path.islink(os.path.join(folder, name)):
             raise Refused("%s/%s is not part of a listing" % (where, name))
@@ -200,6 +205,18 @@ def check(base, man, icon, category, where):
         if png_pixels(body, where)[:ICON] != png_pixels(icon, where):
             raise Refused("%s/icon-loop.png's first frame is not icon.png" % where)
         row["loop"] = height // ICON
+    if "icon-led.png" in names:
+        if category in NO_HOME:
+            raise Refused("%s/icon-led.png: %s apps have no Home tile" % (where, category))
+        body = read("icon-led.png")
+        if len(body) > LED_CAP or png_size(body, where + "/icon-led.png") != LED:
+            raise Refused("%s/icon-led.png is 12 wide and 24 tall (two frames), 2 KB at most" % where)
+        dots = png_pixels(body, where + "/icon-led.png")
+        if any(0 < px[3] < 255 for row in dots for px in row):
+            raise Refused("%s/icon-led.png: a dot is on or off, never see-through" % where)
+        if dots[:12] == dots[12:]:
+            raise Refused("%s/icon-led.png: the idle frame is the rest frame" % where)
+        row["led"] = True
     body = read("clip.webp")
     if len(body) > CLIP_CAP:
         raise Refused("%s/clip.webp is over 600 KB" % where)
