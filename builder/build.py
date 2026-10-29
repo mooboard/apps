@@ -33,6 +33,8 @@ import time
 import unicodedata
 import zlib
 
+import listing
+
 # the store's headings in their order from categories.txt at the repo's top, one a line + apps a to z by folder within
 # each (the owner, 2026-10-20) + a new category is a line there and a folder, and boards read it with the catalog
 def read_categories(root):
@@ -239,6 +241,9 @@ P256_SPKI_PREFIX = bytes.fromhex("3059301306072a8648ce3d020106082a8648ce3d030107
 
 class Refused(Exception):
     """a reason to stop said in one line"""
+
+
+listing.Refused = Refused   # listing.py refuses as this module does
 
 
 def _unique(pairs):
@@ -792,8 +797,8 @@ def load_app(root, category, folder):
             raise Refused("%s: a lua app needs minFirmware %s or later" % (where, RUNTIME_FIRMWARE))
         return loaded
     for name in _visible(os.listdir(base)):
-        if name not in REPO_ONLY + ("mooboard.json", "icon.png", "data", WORDS_FILE):
-            raise Refused("%s/%s is not part of an app (mooboard.json, icon.png, data/, README.md, LICENSE)"
+        if name not in REPO_ONLY + ("mooboard.json", "icon.png", "data", WORDS_FILE, listing.FOLDER):
+            raise Refused("%s/%s is not part of an app (mooboard.json, icon.png, data/, listing/, README.md, LICENSE)"
                           % (where, name))
     for name in ("mooboard.json", "icon.png"):
         if not os.path.isfile(os.path.join(base, name)):
@@ -1083,12 +1088,15 @@ def build(root, out, generated=None, key=None, openssl="openssl", say=lambda lin
         raise Refused("--generated must be YYYY-MM-DDTHH:MM:SSZ")
     check_generated(generated, previous, now)
     cores, packages = build_cores(root, previous_cores, say)
-    rows, rows2, icons2, seen = [], [], bytearray(), set()
+    rows, rows2, icons2, seen, listed_apps = [], [], bytearray(), set(), {}
     for category, folder in find_apps(root):
         man, icon, package, boards, count, words = load_app(root, category, folder)
         if man["id"] in seen:
             raise Refused("two apps have the id %s" % man["id"])
         seen.add(man["id"])
+        shown = listing.check(os.path.join(root, category, folder), man, icon, category, "%s/%s" % (category, folder))
+        if shown is not None:
+            listed_apps[man["id"]] = shown
         resolve_cores(man, len(package), boards, cores)
         name = "%s-%s.mooboard" % (man["id"], man["version"])
         packages[name] = package
@@ -1132,6 +1140,7 @@ def build(root, out, generated=None, key=None, openssl="openssl", say=lambda lin
                             (listed, "cores.json", CORES_CAP)):
         if len(body) > cap:
             raise Refused("%s is %d bytes, over %d KB" % (file, len(body), cap >> 10))
+    check_listings_top(root, listed_apps)
     bodies = {"index.json": index, "index2.json": index2, "cores.json": listed, "icons2.bin": bytes(icons2)}
     signatures = {sig: sign(openssl, key, bodies[file]) for file, sig in SIGNED} if key else {}
     os.makedirs(out, exist_ok=True)
@@ -1156,6 +1165,25 @@ def build(root, out, generated=None, key=None, openssl="openssl", say=lambda lin
     return index
 
 
+def listings_rows(root):
+    """every app's listing row by id, checked (listing.py)"""
+    rows = {}
+    for category, folder in find_apps(root):
+        man, icon = load_app(root, category, folder)[:2]
+        shown = listing.check(os.path.join(root, category, folder), man, icon, category, "%s/%s" % (category, folder))
+        if shown is not None:
+            rows[man["id"]] = shown
+    return rows
+
+
+def check_listings_top(root, rows):
+    """the committed listings.json is the listings' own + none while no app has a listing"""
+    path = os.path.join(root, listing.TOP)
+    have = _read(path) if os.path.isfile(path) else None
+    if (have or None) != (listing.top_bytes(rows) if rows else None):
+        raise Refused("%s is not the listings' own: run python3 builder/build.py --listings and commit it" % listing.TOP)
+
+
 def main(argv=None):
     sys.modules.setdefault("build", sys.modules[__name__])   # seasonal.py raises this module's Refused
     root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -1168,7 +1196,18 @@ def main(argv=None):
     parser.add_argument("--previous-cores", help="the live catalog's cores.json (default: the one beside the previous "
                                                  "index); its earlier core versions stay listed")
     parser.add_argument("--openssl", default="openssl")
+    parser.add_argument("--listings", action="store_true", help="write listings.json at the repo's top and stop")
     args = parser.parse_args(argv)
+    if args.listings:
+        try:
+            rows = listings_rows(root)
+        except Refused as refused:
+            print("refused: %s" % refused, file=sys.stderr)
+            return 1
+        with open(os.path.join(root, listing.TOP), "wb") as f:
+            f.write(listing.top_bytes(rows))
+        print("%s: %d apps" % (listing.TOP, len(rows)))
+        return 0
     floor = args.previous or os.path.join(args.out, "index.json")
     previous = previous_generated(floor)
     if args.previous and previous is None:

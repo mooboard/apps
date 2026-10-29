@@ -154,7 +154,7 @@ def load(base,category,build):
     _categories=build.CATEGORIES
     package=SimpleNamespace(Refused=build.Refused,RESERVED_IDS=tuple(build.USES)+("countdowns","messages","sports","ambiance","lua54"),_plain=_plain)
     folder=Path(base)
-    allowed={"mooboard.json","app.lua","icon.png","sample-data.json","README.md","LICENSE"}
+    allowed={"mooboard.json","app.lua","icon.png","sample-data.json","README.md","LICENSE","listing"}
     for path in folder.iterdir():
         if path.name.startswith("."):continue
         if path.name not in allowed or path.is_symlink():raise build.Refused("unexpected live app file: "+path.name)
