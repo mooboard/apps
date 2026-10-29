@@ -10,7 +10,8 @@ data/ and, for Word Guess, words.txt (its guess list, kept beside the package as
 icon.png, then data/ sorted), so the same folder always builds the same bytes. index.sig is the base64 of the
 DER ECDSA P-256 signature over index.json's exact bytes, as the firmware's OTA release statement is signed, and
 index2.sig and cores.sig the same over theirs. index.json is the legacy catalog older firmware reads (64 apps, 64 KB);
-index2.json lists every app with its icon as a slice of icons2.bin (256 apps, 192 KB). A core is a shared data
+index2.json lists every app with its icon as a slice of icons2.bin (256 apps, 192 KB), and its listing's icon-led.png
+as a second slice, "led", when it has one. A core is a shared data
 package (a font family) apps name in "cores"; Cores/<id>/ holds core.json and data/ and cores.json lists every
 version, the ones --previous-cores lists too, so older pins still resolve.
 The firmware carries font-nunito and font-product-sans (BUILT_IN_CORES), so an app names them with no .core.
@@ -177,6 +178,10 @@ LEGACY_FIRMWARE = (0, 4, 0)
 # index2.json u653 + boards from RUNTIME_FIRMWARE read it alone (and index.json when it is missing) into psram
 INDEX2_CAP = 192 * 1024
 APPS2_MAX = 256
+# 0.4.0-alpha.4 + an app's listing/icon-led.png (listing.py checks it) as index2's "led" slice of icons2.bin right
+# after its icon, which a board writes to /apps/<id>/icon-led.png for Home's grid + never in the package, which older
+# boards refuse past icon.png, and never in index.json
+LED_FILE = "icon-led.png"
 ICON = 32
 NAME_MAX = 24
 DESCRIPTION_MAX = 80
@@ -998,6 +1003,14 @@ def find_apps(root):
     return sorted(apps, key=lambda a: (CATEGORIES.index(a[0]), a[1]))
 
 
+def led_strip(root, category, folder, shown):
+    """the app's listing/icon-led.png for index2's led slice + listing.check refused one that breaks its rules + None
+    for an app without one"""
+    if shown is None or "led" not in shown:
+        return None
+    return _read(os.path.join(root, category, folder, listing.FOLDER, LED_FILE))
+
+
 def index_bytes(rows, generated, events=None):
     index = {"format": 1, "generated": generated, "categories": list(CATEGORIES), "apps": rows}
     if events:
@@ -1006,7 +1019,7 @@ def index_bytes(rows, generated, events=None):
 
 
 def index2_bytes(rows, generated, events=None):
-    """index2.json u653 + index.json's rows with cores, runtime, and the icon as a slice of icons2.bin"""
+    """index2.json u653 + index.json's rows with cores, runtime, and the icon and the LED icon as slices of icons2.bin"""
     index = {"format": 2, "stamp": generated, "categories": list(CATEGORIES), "apps": rows}
     if events:
         index["seasonal"] = events
@@ -1097,6 +1110,7 @@ def build(root, out, generated=None, key=None, openssl="openssl", say=lambda lin
         shown = listing.check(os.path.join(root, category, folder), man, icon, category, "%s/%s" % (category, folder))
         if shown is not None:
             listed_apps[man["id"]] = shown
+        led = led_strip(root, category, folder, shown)
         resolve_cores(man, len(package), boards, cores)
         name = "%s-%s.mooboard" % (man["id"], man["version"])
         packages[name] = package
@@ -1118,6 +1132,9 @@ def build(root, out, generated=None, key=None, openssl="openssl", say=lambda lin
             row["runtime"] = RUNTIMES[man["uses"]]
         row["icon"] = {"offset": len(icons2), "length": len(icon), "sha256": hashlib.sha256(icon).hexdigest()}
         icons2 += icon
+        if led is not None:
+            row["led"] = {"offset": len(icons2), "length": len(led), "sha256": hashlib.sha256(led).hexdigest()}
+            icons2 += led
         rows2.append(row)
         say("%s/%s: %s, %d bytes, %d entries" % (category, folder, name, len(package), count))
     import seasonal

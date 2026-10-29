@@ -750,6 +750,70 @@ class TheRepo(unittest.TestCase):
         self.assertIn("data/glyphs/calendar.bin", names)
 
 
+
+class LedSlice(unittest.TestCase):
+    """0.4.0-alpha.4 + a listing's icon-led.png rides in icons2.bin as index2's signed "led" slice + index.json and the
+    package stay as they were"""
+
+    def tree(self, strip=None):
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        import listing
+        import test_listing as kit
+        tree = Tree(self)
+        base = "Lifestyle/Prayer/listing/"
+        tree.write(base + "clip.webp", kit.webp())
+        tree.write(base + "shot-1.png", kit.png(kit.tile((1, 2, 3), 1024, 256)))
+        tree.write(base + "shot-2.png", kit.png(kit.tile((4, 5, 6), 1024, 256)))
+        tree.write(base + "history.json", json.dumps([{"version": "1.0", "date": "2026-10-29", "notes": "First."}]))
+        if strip is not None:
+            tree.write(base + "icon-led.png", strip)
+        tree.write(listing.TOP, listing.top_bytes(build.listings_rows(tree.root)))
+        return tree
+
+    @staticmethod
+    def strip(frames=2, width=12, height=12):
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        import test_listing as kit
+        rows = []
+        for i in range(frames):
+            rows += kit.tile((0, 0, 0) if i % 2 == 0 else (255, 184, 28), width, height)
+        return kit.png(rows)
+
+    def index2(self, out):
+        return json.loads(read(os.path.join(out, "index2.json")))["apps"][0], read(os.path.join(out, "icons2.bin"))
+
+    def test_the_strip_is_a_slice_after_the_icon(self):
+        strip = self.strip(4)
+        row, icons = self.index2(self.tree(strip).build())
+        icon = row["icon"]
+        self.assertEqual(row["led"], {"offset": icon["offset"] + icon["length"], "length": len(strip),
+                                      "sha256": hashlib.sha256(strip).hexdigest()})
+        self.assertEqual(icons[row["led"]["offset"]:row["led"]["offset"] + row["led"]["length"]], strip)
+        self.assertEqual(len(icons), icon["length"] + len(strip))
+        self.assertEqual(list(row), ["id", "name", "category", "by", "description", "version", "uses", "minFirmware",
+                                     "boards", "file", "size", "sha256", "icon", "led"])
+
+    def test_no_strip_no_field(self):
+        for tree in (Tree(self), self.tree()):
+            row, icons = self.index2(tree.build())
+            self.assertNotIn("led", row)
+            self.assertEqual(len(icons), row["icon"]["length"])
+
+    def test_a_malformed_strip_is_refused(self):
+        for strip in (self.strip(1), self.strip(33), self.strip(2, 13), self.strip(2, 12, 13), b"not a png"):
+            tree = self.tree()
+            tree.write("Lifestyle/Prayer/listing/icon-led.png", strip)
+            with self.assertRaises(build.Refused) as caught:
+                tree.build()
+            self.assertIn("icon-led.png", str(caught.exception))
+
+    def test_index_json_and_the_package_are_the_same_with_or_without_one(self):
+        bare, led = self.tree().build(), self.tree(self.strip(3)).build()
+        for name in ("index.json", "prayer-1.0.0.mooboard"):
+            self.assertEqual(read(os.path.join(bare, name)), read(os.path.join(led, name)), name)
+        self.assertNotEqual(read(os.path.join(bare, "index2.json")), read(os.path.join(led, "index2.json")))
+
+
 if __name__ == "__main__":
     unittest.main()
 
