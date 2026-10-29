@@ -1,0 +1,12 @@
+{
+  "format": 2,
+  "id": "doom",
+  "name": "DOOM",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "The real DOOM engine and shareware episode, adapted to the 128 by 32 panel.",
+  "category": "Games",
+  "uses": "doom",
+  "minFirmware": "0.4.1",
+  "settings": []
+}

@@ -53,7 +53,7 @@ CATALOG_USES = ("pong", "snake", "blocks", "maze", "aquarium", "lava", "aurora",
                 "aibrief", "aipet", "aiscene", "aiface",   # the ai apps u574 c3247
                 "flightglance",
                 "dinorunner", "missiledefense", "minesweeper", "wordguess",   # app-lab's games and ambiances c3506
-                "waterfall", "cybercity", "synthwave", "dune", "pacman", "frogger", "bomberman", "centipede", "game")
+                "waterfall", "cybercity", "synthwave", "dune", "pacman", "frogger", "bomberman", "centipede", "game", "doom")
 USES = ("prayer", "countdown", "sketch", "life", "plasma", "starfield", "fireplace") + CATALOG_USES   # the firmware's renderers (pw::AppRenderer), in its order
 SPEED = {"speed": ("choice", 3)}
 SPEED_COLORS = dict(SPEED, colors=("choice", 2))
@@ -141,6 +141,7 @@ RENDERER_KEYS = {
     "bomberman": _row("card", SPEED),
     "centipede": _row("card", SPEED),
     "game": _row("card", SPEED),
+    "doom": _row("card"),
 }
 CATALOG_FIRMWARE = (0, 3, 1)   # the first firmware that carries the catalog's renderers u534
 # a renderer added after the first catalog firmware and the firmware that first draws it u574 c3247
@@ -151,7 +152,7 @@ USES_FIRMWARE = {"vfdstereo": (0, 3, 2), "microracer": (0, 3, 2), "pixelpinball"
                  "dinorunner": (0, 3, 2),
                  # u643 c3588 + the app-lab review's fixes and word guess's hosted list come with 0.4.0
                  "missiledefense": (0, 4, 0), "minesweeper": (0, 4, 0), "wordguess": (0, 4, 0),
-                 "waterfall": (0, 3, 2), "cybercity": (0, 3, 2), "synthwave": (0, 3, 2), "dune": (0, 3, 2), "pacman": (0, 4, 0), "frogger": (0, 4, 0), "bomberman": (0, 4, 0), "centipede": (0, 4, 0), "game": (0, 4, 1)}
+                 "waterfall": (0, 3, 2), "cybercity": (0, 3, 2), "synthwave": (0, 3, 2), "dune": (0, 3, 2), "pacman": (0, 4, 0), "frogger": (0, 4, 0), "bomberman": (0, 4, 0), "centipede": (0, 4, 0), "game": (0, 4, 1), "doom": (0, 4, 1)}
 BOARDS = ("s3", "p4")
 BOARD_CAP = {"s3": 2 * 1024 * 1024, "p4": 8 * 1024 * 1024}
 ENTRY_CAP = 512 * 1024
@@ -608,6 +609,25 @@ def check_game(data, where):
         raise Refused(where + ": " + str(e)) from e
 
 
+
+def check_doom(data, where):
+    names = [f"wad-{i}.bin" for i in range(4)]
+    if sorted(data) != names:
+        raise Refused(f"{where}: run python3 builder/kit/doom.py to prepare DOOM shareware data")
+    body = b"".join(data[n] for n in names)
+    if body[:4] != b"MBW1" or len(body) < 12:
+        raise Refused(f"{where}: bad WAD envelope")
+    raw_size, checksum = struct.unpack_from("<II", body, 4)
+    if raw_size != 4196020:
+        raise Refused(f"{where}: expected the v1.9 shareware WAD")
+    decoder = zlib.decompressobj()
+    raw = decoder.decompress(body[12:], raw_size + 1)
+    if not decoder.eof or decoder.unused_data or len(raw) != raw_size or zlib.crc32(raw) != checksum:
+        raise Refused(f"{where}: malformed compressed WAD")
+    if hashlib.sha256(raw).hexdigest() != "1d7d43be501e67d927e415e0b8f3e29c3bf33075e859721816f652a526cac771":
+        raise Refused(f"{where}: WAD is not the original v1.9 shareware data")
+
+
 LIST_CAP = 64 * 1024
 USES_CHECKS = {"prayer": check_prayer, "countdown": check_no_data("countdown"), "sketch": check_no_data("sketch")}
 # the live renders u487 + their settings live on the board too
@@ -616,7 +636,7 @@ USES_CHECKS.update({uses: check_no_data(uses) for uses in ("life", "plasma", "st
 USES_CHECKS.update({uses: check_no_data(uses) for uses in CATALOG_USES})
 USES_CHECKS.update({uses: check_list for uses in ("word", "quotes", "facts", "jokes")})   # u532 e7
 USES_CHECKS.update({"word": check_words, "quotes": check_quotes})   # c2948
-USES_CHECKS.update({"facts": check_facts, "jokes": check_jokes, "game": check_game})   # c3135
+USES_CHECKS.update({"facts": check_facts, "jokes": check_jokes, "game": check_game, "doom": check_doom})   # c3135
 
 
 def check_size(app_id, size, boards):
@@ -812,13 +832,15 @@ def check_generated(generated, previous=None, now=None):
                       % (generated, previous))
 
 
-def build(root, out, generated=None, key=None, openssl="openssl", say=lambda line: None, previous=None, now=None):
+def build(root, out, generated=None, key=None, openssl="openssl", say=lambda line: None, previous=None, now=None, catalog_v2=False):
     generated = generated or default_generated()
     if not STAMP.fullmatch(generated):
         raise Refused("--generated must be YYYY-MM-DDTHH:MM:SSZ")
     check_generated(generated, previous, now)
     rows, packages, seen = [], {}, set()
     for category, folder in find_apps(root):
+        if not catalog_v2 and os.path.isfile(os.path.join(root, category, folder, ".catalog-v2-only")):
+            continue
         man, icon, package, boards, count, words = load_app(root, category, folder)
         if man["id"] in seen:
             raise Refused("two apps have the id %s" % man["id"])
@@ -843,8 +865,9 @@ def build(root, out, generated=None, key=None, openssl="openssl", say=lambda lin
             raise Refused("two apps have the id %s" % row["id"])
         seen.add(row["id"])
     packages.update(event_packages)
-    if len(rows) > APPS_MAX:
-        raise Refused("%d apps, over the %d a board reads (pw_apps kCatalogAppsMax)" % (len(rows), APPS_MAX))
+    cap = 96 if catalog_v2 else APPS_MAX
+    if len(rows) > cap:
+        raise Refused("%d apps, over the %d a board reads (pw_apps kCatalogAppsMax)" % (len(rows), cap))
     index = index_bytes(rows, generated, events)
     if len(index) > INDEX_CAP:
         raise Refused("index.json is %d bytes, over 64 KB" % len(index))
@@ -876,13 +899,14 @@ def main(argv=None):
     parser.add_argument("--previous", help="the live catalog's index.json (default: the one in --out from the last build); "
                                            "the new stamp must be later than its own")
     parser.add_argument("--openssl", default="openssl")
+    parser.add_argument("--catalog-v2", action="store_true", help="0.4.1+ catalog, up to 96 apps; publish to the catalog-v2 release tag")
     args = parser.parse_args(argv)
     previous = previous_generated(args.previous or os.path.join(args.out, "index.json"))
     if args.previous and previous is None:
         print("refused: %s holds no index generated stamp" % args.previous, file=sys.stderr)
         return 1
     try:
-        build(root, args.out, args.generated, args.key, args.openssl, say=print, previous=previous)
+        build(root, args.out, args.generated, args.key, args.openssl, say=print, previous=previous, catalog_v2=args.catalog_v2)
     except Refused as refused:
         print("refused: %s" % refused, file=sys.stderr)
         return 1

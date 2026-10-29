@@ -2,12 +2,12 @@
   "format": 2,
   "id": "snake",
   "name": "Snake",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "by": "mooboard",
-  "description": "A snake that plays itself, one apple at a time.",
+  "description": "Wrap around a garden or neon circuit. Steer, grow, and dodge your own tail.",
   "category": "Games",
   "uses": "snake",
-  "minFirmware": "0.3.1",
+  "minFirmware": "0.4.1",
   "settings": [
     {
       "key": "speed",

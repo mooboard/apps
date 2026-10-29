@@ -204,7 +204,7 @@ class Rules(unittest.TestCase):
         self.refused(lambda t: self.replace(t, manifest(boards=["c6"])), "boards must be")
 
     def test_uses(self):
-        self.refused(lambda t: self.replace(t, manifest(uses="doom")), "uses must be one of")
+        self.refused(lambda t: self.replace(t, manifest(uses="unknown-game")), "uses must be one of")
 
     def test_gif_apps_wait(self):
         self.refused(lambda t: self.replace(t, manifest(uses=None)), "GIF apps")
@@ -340,7 +340,7 @@ class Catalog(unittest.TestCase):
     def test_every_catalog_renderer_is_known(self):
         # both waves u517 u532 and the ai apps u574 + a card takes its turn a hold holds the panel and ok to wake does both
         # e6
-        self.assertEqual(len(build.CATALOG_USES), 55)   # + flight glance and app-lab's eight
+        self.assertEqual(len(build.CATALOG_USES), 56)   # + flight glance and app-lab's eight
         self.assertEqual(list(build.RENDERER_KEYS), list(build.CATALOG_USES))
         self.assertEqual(build.USES[7:], build.CATALOG_USES)
         kinds = {uses: row["kind"] for uses, row in build.RENDERER_KEYS.items()}
@@ -729,7 +729,7 @@ class TheRepo(unittest.TestCase):
             top = os.path.join(REPO, category)
             for folder in sorted(f for f in os.listdir(top) if not f.startswith(".")) if os.path.isdir(top) else []:
                 path = os.path.join(top, folder, "mooboard.json")
-                if os.path.isfile(path):
+                if os.path.isfile(path) and not os.path.isfile(os.path.join(top, folder, ".catalog-v2-only")):
                     man = json.loads(read(path))
                     want.append((man["id"], man["name"], category, man["uses"]))
         got = [(a["id"], a["name"], a["category"], a["uses"]) for a in index["apps"]]
