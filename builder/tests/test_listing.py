@@ -149,11 +149,14 @@ class ListingTest(unittest.TestCase):
             self.write("history.json", json.dumps(rows).encode())
             self.refused(words)
 
-    def test_a_led_icon_is_two_12_by_12_frames(self):
+    def test_a_led_icon_is_2_to_32_frames_of_12_by_12(self):
         self.write("icon-led.png", png(tile((0, 0, 0), 12, 12) + tile((255, 184, 28), 12, 12)))
-        self.assertTrue(self.check()["led"])
-        for rows, words in ((tile((1, 2, 3), 12, 12), "12 wide and 24 tall"), (tile((1, 2, 3), 32, 64), "12 wide"),
-                            (tile((9, 9, 9), 12, 24), "idle frame is the rest frame")):
+        self.assertEqual(self.check()["led"], 2)
+        self.write("icon-led.png", png((tile((0, 0, 0), 12, 12) + tile((255, 184, 28), 12, 12)) * 3))
+        self.assertEqual(self.check()["led"], 6)
+        for rows, words in ((tile((1, 2, 3), 12, 12), "2 to 32 frames"), (tile((1, 2, 3), 32, 64), "12 wide"),
+                            (tile((1, 2, 3), 12, 12 * 33), "2 to 32 frames"), (tile((1, 2, 3), 12, 18), "2 to 32"),
+                            (tile((9, 9, 9), 12, 24), "every frame is the same")):
             self.write("icon-led.png", png(rows))
             self.refused(words)
 
