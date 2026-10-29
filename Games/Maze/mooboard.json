@@ -2,12 +2,12 @@
   "format": 2,
   "id": "maze",
   "name": "Maze",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "by": "mooboard",
-  "description": "A maze draws itself, then finds the way out.",
+  "description": "Watch the maze loop, then start a fresh puzzle and find your own way out.",
   "category": "Games",
   "uses": "maze",
-  "minFirmware": "0.3.1",
+  "minFirmware": "0.4.1",
   "settings": [
     {
       "key": "speed",
