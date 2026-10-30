@@ -7,7 +7,7 @@
   "description": "Race neon lanes, dodge traffic, chain passes, and manage your A-button nitro.",
   "category": "Games",
   "uses": "game",
-  "minFirmware": "0.4.0-alpha.4",
+  "minFirmware": "0.4.0-alpha",
   "settings": [
     {
       "key": "speed",
