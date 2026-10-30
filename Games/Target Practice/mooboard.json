@@ -7,7 +7,7 @@
   "description": "Chain saucer hits for bonuses in a cosmic shooting gallery before three misses.",
   "category": "Games",
   "uses": "game",
-  "minFirmware": "0.4.0-alpha.4",
+  "minFirmware": "0.4.0-alpha",
   "settings": [
     {
       "key": "speed",
