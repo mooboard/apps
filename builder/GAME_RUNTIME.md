@@ -137,7 +137,7 @@ Drawing instructions take the first register of a consecutive argument block:
 Drawing is allowed only from `draw`. The palette has at most sixteen colors;
 index 0 is black, and is transparent in sprites. Each of at most sixteen
 sprites is eight rows of eight hexadecimal palette indices, e.g. `00111100`.
-Coordinates refer to the 128×32 panel; the scene keeps the outer edge dark.
+Coordinates refer to the whole 128×32 panel.
 Drawing work and coordinates are bounded, even for a program with bad values.
 
 ## ABI and resource limits

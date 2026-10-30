@@ -22,7 +22,7 @@ W, H = 128, 32
 
 
 def frame(color=(200, 120, 20), box=(40, 8, 48, 16)):
-    """a black frame with one lit box well inside the edge ring"""
+    """a black frame with one lit box well inside the panel"""
     rgb = bytearray(W * H * 3)
     x0, y0, bw, bh = box
     for y in range(y0, y0 + bh):
@@ -262,8 +262,13 @@ class Rules(unittest.TestCase):
             at = fast.find(b"\x21\xf9\x04", at + 1)
         self.refused("frames shorter than 30 ms", background=bytes(fast))
 
-    def test_the_edge_ring_stays_dark(self):
-        self.refused("lit pixels in the edge ring", background=gif_of([(frame(box=(0, 0, 10, 10)), 100)]))
+    def test_a_background_may_light_every_edge(self):
+        # every led of the panel the background's to light, its corners and edges too
+        frames = [(frame(box=(0, 0, W, H)), 100), (frame((0, 90, 255), (0, 0, 10, 10)), 100)]
+        out, _ = built(SeasonalTree(self, background=gif_of(frames)))
+        z = zipfile.ZipFile(os.path.join(out, "diwali-1.0.0.mooboard"))
+        got, _, _ = unpack_background(z.read("data/background.bin"))
+        self.assertEqual(got, [rgb for rgb, _ in frames])
 
     def test_gif_cap(self):
         body = gif_of([(frame(), 100), (frame((0, 0, 255)), 100)])

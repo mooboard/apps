@@ -152,9 +152,6 @@ def read_background(name, body, where):
         raise build.Refused("%s/%s is over %d KB" % (where, name, cap >> 10))
     if len(frames) > 1 and any(ms < SHORTEST_MS for _, ms in frames):
         raise build.Refused("%s/%s has frames shorter than %d ms" % (where, name, SHORTEST_MS))
-    ring = [y * W + x for y in range(H) for x in range(W) if x in (0, W - 1) or y in (0, H - 1)]
-    if any(_lit(rgb, i) for rgb, _ in frames for i in ring):
-        raise build.Refused("%s/%s has lit pixels in the edge ring" % (where, name))
     if len(frames) == 1:
         frames = [(frames[0][0], 0)]
     return [(rgb, min(ms, LONGEST_MS)) for rgb, ms in frames]
