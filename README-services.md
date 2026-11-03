@@ -5,8 +5,8 @@ Each `Cores/service-<id>/data/logo.png` is 128 by 128 with a clear background. W
 | Pack | Source |
 | --- | --- |
 | service-hue | Simple Icons 13.21.0 `philipshue`, #0065D3 |
-| service-govee | The owner's supplied Govee logo, scaled to 128 by 128 |
-| service-nanoleaf | The owner's supplied Nanoleaf logo, scaled to 128 by 128 |
+| service-govee | The owner's supplied Govee logo, scaled to 128 by 128, used with the owner's permission |
+| service-nanoleaf | The owner's supplied Nanoleaf logo, scaled to 128 by 128, used with the owner's permission |
 | service-spotify | Simple Icons 13.21.0 `spotify`, #1ED760 |
 | service-sonos | Simple Icons 13.21.0 `sonos`, white |
 | service-googlehome | Simple Icons 13.21.0 `googlehome`, #4285F4 |

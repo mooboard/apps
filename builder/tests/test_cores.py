@@ -342,7 +342,8 @@ class Signed(unittest.TestCase):
 
 
 class TheRepoCores(unittest.TestCase):
-    """the four font cores u652 + made by the firmware's tools/gen_fonts.py --core, each with its licence"""
+    """the four font cores u652 + made by the firmware's tools/gen_fonts.py --core, each with its licence + the eight
+    service data cores u712 (appletv, googlehome, govee, hue, lastfm, nanoleaf, sonos, spotify), each its logo alone"""
 
     def test_the_font_cores_build_and_every_app_is_in_index2(self):
         out = tempfile.mkdtemp()
