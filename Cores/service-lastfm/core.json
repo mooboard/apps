@@ -1,0 +1,10 @@
+{
+  "format": 1,
+  "kind": "core",
+  "id": "service-lastfm",
+  "version": "1.0.0",
+  "type": "data",
+  "files": {
+    "data/logo.png": "1870df32d1043573e8f124d6b1838213b1d44c07f5f8424f2b320a98c6eec1f7"
+  }
+}

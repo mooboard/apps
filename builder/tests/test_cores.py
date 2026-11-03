@@ -351,11 +351,16 @@ class TheRepoCores(unittest.TestCase):
         rows = load(out, "cores.json")["cores"]
         self.assertEqual([(r["id"], r["version"], r["type"]) for r in rows],
                          [("font-albert-sans", "1.0.0", "font"), ("font-figtree", "1.0.0", "font"),
-                          ("font-inter", "1.0.0", "font"), ("font-outfit", "1.0.0", "font")])
+                          ("font-inter", "1.0.0", "font"), ("font-outfit", "1.0.0", "font")]
+                         + [("service-" + k, "1.0.0", "data") for k in
+                            ("appletv", "googlehome", "govee", "hue", "lastfm", "nanoleaf", "sonos", "spotify")])
         for row in rows:
             names = zipfile.ZipFile(os.path.join(out, row["file"])).namelist()
-            self.assertEqual(names[:2], ["core.json", "data/OFL.txt"])
-            self.assertTrue(all(n.endswith(".ttf") for n in names[2:]))
+            if row["type"] == "data":
+                self.assertEqual(names, ["core.json", "data/logo.png"])
+            else:
+                self.assertEqual(names[:2], ["core.json", "data/OFL.txt"])
+                self.assertTrue(all(n.endswith(".ttf") for n in names[2:]))
             self.assertLessEqual(row["size"], 192 * 1024)
         legacy = [a["id"] for a in load(out, "index.json")["apps"]]
         every = [a["id"] for a in load(out, "index2.json")["apps"]]

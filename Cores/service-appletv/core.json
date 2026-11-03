@@ -1,0 +1,10 @@
+{
+  "format": 1,
+  "kind": "core",
+  "id": "service-appletv",
+  "version": "1.0.0",
+  "type": "data",
+  "files": {
+    "data/logo.png": "9242b29b24a0aa47d822f0bcc4172af202357de1f52c383fda628dd300505789"
+  }
+}

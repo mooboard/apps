@@ -1,0 +1,10 @@
+{
+  "format": 1,
+  "kind": "core",
+  "id": "service-googlehome",
+  "version": "1.0.0",
+  "type": "data",
+  "files": {
+    "data/logo.png": "02dd6966182cc73e4e3ba45f438a38a1f10b8156b7aac6c48724c868c03b2fde"
+  }
+}

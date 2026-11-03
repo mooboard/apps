@@ -1,0 +1,10 @@
+{
+  "format": 1,
+  "kind": "core",
+  "id": "service-sonos",
+  "version": "1.0.0",
+  "type": "data",
+  "files": {
+    "data/logo.png": "65573d0716c1c9e19aee6665601493987ac397d5086b7b96b382fb456bf6e2aa"
+  }
+}

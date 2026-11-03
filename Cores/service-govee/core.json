@@ -1,0 +1,10 @@
+{
+  "format": 1,
+  "kind": "core",
+  "id": "service-govee",
+  "version": "1.0.0",
+  "type": "data",
+  "files": {
+    "data/logo.png": "e80e02e7d89c2f9c4cb7959a750da25efe4f7d4a98a4ad4cc9195793f56c3b8e"
+  }
+}

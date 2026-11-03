@@ -1,0 +1,10 @@
+{
+  "format": 1,
+  "kind": "core",
+  "id": "service-nanoleaf",
+  "version": "1.0.0",
+  "type": "data",
+  "files": {
+    "data/logo.png": "d6528ccd7d3cb95a7d8b65a3cfa38c1b478507af157eed709fb94b269cc28635"
+  }
+}

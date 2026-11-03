@@ -1,0 +1,10 @@
+{
+  "format": 1,
+  "kind": "core",
+  "id": "service-hue",
+  "version": "1.0.0",
+  "type": "data",
+  "files": {
+    "data/logo.png": "34fa233d9ffc19f22b9d3f14b44abacd70db65bdc15d9f6e13be0d307a632c4b"
+  }
+}

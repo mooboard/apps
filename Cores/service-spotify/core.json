@@ -1,0 +1,10 @@
+{
+  "format": 1,
+  "kind": "core",
+  "id": "service-spotify",
+  "version": "1.0.0",
+  "type": "data",
+  "files": {
+    "data/logo.png": "2fbb5144d69a502fcc0726a53903e4bb82f974af21ad16915b9f42b136642e43"
+  }
+}
