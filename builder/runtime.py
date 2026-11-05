@@ -22,10 +22,13 @@ def _plain(value):
     if isinstance(value,dict):return all(_plain(k) and _plain(v) for k,v in value.items())
     return True
 
-ORDER = ('format', 'id', 'name', 'version', 'by', 'description', 'category', 'runtime', 'font', 'minFirmware', 'boards', 'settings', 'controls', 'sources')
+ORDER = ('format', 'id', 'name', 'version', 'by', 'description', 'category', 'runtime', 'font', 'minFirmware', 'boards', 'settings', 'controls', 'sources', 'complications')
 SETTING_ORDER = ('key', 'type', 'label', 'default', 'max', 'options')
 CONTROL_ORDER = ('key', 'type', 'label', 'arg', 'min', 'max', 'chars', 'add')
 SOURCE_ORDER = ('key', 'url', 'refresh', 'headers')
+COMPLICATION_ORDER = ('key', 'label', 'source', 'path', 'icon', 'format', 'decimals')
+IMAGE = re.compile('images/[a-z0-9-]{1,32}\\.png\\Z')
+ICON_WORDS = 'A complication icon is a board icon or a 7 x 7 PNG in the package'
 KEY = re.compile('[a-z][a-z0-9_]{0,15}\\Z')
 TOKEN = re.compile('\\{(settings|secrets)\\.([a-z][a-z0-9_]{0,15})\\}')
 VERSION = re.compile('\\d+\\.\\d+\\.\\d+(?:-[0-9A-Za-z.-]+)?\\Z')
@@ -33,6 +36,10 @@ CAP = 352 * 1024
 
 def text(value, maximum):
     return isinstance(value, str) and bool(value.strip()) and (len(value) <= maximum) and package._plain(value)
+
+def label(value, maximum):
+    """the board's validLabel + plain text that holds no link"""
+    return text(value, maximum) and '://' not in value
 
 def unique(pairs):
     result = {}
@@ -53,7 +60,7 @@ def check(man):
     refuse(not isinstance(man.get('id'), str) or not re.fullmatch('[a-z0-9-]{3,32}', man['id']), 'App id must be 3 to 32 letters, numbers and hyphens')
     refuse(man['id'] in package.RESERVED_IDS, 'Choose your own app id')
     for field, limit in (('name', 24), ('by', 32), ('description', 160)):
-        refuse(not text(man.get(field), limit), '%s must be 1 to %d plain characters' % (field, limit))
+        refuse(not label(man.get(field), limit), '%s must be 1 to %d plain characters' % (field, limit))
     for field in ('version', 'minFirmware'):
         refuse(not isinstance(man.get(field), str) or not VERSION.fullmatch(man[field]), field + ' must be a semantic version')
     refuse(man.get('runtime') != 'lua54', 'The live runtime is lua54')
@@ -94,7 +101,7 @@ def check(man):
         refuse(not isinstance(key, str) or not KEY.fullmatch(key) or key in seen_controls, 'Control keys must be unique')
         seen_controls.add(key)
         refuse(kind not in ('button', 'stepper', 'readout', 'list'), 'Unknown control type')
-        refuse(not text(control.get('label'), 24), 'A control needs a label')
+        refuse(not label(control.get('label'), 24), 'A control needs a label')
         allowed = {'key', 'type', 'label'} | ({'arg'} if kind == 'button' and 'arg' in control else {'min', 'max'} if kind == 'stepper' else {'max', 'chars', 'add'} if kind == 'list' else set())
         refuse(set(control) != allowed, 'A control has fields for another type')
         for field in re.findall('\\{([^{}]+)\\}', control['label']):
@@ -105,7 +112,7 @@ def check(man):
         if kind == 'button' and 'arg' in control:
             refuse(type(control['arg']) is not int or not 0 <= control['arg'] <= 86400, 'Button arg must be 0 to 86400')
         if kind == 'list':
-            refuse(type(control.get('max')) is not int or not 1 <= control['max'] <= 8 or type(control.get('chars')) is not int or (not 1 <= control['chars'] <= 16) or (not text(control.get('add'), 24)), 'A list needs max, chars and add')
+            refuse(type(control.get('max')) is not int or not 1 <= control['max'] <= 8 or type(control.get('chars')) is not int or (not 1 <= control['chars'] <= 16) or (not label(control.get('add'), 24)), 'A list needs max, chars and add')
     sources = man.get('sources', [])
     refuse(not isinstance(sources, list) or len(sources) > 4, 'An app has at most 4 data sources')
     seen_sources = set()
@@ -131,11 +138,28 @@ def check(man):
                 refuse(group == 'settings' and field not in seen, 'Header settings must be declared')
             sample = TOKEN.sub('sample', value)
             refuse('{' in sample or '}' in sample, 'Invalid source header placeholder')
+    complications = man.get('complications', [])
+    refuse(not isinstance(complications, list) or len(complications) > 2, 'An app has at most 2 complications')
+    seen_complications = set()
+    for item in complications:
+        refuse(not isinstance(item, dict) or set(item) - set(COMPLICATION_ORDER) or any((k not in item for k in ('key', 'label', 'source', 'path'))), 'A complication has a key, label, source, and path')
+        key = item['key']
+        refuse(not isinstance(key, str) or not KEY.fullmatch(key), 'A complication key is a lowercase name of at most 16 characters')
+        refuse(key in seen_complications, 'Complication keys must be unique')
+        seen_complications.add(key)
+        refuse(not label(item['label'], 24), 'A complication needs a label of at most 24 characters')
+        refuse(not isinstance(item['source'], str) or item['source'] not in seen_sources, "A complication reads one of the app's sources")
+        refuse(not isinstance(item['path'], str) or not complication.valid_path(item['path']), 'A complication path is keys and [n] indexes of at most 64 characters')
+        if 'icon' in item:
+            icon = item['icon']
+            refuse(not isinstance(icon, str) or not (icon in complication.icons() or IMAGE.fullmatch(icon)), ICON_WORDS)
+        refuse('format' in item and (not complication.valid_format(item['format'])), 'A complication format has one {value} and at most 16 bytes')
+        refuse('decimals' in item and (type(item['decimals']) is not int or not 0 <= item['decimals'] <= 2), 'Complication decimals are 0 to 2')
     return man
 
 def canonical(man):
     result = {key: man[key] for key in ORDER if key in man}
-    for field, order in (('settings', SETTING_ORDER), ('controls', CONTROL_ORDER), ('sources', SOURCE_ORDER)):
+    for field, order in (('settings', SETTING_ORDER), ('controls', CONTROL_ORDER), ('sources', SOURCE_ORDER), ('complications', COMPLICATION_ORDER)):
         if field in result:
             result[field] = [{key: item[key] for key in order if key in item} for item in result[field]]
     return (json.dumps(result, ensure_ascii=False, indent=2) + '\n').encode('utf-8')
