@@ -1193,6 +1193,30 @@
       12
     ],
     [
+      "const",
+      21,
+      10
+    ],
+    [
+      "eq",
+      22,
+      20,
+      21
+    ],
+    [
+      "jz",
+      22,
+      "combo_max"
+    ],
+    [
+      "cue",
+      "powerUp"
+    ],
+    [
+      "label",
+      "combo_max"
+    ],
+    [
       "load",
       20,
       12
@@ -1391,12 +1415,20 @@
       "gameover"
     ],
     [
+      "cue",
+      "death"
+    ],
+    [
       "jump",
       "done"
     ],
     [
       "label",
       "gameover"
+    ],
+    [
+      "cue",
+      "gameOver"
     ],
     [
       "const",
