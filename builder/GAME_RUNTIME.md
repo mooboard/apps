@@ -116,6 +116,7 @@ Register operands are integers 0–31. `a`, `b`, `c` below name registers; an
 | `input a, field` / `setting a, index` | Read input / app setting |
 | `random a, b` | Seeded random integer in `[0, r[b])`; zero when the bound is nonpositive |
 | `overlap a` | AABB collision using eight consecutive registers |
+| `cue look` / `cue look, color` | Flash the room's lights (see Game lights) |
 
 Addition, subtraction, multiplication and shifts wrap at 32 bits. Right shift
 is logical. Division truncates toward zero. Division by zero and signed
@@ -139,6 +140,75 @@ index 0 is black, and is transparent in sprites. Each of at most sixteen
 sprites is eight rows of eight hexadecimal palette indices, e.g. `00111100`.
 Coordinates refer to the whole 128×32 panel.
 Drawing work and coordinates are bounded, even for a program with bad values.
+
+## Game lights
+
+Firmware **0.4.2-alpha.1** and later can flash the room's lights at a game's big
+moments. Either way below needs `"minFirmware": "0.4.2-alpha.1"` or later, since
+older boards refuse both. The builder refuses an app that asks for less.
+
+The six looks, with the board's own timing and color:
+
+| Look | Pulses | On ms | Off ms | Fade ms | Color |
+| --- | --- | --- | --- | --- | --- |
+| `hit` | 1 | 80 | 0 | 170 | `#ffffff` |
+| `powerUp` | 1 | 150 | 0 | 350 | `#00ff6e` |
+| `explosion` | 1 | 100 | 0 | 500 | `#ff5a00` |
+| `levelClear` | 1 | 250 | 0 | 600 | `#ffc800` |
+| `death` | 2 | 150 | 100 | 600 | `#ff0000` |
+| `gameOver` | 3 | 200 | 150 | 1500 | `#ff0000` |
+
+Use `death` when the player loses a life and `gameOver` when the run ends.
+
+### A game program
+
+`["cue", "death"]` flashes a look in its own color. `["cue", "powerUp", 8]`
+flashes it in palette color 8 (1 to the last color; 0 is black). The op is
+opcode 32 and its immediate holds the look's number (1 `hit` to 6 `gameOver`) in
+the low four bits and the palette index plus one in the next five, zero for the
+look's own color. A cue belongs in `step`, `init` or `auto`. The board stops a
+program that cues from `draw`, so the builder refuses it. Cue once, when the
+moment happens, and not on every step it lasts.
+
+### A native game's manifest
+
+A game with its own firmware renderer names its moments in `"lights"`, the last
+key of `mooboard.json`. It maps each event to a look. Only `look` is required.
+`color` is `#rrggbb`, `pulses` 1 to 3, `on` 40 to 600 ms, `off` 0 to 500 ms
+(50 or more when there is more than one pulse) and `fade` 0 to 2000 ms. An event
+left out stays dark.
+
+```json
+"lights": {
+  "dead": {"look": "gameOver"},
+  "chest": {"look": "powerUp", "color": "#ffc800"}
+}
+```
+
+The builder writes the events in the renderer's order and each look's keys in
+the board's order. Each renderer raises only these events:
+
+| `uses` | Events |
+| --- | --- |
+| `pong` | `missed`, `scored` |
+| `snake` | `crash`, `full`, `grow10` |
+| `blocks` | `topOut`, `lines4`, `lines` |
+| `maze` | `solved` |
+| `breakout` | `ballLost`, `cleared` |
+| `invaders` | `cannonHit`, `waveCleared`, `invaderHit` |
+| `flappy` | `crash`, `pipes10` |
+| `cycles` | `playerOut`, `roundWon`, `rivalOut` |
+| `microracer` | `crash`, `milestone` |
+| `pixelpinball` | `drain`, `targets`, `bumper` |
+| `microrogue` | `hurt`, `dead`, `stairs`, `chest` |
+| `spacelander` | `crash`, `landed` |
+| `dinorunner` | `crash`, `score100` |
+| `missiledefense` | `cityLost`, `lastCity`, `waveCleared`, `intercept` |
+| `minesweeper` | `mine`, `cleared` |
+| `wordguess` | `solved`, `outOfGuesses`, `miss` |
+| `doom` | `died`, `hurt`, `powerUp`, `exit`, `blast` |
+
+A game program (`"uses": "game"`) cues from its code and takes no `"lights"`.
 
 ## ABI and resource limits
 

@@ -169,6 +169,28 @@ USES_FIRMWARE["game"] = RUNTIME_FIRMWARE
 RUNTIMES = {"game": "game", "lua54": "lua"}   # uses to index2's runtime + the legacy index lists neither
 # the first firmware with doom c3870 + its pre-release keeps it out of the legacy index
 USES_FIRMWARE["doom"] = "0.4.0-alpha.4"
+# a game's light moments u757 c5365 + its manifest's "lights" maps an event its renderer raises (pw_scenes store
+# kEvents, in their order) to a look (pw_model GameGlow kCueNames past flash) + older boards refuse the key, and a vm
+# game's cue op, so either needs this firmware in pw_ota's order + each look's pulses, on, off, fade ms and color (gameCueLook)
+LIGHTS_FIRMWARE = "0.4.2-alpha.1"   # every 0.4.2 prototype and the release + the publish raises it
+LIGHT_LOOKS = ("hit", "powerUp", "explosion", "levelClear", "death", "gameOver")
+LIGHT_DEFAULTS = {"hit": (1, 80, 0, 170, "#ffffff"), "powerUp": (1, 150, 0, 350, "#00ff6e"),
+                  "explosion": (1, 100, 0, 500, "#ff5a00"), "levelClear": (1, 250, 0, 600, "#ffc800"),
+                  "death": (2, 150, 100, 600, "#ff0000"), "gameOver": (3, 200, 150, 1500, "#ff0000")}
+LIGHT_KEYS = ("look", "color", "pulses", "on", "off", "fade")
+LIGHT_RANGES = (("pulses", 1, 3), ("on", 40, 600), ("off", 0, 500), ("fade", 0, 2000))
+LIGHTS_MAX = 16
+LIGHT_EVENT = re.compile(r"[A-Za-z0-9]{1,15}")
+LIGHT_COLOR = re.compile(r"#[0-9a-fA-F]{6}")
+LIGHT_EVENTS = {"pong": ("missed", "scored"), "snake": ("crash", "full", "grow10"),
+                "blocks": ("topOut", "lines4", "lines"), "maze": ("solved",), "breakout": ("ballLost", "cleared"),
+                "invaders": ("cannonHit", "waveCleared", "invaderHit"), "flappy": ("crash", "pipes10"),
+                "cycles": ("playerOut", "roundWon", "rivalOut"), "microracer": ("crash", "milestone"),
+                "pixelpinball": ("drain", "targets", "bumper"), "microrogue": ("hurt", "dead", "stairs", "chest"),
+                "spacelander": ("crash", "landed"), "dinorunner": ("crash", "score100"),
+                "missiledefense": ("cityLost", "lastCity", "waveCleared", "intercept"),
+                "minesweeper": ("mine", "cleared"), "wordguess": ("solved", "outOfGuesses", "miss"),
+                "doom": ("died", "hurt", "powerUp", "exit", "blast")}
 BOARDS = ("s3", "p4")
 BOARD_CAP = {"s3": 2 * 1024 * 1024, "p4": 8 * 1024 * 1024}
 ENTRY_CAP = 512 * 1024
@@ -193,7 +215,7 @@ ICON = 32
 NAME_MAX = 24
 DESCRIPTION_MAX = 80
 KEYS = ("format", "id", "name", "version", "by", "description", "category", "uses", "minFirmware", "boards",
-        "cores", "settings", "controls")
+        "cores", "settings", "controls", "lights")
 SETTING_KEYS = ("key", "type", "label", "default", "max", "options")
 CONTROL_KEYS = ("key", "type", "label", "arg", "min", "max", "chars", "add")
 SETTINGS_MAX = 8
@@ -366,7 +388,38 @@ def check_manifest(body, category, folder):
     if "cores" in man:
         check_cores_field(man, where)
     check_sheet(man, where)
+    if "lights" in man:
+        check_lights(man, where)
     return man
+
+
+def check_lights(man, where):
+    """a game's light moments as the board reads them (pw_apps Manifest.cpp readLights) u757 c5365 + only events its
+    renderer raises + a look the board knows + pulses past the first need a gap, which the board would make 50 ms"""
+    events, lights = LIGHT_EVENTS.get(man["uses"]), man["lights"]
+    if events is None:
+        raise Refused("%s: a %s app raises no light events" % (where, man["uses"]))
+    if order(man.get("minFirmware", "0.0.0")) < order(LIGHTS_FIRMWARE):
+        raise Refused("%s: an app with lights needs minFirmware %s or later" % (where, LIGHTS_FIRMWARE))
+    if not isinstance(lights, dict) or not 1 <= len(lights) <= LIGHTS_MAX:
+        raise Refused("%s: lights must map 1 to %d events to looks" % (where, LIGHTS_MAX))
+    for name, rule in lights.items():
+        if not LIGHT_EVENT.fullmatch(name):
+            raise Refused("%s: lights event %r is not 1 to 15 letters and digits" % (where, name))
+        if name not in events:
+            raise Refused("%s: %s raises no event %s (%s)" % (where, man["uses"], name, ", ".join(events)))
+        if not isinstance(rule, dict) or any(key not in LIGHT_KEYS for key in rule):
+            raise Refused("%s: lights %s takes only %s" % (where, name, ", ".join(LIGHT_KEYS)))
+        if rule.get("look") not in LIGHT_LOOKS:
+            raise Refused("%s: lights %s look must be one of %s" % (where, name, ", ".join(LIGHT_LOOKS)))
+        if "color" in rule and not (isinstance(rule["color"], str) and LIGHT_COLOR.fullmatch(rule["color"])):
+            raise Refused("%s: lights %s color must be #rrggbb" % (where, name))
+        for key, low, high in LIGHT_RANGES:
+            if key in rule and not _int(rule[key], low, high):
+                raise Refused("%s: lights %s %s must be %d to %d" % (where, name, key, low, high))
+        pulses, _, off, _, _ = LIGHT_DEFAULTS[rule["look"]]
+        if rule.get("pulses", pulses) > 1 and rule.get("off", off) < 50:
+            raise Refused("%s: lights %s off must be 50 or more between pulses" % (where, name))
 
 
 def check_cores_field(man, where):
@@ -815,6 +868,10 @@ def manifest_bytes(man):
         man["controls"] = [{k: c[k] for k in CONTROL_KEYS if k in c} for c in man["controls"]]
     if "cores" in man:
         man["cores"] = dict(sorted(man["cores"].items()))
+    # + lights in the renderer's event order and each look's keys in the board's u757 c5365
+    if "lights" in man:
+        man["lights"] = {event: {k: man["lights"][event][k] for k in LIGHT_KEYS if k in man["lights"][event]}
+                         for event in LIGHT_EVENTS[man["uses"]] if event in man["lights"]}
     return (json.dumps({key: man[key] for key in KEYS if key in man}, ensure_ascii=False, indent=2) + "\n").encode()
 
 
@@ -881,6 +938,11 @@ def load_app(root, category, folder, floor=None):
         raise Refused("%s has more than %d entries" % (where, MAX_ENTRIES))
     USES_CHECKS[man["uses"]](data, where)
     data = package_data(man["uses"], data)
+    if man["uses"] == "game":
+        import game
+        if game.cues(data["game.bin"]) and \
+                order(man.get("minFirmware", "0.0.0")) < order(LIGHTS_FIRMWARE):
+            raise Refused("%s: a game that cues needs minFirmware %s or later" % (where, LIGHTS_FIRMWARE))
     entries = [("mooboard.json", manifest_bytes(man)), ("icon.png", icon)]
     entries += [("data/" + path, data[path]) for path in sorted(data)]
     package = write_zip(entries)

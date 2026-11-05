@@ -4,10 +4,13 @@ import re
 import struct
 
 OPS = ("halt const mov add sub mul div mod and or xor shl shr eq lt jump jz jnz load store loadi storei input random "
-       "setting clear pixel rect line sprite digits overlap").split()
+       "setting clear pixel rect line sprite digits overlap cue").split()
 REGISTERS, WORDS, INSTRUCTIONS, SPRITES, ABI = 32, 512, 2048, 16, 1
 MAX_BYTES = 32 + 48 + INSTRUCTIONS * 8 + SPRITES * 64 + WORDS * 4
 ARGS = {"clear": 1, "pixel": 3, "rect": 5, "line": 5, "sprite": 4, "digits": 4, "overlap": 8}
+# the lights api u757 c5365 + cue's imm is its look's number here plus 1 in the low 4 bits and a palette color plus 1
+# in the next 5, 0 the look's own color (pw_game Program.h Op::Cue) + 0.4.2-alpha.1 and later run it
+LOOKS = ("hit", "powerUp", "explosion", "levelClear", "death", "gameOver")
 
 
 def integer(n, low, high, what):
@@ -43,11 +46,19 @@ def validate_binary(data):
             raise ValueError("game input")
         if name == "setting" and not 0 <= imm < 8:
             raise ValueError("game setting")
+        if name == "cue" and not (1 <= imm & 15 <= len(LOOKS) and 0 <= imm and imm >> 4 <= 16):
+            raise ValueError("game cue")
         if a + ARGS.get(name, 0) > REGISTERS:
             raise ValueError("game drawing arguments")
     if any(value > 15 for value in data[80 + count * 8:80 + count * 8 + sprites * 64]):
         raise ValueError("game sprite palette")
     return data
+
+
+def cues(data):
+    """how many cue instructions a validated binary holds + a game that cues needs 0.4.2-alpha.1"""
+    count = struct.unpack_from("<H", data, 8)[0]
+    return sum(data[80 + n * 8] == OPS.index("cue") for n in range(count))
 
 
 def compile_game(source):
@@ -109,6 +120,14 @@ def compile_game(source):
             elif name in ("const", "load", "store", "input", "setting", "jz", "jnz"):
                 if len(args) != 2: raise ValueError(f"{name} needs two operands")
                 a, imm = args
+            elif name == "cue":
+                if not 1 <= len(args) <= 2 or args[0] not in LOOKS:
+                    raise ValueError("cue needs a look (%s) and maybe a palette index" % ", ".join(LOOKS))
+                if section == "draw":
+                    raise ValueError("cue is not allowed in draw")
+                imm = LOOKS.index(args[0]) + 1
+                if len(args) == 2:
+                    imm |= (integer(args[1], 1, len(palette) - 1, "cue palette index") + 1) << 4
             elif name in ARGS:
                 if len(args) != 1: raise ValueError(f"{name} needs an argument register")
                 a = args[0]

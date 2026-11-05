@@ -707,16 +707,17 @@ class TheRepo(unittest.TestCase):
         out = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, out)
         build.build(REPO, out, generated=GENERATED)
-        row = [a for a in json.loads(read(os.path.join(out, "index.json")))["apps"] if a["id"] == "word-guess"][0]
-        self.assertEqual(row["minFirmware"], "0.4.0")
+        # index2's rows + a game with lights leaves the legacy index u757
+        rows = {a["id"]: a for a in json.loads(read(os.path.join(out, "index2.json")))["apps"]}
+        row = rows["word-guess"]
+        self.assertGreaterEqual(build.order(row["minFirmware"]), build.order("0.4.0"))
         body = read(os.path.join(out, row["words"]["file"]))
         self.assertEqual(len(body), 8506 * 3)
         self.assertEqual(row["words"]["size"], len(body))
         self.assertEqual(body[:3], packed("aalii"))
         self.assertIn(packed("cramp"), [body[i:i + 3] for i in range(0, len(body), 3)])
         for app_id in ("minesweeper", "missile-defense"):
-            self.assertEqual([a for a in json.loads(read(os.path.join(out, "index.json")))["apps"]
-                              if a["id"] == app_id][0]["minFirmware"], "0.4.0")
+            self.assertGreaterEqual(build.order(rows[app_id]["minFirmware"]), build.order("0.4.0"))
 
     def test_this_repo_builds_and_fits_the_s3(self):
         out = tempfile.mkdtemp()
@@ -1117,3 +1118,100 @@ class Generated(unittest.TestCase):
             f.write("not json")
         with unittest.mock.patch.object(sys, "stderr", io.StringIO()):
             self.assertEqual(build.main(["--out", out, "--previous", live]), 1)
+
+
+def snake(**changes):
+    """a native game with its light moments u757 c5365 + written in an order the board does not keep"""
+    out = manifest(id="snake", name="Snake", uses="snake", category="Games", minFirmware="0.4.2-alpha.1",
+                   description="Classic Snake.")
+    out["lights"] = {"grow10": {"fade": 300, "look": "powerUp"}, "crash": {"look": "gameOver"}}
+    out.update(changes)
+    return {key: value for key, value in out.items() if value is not None}
+
+
+class Lights(unittest.TestCase):
+    """a game's light moments u757 c5365: each event one its renderer raises, a look the board knows, in range, laid
+    out after controls in the board's key order, and only from 0.4.2-alpha.1"""
+
+    def build(self, man, folder="Snake"):
+        tree = Tree(self)
+        tree.app("Games", folder, man, {})
+        return tree.build()
+
+    def refused(self, man, words, folder="Snake"):
+        with self.assertRaises(build.Refused) as caught:
+            self.build(man, folder)
+        self.assertIn(words, str(caught.exception))
+
+    def test_lights_build_after_controls_in_the_boards_key_order(self):
+        out = self.build(snake(settings=[{"key": "speed", "type": "choice", "label": "Speed", "default": "Normal",
+                                          "options": ["Slow", "Normal", "Fast"]}]))
+        body = zipfile.ZipFile(os.path.join(out, "snake-1.0.0.mooboard")).read("mooboard.json").decode()
+        man = json.loads(body)
+        self.assertEqual(list(man)[-2:], ["settings", "lights"])
+        self.assertEqual(list(man["lights"]), ["crash", "grow10"])   # the renderer's own order
+        self.assertEqual(list(man["lights"]["grow10"]), ["look", "fade"])
+        self.assertEqual(build.KEYS[-2:], ("controls", "lights"))
+        # older boards refuse the key, so the legacy index never lists it and index2 keeps the floor
+        self.assertNotIn("snake", [a["id"] for a in json.loads(read(os.path.join(out, "index.json")))["apps"]])
+        row = [a for a in json.loads(read(os.path.join(out, "index2.json")))["apps"] if a["id"] == "snake"][0]
+        self.assertEqual(row["minFirmware"], "0.4.2-alpha.1")
+        self.assertNotIn("lights", row)
+
+    def test_every_look_and_field_in_range_builds(self):
+        lights = {"crash": {"look": "death", "color": "#FFc800", "pulses": 3, "on": 40, "off": 50, "fade": 2000},
+                  "full": {"look": "explosion", "on": 600, "off": 500, "fade": 0},
+                  "grow10": {"look": "hit", "pulses": 1, "off": 0}}
+        self.build(snake(lights=lights))
+        for look in build.LIGHT_LOOKS:
+            self.build(snake(lights={"crash": {"look": look}}))
+
+    def test_lights_need_0_4_2_alpha(self):
+        # pw_ota's order + every 0.4.2 prototype and the release pass, and 0.4.1's never
+        for floor in ("0.4.1", "0.4.1-alpha", "0.4.1-beta.2", "0.4.0-alpha.3"):
+            self.refused(snake(minFirmware=floor), "an app with lights needs minFirmware 0.4.2-alpha.1")
+        self.refused(snake(minFirmware=None), "needs minFirmware")
+        for floor in ("0.4.2-alpha.1", "0.4.2-alpha.3", "0.4.2-alpha", "0.4.2-beta", "0.4.2"):
+            self.build(snake(minFirmware=floor))
+
+    def test_bad_lights_are_refused(self):
+        many = {"e%d" % n: {"look": "hit"} for n in range(17)}
+        for lights, words in (
+                ([], "lights must map 1 to 16 events to looks"), ({}, "lights must map 1 to 16 events to looks"),
+                (many, "lights must map 1 to 16 events to looks"),
+                ({"a-b": {"look": "hit"}}, "is not 1 to 15 letters and digits"),
+                ({"crashedIntoTheWall": {"look": "hit"}}, "is not 1 to 15 letters and digits"),
+                ({"jump": {"look": "hit"}}, "snake raises no event jump (crash, full, grow10)"),
+                ({"crash": "gameOver"}, "lights crash takes only look, color, pulses, on, off, fade"),
+                ({"crash": {"look": "gameOver", "speed": 1}}, "lights crash takes only look, color, pulses"),
+                ({"crash": {"color": "#ff0000"}}, "lights crash look must be one of hit, powerUp"),
+                ({"crash": {"look": "flash"}}, "lights crash look must be one of"),
+                ({"crash": {"look": "GameOver"}}, "lights crash look must be one of"),
+                ({"crash": {"look": "hit", "color": "#fff"}}, "lights crash color must be #rrggbb"),
+                ({"crash": {"look": "hit", "color": "red"}}, "lights crash color must be #rrggbb"),
+                ({"crash": {"look": "hit", "pulses": 0}}, "lights crash pulses must be 1 to 3"),
+                ({"crash": {"look": "hit", "pulses": 4}}, "lights crash pulses must be 1 to 3"),
+                ({"crash": {"look": "hit", "pulses": True}}, "lights crash pulses must be 1 to 3"),
+                ({"crash": {"look": "hit", "on": 39}}, "lights crash on must be 40 to 600"),
+                ({"crash": {"look": "hit", "on": 100.0}}, "lights crash on must be 40 to 600"),
+                ({"crash": {"look": "hit", "off": 501}}, "lights crash off must be 0 to 500"),
+                ({"crash": {"look": "hit", "fade": -1}}, "lights crash fade must be 0 to 2000"),
+                ({"crash": {"look": "hit", "pulses": 2}}, "lights crash off must be 50 or more between pulses"),
+                ({"crash": {"look": "gameOver", "off": 20}}, "lights crash off must be 50 or more between pulses")):
+            with self.subTest(lights=str(lights)[:60]):
+                self.refused(snake(lights=lights), words)
+        # a renderer that raises no events takes no lights
+        self.refused(manifest(id="life", name="Game of Life", uses="life", category="Games",
+                              minFirmware="0.4.2-alpha.1", lights={"crash": {"look": "hit"}}),
+                     "a life app raises no light events", folder="Game of Life")
+
+    def test_the_boards_events_and_looks(self):
+        # pw_scenes store kEvents for each renderer and pw_model GameGlow kCueNames past flash
+        import game
+        self.assertEqual(build.LIGHT_LOOKS, game.LOOKS)
+        self.assertEqual(build.LIGHT_LOOKS, ("hit", "powerUp", "explosion", "levelClear", "death", "gameOver"))
+        self.assertTrue(set(build.LIGHT_EVENTS) <= set(build.CATALOG_USES))
+        self.assertEqual(len(build.LIGHT_EVENTS), 17)
+        self.assertEqual(build.LIGHT_EVENTS["microrogue"], ("hurt", "dead", "stairs", "chest"))
+        self.assertEqual(build.LIGHT_EVENTS["doom"], ("died", "hurt", "powerUp", "exit", "blast"))
+        self.assertTrue(all(1 <= len(e) <= 15 and e.isalnum() for v in build.LIGHT_EVENTS.values() for e in v))
