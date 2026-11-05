@@ -2,12 +2,12 @@
   "format": 2,
   "id": "micro-racer",
   "name": "Micro Racer",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "by": "mooboard",
   "description": "A retro highway racer with nitro boost.",
   "category": "Games",
   "uses": "microracer",
-  "minFirmware": "0.3.2",
+  "minFirmware": "0.4.2-alpha.1",
   "settings": [
     {
       "key": "speed",
@@ -31,5 +31,13 @@
         "Midnight City"
       ]
     }
-  ]
+  ],
+  "lights": {
+    "crash": {
+      "look": "death"
+    },
+    "milestone": {
+      "look": "levelClear"
+    }
+  }
 }
