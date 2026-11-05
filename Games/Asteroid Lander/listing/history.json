@@ -1,4 +1,5 @@
 [
+  {"version": "1.2", "date": "2026-11-05", "notes": "Game lights flash when you land or crash."},
   {"version": "1.1", "date": "2026-10-27", "notes": "A new lander that sets down between jagged peaks. Fly in low, normal, or high gravity on the Moon, Mars, or Europa."},
   {"version": "1.0", "date": "2026-10-26", "notes": "First release. Pilot a thrust rocket to the landing pads."}
 ]
