@@ -1,3 +1,4 @@
 [
+  {"version": "1.1", "date": "2026-11-05", "notes": "Game lights flash when your cannon is hit or a wave is cleared."},
   {"version": "1.0", "date": "2026-10-21", "notes": "First release. Invaders march down, and the cannon fights back from behind three shields."}
 ]

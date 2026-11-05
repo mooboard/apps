@@ -2,12 +2,12 @@
   "format": 2,
   "id": "invaders",
   "name": "Invaders",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "by": "mooboard",
   "description": "Invaders march down and the cannon fights back.",
   "category": "Games",
   "uses": "invaders",
-  "minFirmware": "0.3.1",
+  "minFirmware": "0.4.2-alpha.1",
   "settings": [
     {
       "key": "speed",
@@ -30,5 +30,13 @@
         "Neon"
       ]
     }
-  ]
+  ],
+  "lights": {
+    "cannonHit": {
+      "look": "gameOver"
+    },
+    "waveCleared": {
+      "look": "levelClear"
+    }
+  }
 }
