@@ -2,12 +2,12 @@
   "format": 2,
   "id": "word-guess",
   "name": "Word Guess",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "by": "mooboard",
   "description": "Find the five-letter word in six tries.",
   "category": "Games",
   "uses": "wordguess",
-  "minFirmware": "0.4.0",
+  "minFirmware": "0.4.2-alpha.1",
   "settings": [
     {
       "key": "speed",
@@ -20,5 +20,17 @@
         "Fast"
       ]
     }
-  ]
+  ],
+  "lights": {
+    "solved": {
+      "look": "levelClear",
+      "color": "#53ffb7"
+    },
+    "outOfGuesses": {
+      "look": "gameOver"
+    },
+    "miss": {
+      "look": "hit"
+    }
+  }
 }
