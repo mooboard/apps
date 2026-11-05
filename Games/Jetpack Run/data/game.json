@@ -3961,6 +3961,11 @@
       6
     ],
     [
+      "cue",
+      "hit",
+      8
+    ],
+    [
       "jump",
       "next_hazard"
     ],
@@ -4042,12 +4047,20 @@
       "over"
     ],
     [
+      "cue",
+      "death"
+    ],
+    [
       "jump",
       "next_hazard"
     ],
     [
       "label",
       "over"
+    ],
+    [
+      "cue",
+      "gameOver"
     ],
     [
       "const",
@@ -4553,6 +4566,25 @@
       "jz",
       0,
       "next_coin"
+    ],
+    [
+      "load",
+      21,
+      9
+    ],
+    [
+      "jnz",
+      21,
+      "shield_kept"
+    ],
+    [
+      "cue",
+      "powerUp",
+      8
+    ],
+    [
+      "label",
+      "shield_kept"
     ],
     [
       "const",
