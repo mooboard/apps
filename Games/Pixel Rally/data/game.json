@@ -1041,6 +1041,10 @@
       "gameover"
     ],
     [
+      "cue",
+      "death"
+    ],
+    [
       "jump",
       "spawn"
     ],
@@ -1118,6 +1122,26 @@
       "store",
       20,
       7
+    ],
+    [
+      "const",
+      21,
+      5
+    ],
+    [
+      "eq",
+      22,
+      20,
+      21
+    ],
+    [
+      "jz",
+      22,
+      "combo_score"
+    ],
+    [
+      "cue",
+      "powerUp"
     ],
     [
       "label",
@@ -1211,6 +1235,10 @@
     [
       "label",
       "gameover"
+    ],
+    [
+      "cue",
+      "gameOver"
     ],
     [
       "const",
