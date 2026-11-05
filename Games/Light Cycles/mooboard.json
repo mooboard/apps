@@ -2,12 +2,12 @@
   "format": 2,
   "id": "light-cycles",
   "name": "Light Cycles",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "by": "mooboard",
   "description": "Light trails race to box each other in.",
   "category": "Games",
   "uses": "cycles",
-  "minFirmware": "0.3.1",
+  "minFirmware": "0.4.2-alpha.1",
   "settings": [
     {
       "key": "riders",
@@ -31,5 +31,16 @@
         "Fast"
       ]
     }
-  ]
+  ],
+  "lights": {
+    "playerOut": {
+      "look": "gameOver"
+    },
+    "roundWon": {
+      "look": "levelClear"
+    },
+    "rivalOut": {
+      "look": "explosion"
+    }
+  }
 }
