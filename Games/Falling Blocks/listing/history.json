@@ -1,3 +1,4 @@
 [
+  {"version": "1.1", "date": "2026-11-05", "notes": "Game lights flash when you clear lines and when the stack tops out."},
   {"version": "1.0", "date": "2026-10-21", "notes": "First release. Pieces fall, stack, and clear lines, with the lines cleared and the next piece beside the well."}
 ]
