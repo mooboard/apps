@@ -1,4 +1,5 @@
 [
+  {"version": "1.2", "date": "2026-11-05", "notes": "Game lights flash when the ball drains or you clear the targets."},
   {"version": "1.1", "date": "2026-10-27", "notes": "Rebuilt as a sideways table with three bumpers, drop targets, and two flippers, on a choice of three tables. Dropping all three targets raises the multiplier."},
   {"version": "1.0", "date": "2026-10-26", "notes": "First release. Arcade pinball with bumpers and ramps."}
 ]

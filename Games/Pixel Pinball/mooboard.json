@@ -2,12 +2,12 @@
   "format": 2,
   "id": "pixel-pinball",
   "name": "Pixel Pinball",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "by": "mooboard",
   "description": "Arcade pinball with bumpers, drop targets, and flippers.",
   "category": "Games",
   "uses": "pixelpinball",
-  "minFirmware": "0.3.2",
+  "minFirmware": "0.4.2-alpha.1",
   "settings": [
     {
       "key": "speed",
@@ -31,5 +31,13 @@
         "Emerald Casino"
       ]
     }
-  ]
+  ],
+  "lights": {
+    "drain": {
+      "look": "death"
+    },
+    "targets": {
+      "look": "powerUp"
+    }
+  }
 }
