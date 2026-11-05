@@ -2,12 +2,12 @@
   "format": 2,
   "id": "pong-clock",
   "name": "Pong Clock",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "by": "mooboard",
   "description": "Two paddles play, and the score is the time.",
   "category": "Games",
   "uses": "pong",
-  "minFirmware": "0.3.1",
+  "minFirmware": "0.4.2-alpha.1",
   "settings": [
     {
       "key": "speed",
@@ -30,5 +30,13 @@
         "Neon"
       ]
     }
-  ]
+  ],
+  "lights": {
+    "missed": {
+      "look": "death"
+    },
+    "scored": {
+      "look": "hit"
+    }
+  }
 }
