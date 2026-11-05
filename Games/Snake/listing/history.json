@@ -1,3 +1,4 @@
 [
+  {"version": "1.1", "date": "2026-11-05", "notes": "Game lights flash when you crash, grow by ten, or fill the board."},
   {"version": "1.0", "date": "2026-10-21", "notes": "First release. Classic Snake, one apple at a time."}
 ]
