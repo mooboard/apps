@@ -2,12 +2,12 @@
   "format": 2,
   "id": "missile-defense",
   "name": "Missile Defense",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "by": "mooboard",
   "description": "Guard three cities with interceptors and chain reactions.",
   "category": "Games",
   "uses": "missiledefense",
-  "minFirmware": "0.4.0",
+  "minFirmware": "0.4.2-alpha.1",
   "settings": [
     {
       "key": "speed",
@@ -20,5 +20,16 @@
         "Fast"
       ]
     }
-  ]
+  ],
+  "lights": {
+    "cityLost": {
+      "look": "explosion"
+    },
+    "lastCity": {
+      "look": "gameOver"
+    },
+    "waveCleared": {
+      "look": "levelClear"
+    }
+  }
 }
