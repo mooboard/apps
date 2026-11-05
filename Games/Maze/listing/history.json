@@ -1,3 +1,4 @@
 [
+  {"version": "1.1", "date": "2026-11-05", "notes": "Game lights flash when the maze is solved."},
   {"version": "1.0", "date": "2026-10-21", "notes": "First release. A maze draws itself, then finds the way out."}
 ]
