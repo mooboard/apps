@@ -1215,3 +1215,26 @@ class Lights(unittest.TestCase):
         self.assertEqual(build.LIGHT_EVENTS["microrogue"], ("hurt", "dead", "stairs", "chest"))
         self.assertEqual(build.LIGHT_EVENTS["doom"], ("died", "hurt", "powerUp", "exit", "blast"))
         self.assertTrue(all(1 <= len(e) <= 15 and e.isalnum() for v in build.LIGHT_EVENTS.values() for e in v))
+
+    def test_the_repos_games_light_their_moments(self):
+        # every first-party game but Game of Life names its moments + the vm games cue a loss in their programs
+        import game
+        for folder in sorted(os.listdir(os.path.join(REPO, "Games"))):
+            path = os.path.join(REPO, "Games", folder, "mooboard.json")
+            if not os.path.isfile(path):
+                continue
+            man = json.loads(read(path))
+            with self.subTest(folder=folder):
+                if man["uses"] == "life":
+                    self.assertNotIn("lights", man)
+                    continue
+                self.assertEqual(man["minFirmware"], "0.4.2-alpha.1")
+                if man["uses"] == "game":
+                    self.assertNotIn("lights", man)
+                    src = json.loads(read(os.path.join(REPO, "Games", folder, "data", "game.json")))
+                    looks = {line[1] for section in ("init", "step", "auto") for line in src.get(section, [])
+                             if line[0] == "cue"}
+                    self.assertTrue(looks & {"death", "gameOver"}, looks)
+                    self.assertTrue(game.cues(game.compile_game(src)))
+                else:
+                    self.assertTrue(set(man["lights"]) <= set(build.LIGHT_EVENTS[man["uses"]]))
