@@ -2,12 +2,12 @@
   "format": 2,
   "id": "breakout",
   "name": "Breakout",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "by": "mooboard",
   "description": "A paddle clears the wall, brick by brick.",
   "category": "Games",
   "uses": "breakout",
-  "minFirmware": "0.3.1",
+  "minFirmware": "0.4.2-alpha.1",
   "settings": [
     {
       "key": "speed",
@@ -20,5 +20,13 @@
         "Fast"
       ]
     }
-  ]
+  ],
+  "lights": {
+    "ballLost": {
+      "look": "death"
+    },
+    "cleared": {
+      "look": "levelClear"
+    }
+  }
 }
