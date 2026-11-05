@@ -2,12 +2,12 @@
   "format": 2,
   "id": "dino-dash",
   "name": "Dino Dash",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "by": "mooboard",
   "description": "A dinosaur dashes across the desert, jumping cacti and ducking birds.",
   "category": "Games",
   "uses": "dinorunner",
-  "minFirmware": "0.3.2",
+  "minFirmware": "0.4.2-alpha.1",
   "settings": [
     {
       "key": "speed",
@@ -20,5 +20,13 @@
         "Fast"
       ]
     }
-  ]
+  ],
+  "lights": {
+    "crash": {
+      "look": "gameOver"
+    },
+    "score100": {
+      "look": "powerUp"
+    }
+  }
 }
