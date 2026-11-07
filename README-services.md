@@ -12,5 +12,6 @@ Each `Cores/service-<id>/data/logo.png` is 128 by 128 with a clear background. W
 | service-googlehome | Simple Icons 13.21.0 `googlehome`, #4285F4 |
 | service-lastfm | Simple Icons 13.21.0 `lastdotfm`, #D51007 |
 | service-appletv | Simple Icons 13.21.0 `appletv`, white |
+| service-googletv | Simple Icons 16.36.0 `googletv`, #4285F4 |
 
 Simple Icons is CC0 1.0 (the marks stay their owners' trademarks). No brand's official press kit was used, since none is reachable without a login. Rendered with Chrome headless, the Govee and Nanoleaf PNGs reduced to 128 colors.

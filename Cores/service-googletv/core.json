@@ -1,0 +1,10 @@
+{
+  "format": 1,
+  "kind": "core",
+  "id": "service-googletv",
+  "version": "1.0.0",
+  "type": "data",
+  "files": {
+    "data/logo.png": "c20d279b9e565242611c236816ca06d3ba0e78af43218113eb1990f090cd34d3"
+  }
+}

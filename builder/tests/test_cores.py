@@ -342,8 +342,9 @@ class Signed(unittest.TestCase):
 
 
 class TheRepoCores(unittest.TestCase):
-    """the four font cores u652 + made by the firmware's tools/gen_fonts.py --core, each with its licence + the eight
-    service data cores u712 (appletv, googlehome, govee, hue, lastfm, nanoleaf, sonos, spotify), each its logo alone"""
+    """the four font cores u652 + made by the firmware's tools/gen_fonts.py --core, each with its licence + the nine
+    service data cores u712 u782 (appletv, googlehome, googletv, govee, hue, lastfm, nanoleaf, sonos, spotify), each its
+    logo alone"""
 
     def test_the_font_cores_build_and_every_app_is_in_index2(self):
         out = tempfile.mkdtemp()
@@ -354,7 +355,8 @@ class TheRepoCores(unittest.TestCase):
                          [("font-albert-sans", "1.0.0", "font"), ("font-figtree", "1.0.0", "font"),
                           ("font-inter", "1.0.0", "font"), ("font-outfit", "1.0.0", "font")]
                          + [("service-" + k, "1.0.0", "data") for k in
-                            ("appletv", "googlehome", "govee", "hue", "lastfm", "nanoleaf", "sonos", "spotify")])
+                            ("appletv", "googlehome", "googletv", "govee", "hue", "lastfm", "nanoleaf", "sonos",
+                             "spotify")])
         for row in rows:
             names = zipfile.ZipFile(os.path.join(out, row["file"])).namelist()
             if row["type"] == "data":
