@@ -132,11 +132,11 @@ RENDERER_KEYS = {
     "pixelpinball": _row("card", {"speed": ("choice", 3), "table": ("choice", 3)}),
     "microrogue": _row("card", {"speed": ("choice", 3), "theme": ("choice", 3)}),
     "spacelander": _row("card", {"speed": ("choice", 3), "planet": ("choice", 3)}),
-    # the ai apps u574 c3247 + the briefing and the dreamscape wait for an answer from api.mooboard.co/ai
+    # the ai apps u574 c3247, retired with the board's kNeedsAi u831 c6385 + their saved keys stay so an entry still reads
     "aibrief": _row("card", {"tone": ("choice", 3), "personal": ("toggle", 0), "accent": ("color", 0)},
-                    needs=("ai", "clock")),
+                    needs=("clock",)),
     "aipet": _row("card", {"name": ("text", 12), "color": ("color", 0), "persona": ("choice", 4)}, needs=("clock",)),
-    "aiscene": _row("card", {"scene": ("text", 32), "style": ("choice", 3), "refresh": ("choice", 3)}, needs=("ai",)),
+    "aiscene": _row("card", {"scene": ("text", 32), "style": ("choice", 3), "refresh": ("choice", 3)}),
     "aiface": _row("card", {"describe": ("text", 32)}, needs=("clock",)),
     "flightglance": _row("card", {"radius": ("choice", 5), "units": ("choice", 2), "follow": ("text", 32),
                                   "follow2": ("text", 32), "cycle": ("choice", 4), "layout": ("choice", 8),
