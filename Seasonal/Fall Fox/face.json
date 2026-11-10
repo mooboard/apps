@@ -1,0 +1,14 @@
+{
+  "id": "fall-fox",
+  "name": "Fall Fox",
+  "start": "2026-11-14",
+  "end": "2026-11-15",
+  "clock": {
+    "x": 64,
+    "y": 9,
+    "align": "center",
+    "font": "clock",
+    "size": 14,
+    "color": "#ffe2b8"
+  }
+}
