@@ -1,0 +1,14 @@
+{
+  "id": "christmas",
+  "name": "Christmas",
+  "start": "2026-12-24",
+  "end": "2026-12-26",
+  "clock": {
+    "x": 64,
+    "y": 12,
+    "align": "center",
+    "font": "clock",
+    "size": 13,
+    "color": "#fff4d0"
+  }
+}
