@@ -1,0 +1,14 @@
+{
+  "id": "new-year",
+  "name": "New Year",
+  "start": "2026-12-31",
+  "end": "2027-01-03",
+  "clock": {
+    "x": 64,
+    "y": 5,
+    "align": "center",
+    "font": "clock",
+    "size": 14,
+    "color": "#ffffff"
+  }
+}
