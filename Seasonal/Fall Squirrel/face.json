@@ -1,8 +1,8 @@
 {
   "id": "fall-squirrel",
   "name": "Fall Squirrel",
-  "start": "2026-11-11",
-  "end": "2026-11-13",
+  "start": "2026-11-14",
+  "end": "2026-11-15",
   "clock": {
     "x": 64,
     "y": 9,
@@ -10,5 +10,6 @@
     "font": "clock",
     "size": 14,
     "color": "#ffe2b8"
-  }
+  },
+  "version": "1.1.0"
 }
