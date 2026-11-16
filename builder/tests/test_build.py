@@ -341,7 +341,7 @@ class Catalog(unittest.TestCase):
     def test_every_catalog_renderer_is_known(self):
         # both waves u517 u532 and the ai apps u574 + a card takes its turn a hold holds the panel and ok to wake does both
         # e6
-        self.assertEqual(len(build.CATALOG_USES), 52)   # + flight glance, app-lab's eight, the game vm u653, and doom
+        self.assertEqual(len(build.CATALOG_USES), 53)   # + flight glance, app-lab's eight, the game vm u653, doom, and christmas
         self.assertEqual(list(build.RENDERER_KEYS), list(build.CATALOG_USES))
         self.assertEqual(build.USES[7:], build.CATALOG_USES)
         kinds = {uses: row["kind"] for uses, row in build.RENDERER_KEYS.items()}
@@ -410,6 +410,19 @@ class Catalog(unittest.TestCase):
         self.refused(face, "aiface app needs minFirmware 0.3.2 or later", category="AI", folder="AI Clock Builder")
         face["minFirmware"] = "0.3.2"
         self.tree(face, category="AI", folder="AI Clock Builder").build()
+
+    def test_the_christmas_ambiance_needs_the_firmware_that_draws_it(self):   # u805
+        man = manifest(id="christmas-ambiance", name="Christmas", uses="christmas", category="Ambiance",
+                       minFirmware="0.4.3", description="A snowy village and Santa's sleigh across the night sky.")
+        man["settings"] = [{"key": "scene", "type": "choice", "label": "Scene", "default": "Village",
+                            "options": ["Village", "Sleigh"]}]
+        self.refused(man, "christmas app needs minFirmware 0.4.4 or later", category="Ambiance", folder="Christmas")
+        man["minFirmware"] = "0.4.4"
+        man["settings"][0]["options"] = ["Village", "Sleigh", "Pines"]
+        self.refused(man, "setting scene needs 2 options", category="Ambiance", folder="Christmas")
+        man["settings"][0]["options"] = ["Village", "Sleigh"]
+        self.tree(man, category="Ambiance", folder="Christmas").build()
+        self.assertEqual(build.USES_FIRMWARE["christmas"], (0, 4, 4))
 
     def test_settings_out_of_their_rules(self):
         self.refused(scoreboard(settings=[{"key": "left", "type": "text", "label": "Left", "default": "Home"}],
