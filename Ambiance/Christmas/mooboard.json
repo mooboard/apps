@@ -1,0 +1,23 @@
+{
+  "format": 2,
+  "id": "christmas-ambiance",
+  "name": "Christmas",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "A snowy village and Santa's sleigh across the night sky.",
+  "category": "Ambiance",
+  "uses": "christmas",
+  "minFirmware": "0.4.4",
+  "settings": [
+    {
+      "key": "scene",
+      "type": "choice",
+      "label": "Scene",
+      "default": "Village",
+      "options": [
+        "Village",
+        "Sleigh"
+      ]
+    }
+  ]
+}
