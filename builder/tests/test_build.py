@@ -750,6 +750,7 @@ class TheRepo(unittest.TestCase):
                 path = os.path.join(top, folder, "mooboard.json")
                 if os.path.isfile(path):
                     man = json.loads(read(path))
+                    man.setdefault("uses", "lua54")   # a format 3 app runs its own Lua and the index calls that lua54
                     if skipped and man["uses"] == "doom":
                         continue
                     want2.append((man["id"], man["name"], category, man["uses"]))
