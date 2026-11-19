@@ -1,0 +1,24 @@
+{
+  "format": 3,
+  "id": "transit",
+  "name": "Transit",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "The next bus or train at your stop, from your city's free feed.",
+  "category": "Tools",
+  "runtime": "lua54",
+  "minFirmware": "0.4.1",
+  "boards": ["s3", "p4"],
+  "settings": [
+    {"key": "feed", "type": "text", "label": "Feed link", "default": "none", "max": 256},
+    {"key": "name", "type": "text", "label": "Stop name", "default": "My stop", "max": 12},
+    {"key": "route", "type": "text", "label": "Route", "default": "all", "max": 16},
+    {"key": "heading", "type": "choice", "label": "Direction", "default": "Both", "options": ["Both", "Outbound", "Inbound"]}
+  ],
+  "controls": [
+    {"key": "next", "type": "readout", "label": "Next"}
+  ],
+  "sources": [
+    {"key": "stop", "url": "{settings.feed}", "refresh": 30}
+  ]
+}
