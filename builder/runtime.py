@@ -77,7 +77,10 @@ def check(man):
         refuse(not isinstance(key, str) or not KEY.fullmatch(key) or key in seen, 'Setting keys must be unique')
         seen.add(key)
         refuse(not text(setting.get('label'), 24), 'A setting needs a label of at most 24 characters')
-        if kind == 'text':
+        if kind == 'secret':
+            maximum = setting.get('max')
+            refuse(type(maximum) is not int or not 1 <= maximum <= 256 or 'default' in setting, 'A secret setting needs a max of 1 to 256 and no default')
+        elif kind == 'text':
             maximum = setting.get('max')
             refuse(type(maximum) is not int or not 1 <= maximum <= 256 or (not text(default, maximum)), 'A text setting needs a default and max of 1 to 256')
         elif kind == 'toggle':
@@ -89,8 +92,8 @@ def check(man):
             refuse(not isinstance(options, list) or not 2 <= len(options) <= 8 or any((not text(v, 16) for v in options)), 'A choice needs 2 to 8 options')
             refuse(len(set(options)) != len(options) or default not in options, 'A choice needs unique options and a matching default')
         else:
-            raise package.Refused('Setting types are text, toggle, color and choice')
-        allowed = {'key', 'type', 'label', 'default'} | ({'max'} if kind == 'text' else {'options'} if kind == 'choice' else set())
+            raise package.Refused('Setting types are text, secret, toggle, color and choice')
+        allowed = {'key', 'type', 'label'} | (set() if kind == 'secret' else {'default'}) | ({'max'} if kind in ('text', 'secret') else {'options'} if kind == 'choice' else set())
         refuse(set(setting) != allowed, 'A setting has fields for another type')
     controls = man.get('controls', [])
     refuse(not isinstance(controls, list) or len(controls) > 16, 'An app has at most 16 controls')
@@ -122,8 +125,10 @@ def check(man):
         refuse(not isinstance(key, str) or not KEY.fullmatch(key) or key in seen_sources, 'Data source keys must be unique')
         seen_sources.add(key)
         refuse(not isinstance(url, str) or not 1 <= len(url) <= 512 or (not package._plain(url)), 'A source needs a URL or a setting placeholder')
+        secrets = {s['key'] for s in settings if s.get('type') == 'secret'}
         for group, field in TOKEN.findall(url):
             refuse(group != 'settings' or field not in seen, 'Source URLs may refer only to declared settings')
+            refuse(field in secrets, 'A secret setting goes only in a header')
         sample = TOKEN.sub('sample', url)
         refuse('{' in sample or '}' in sample, 'Invalid source URL placeholder')
         refuse(not (url.startswith('https://') or re.fullmatch('\\{settings\\.[a-z][a-z0-9_]{0,15}\\}', url)), 'Sources use HTTPS')
@@ -163,6 +168,9 @@ def check(man):
             refuse(change != 0, "A complication change is a path as its value's is")
         refuse('size' in item and item['size'] not in ('small', 'wide'), 'A complication size is small or wide')
         refuse('refresh' in item and (type(item['refresh']) is not int or not 300 <= item['refresh'] <= 86400), 'A complication refresh is 300 to 86400 seconds')
+    newer = any((k in item for item in complications for k in ('change', 'size', 'refresh'))) or any(('{' in str(item.get(k, '')) for item in complications for k in ('path', 'change'))) or any((s.get('type') == 'secret' for s in settings))
+    floor = tuple((int(n) for n in man['minFirmware'].split('-')[0].split('.')))
+    refuse(newer and floor < (0, 4, 4), 'Complication change, size, refresh, setting paths, and secret settings need minFirmware 0.4.4 or later')
     return man
 
 def canonical(man):
