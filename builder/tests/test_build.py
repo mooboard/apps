@@ -341,7 +341,7 @@ class Catalog(unittest.TestCase):
     def test_every_catalog_renderer_is_known(self):
         # both waves u517 u532 and the ai apps u574 + a card takes its turn a hold holds the panel and ok to wake does both
         # e6
-        self.assertEqual(len(build.CATALOG_USES), 53)   # + flight glance, app-lab's eight, the game vm u653, doom, and christmas
+        self.assertEqual(len(build.CATALOG_USES), 54)   # + flight glance, app-lab's eight, the game vm u653, doom, christmas, and limits u910
         self.assertEqual(list(build.RENDERER_KEYS), list(build.CATALOG_USES))
         self.assertEqual(build.USES[7:], build.CATALOG_USES)
         kinds = {uses: row["kind"] for uses, row in build.RENDERER_KEYS.items()}

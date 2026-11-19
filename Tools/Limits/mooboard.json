@@ -1,0 +1,11 @@
+{
+  "format": 2,
+  "id": "limits",
+  "name": "Limits",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "Your Claude Code session and weekly limits as two bars.",
+  "category": "Tools",
+  "uses": "limits",
+  "minFirmware": "0.4.4-alpha.2"
+}

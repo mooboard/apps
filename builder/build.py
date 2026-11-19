@@ -68,7 +68,8 @@ CATALOG_USES = ("pong", "snake", "blocks", "maze", "aquarium", "lava", "aurora",
                 "waterfall", "cybercity", "synthwave", "dune",
                 "game",   # the game vm's abi 1 programs u653 + after the rest as the firmware's table has it c3741
                 "doom",   # the real doom engine after the game vm, renderer 62 c3870
-                "christmas")   # the Christmas ambiance after doom, renderer 63 u805 c6157
+                "christmas",   # the Christmas ambiance after doom, renderer 63 u805 c6157
+                "limits")   # the Claude Code plan limits after christmas, renderer 64 u910 c7680
 USES = ("prayer", "countdown", "sketch", "life", "plasma", "starfield", "fireplace") + CATALOG_USES   # the firmware's renderers (pw::AppRenderer), in its order
 SPEED = {"speed": ("choice", 3)}
 SPEED_COLORS = dict(SPEED, colors=("choice", 2))
@@ -154,6 +155,7 @@ RENDERER_KEYS = {
     "game": _row("card", SPEED),   # every game program takes the speed choice alone
     "doom": _row("card"),   # no settings, the pad or the wad's own demos c3875
     "christmas": _row("card", {"scene": ("choice", 2)}),   # village or sleigh u805 c6157
+    "limits": _row("card", needs=("clock",)),   # no settings, the computer's script sends its numbers u910 c7680
 }
 CATALOG_FIRMWARE = (0, 3, 1)   # the first firmware that carries the catalog's renderers u534
 # a renderer added after the first catalog firmware and the firmware that first draws it u574 c3247
@@ -172,6 +174,7 @@ RUNTIMES = {"game": "game", "lua54": "lua"}   # uses to index2's runtime + the l
 # the first firmware with doom c3870 + its pre-release keeps it out of the legacy index
 USES_FIRMWARE["doom"] = "0.4.0-alpha.4"
 USES_FIRMWARE["christmas"] = (0, 4, 4)   # the firmware that first draws the Christmas ambiance u805
+USES_FIRMWARE["limits"] = (0, 4, 4)   # the firmware that first draws Limits u910
 # a game's light moments u757 c5365 + its manifest's "lights" maps an event its renderer raises (pw_scenes store
 # kEvents, in their order) to a look (pw_model GameGlow kCueNames past flash) + older boards refuse the key, and a vm
 # game's cue op, so either needs this firmware in pw_ota's order + each look's pulses, on, off, fade ms and color (gameCueLook)
