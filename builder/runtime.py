@@ -26,7 +26,7 @@ ORDER = ('format', 'id', 'name', 'version', 'by', 'description', 'category', 'ru
 SETTING_ORDER = ('key', 'type', 'label', 'default', 'max', 'options')
 CONTROL_ORDER = ('key', 'type', 'label', 'arg', 'min', 'max', 'chars', 'add')
 SOURCE_ORDER = ('key', 'url', 'refresh', 'headers')
-COMPLICATION_ORDER = ('key', 'label', 'source', 'path', 'icon', 'format', 'decimals')
+COMPLICATION_ORDER = ('key', 'label', 'source', 'path', 'icon', 'format', 'decimals', 'change', 'size', 'refresh')
 IMAGE = re.compile('images/[a-z0-9-]{1,32}\\.png\\Z')
 ICON_WORDS = 'A complication icon is a board icon or a 7 x 7 PNG in the package'
 KEY = re.compile('[a-z][a-z0-9_]{0,15}\\Z')
@@ -149,12 +149,20 @@ def check(man):
         seen_complications.add(key)
         refuse(not label(item['label'], 24), 'A complication needs a label of at most 24 characters')
         refuse(not isinstance(item['source'], str) or item['source'] not in seen_sources, "A complication reads one of the app's sources")
-        refuse(not isinstance(item['path'], str) or not complication.valid_path(item['path']), 'A complication path is keys and [n] indexes of at most 64 characters')
+        path = complication.path_template(item['path'], settings)
+        refuse(path == 1, "A complication path names only the app's settings")
+        refuse(path != 0, 'A complication path is keys and [n] indexes of at most 64 characters')
         if 'icon' in item:
             icon = item['icon']
             refuse(not isinstance(icon, str) or not (icon in complication.icons() or IMAGE.fullmatch(icon)), ICON_WORDS)
         refuse('format' in item and (not complication.valid_format(item['format'])), 'A complication format has one {value} and at most 16 bytes')
         refuse('decimals' in item and (type(item['decimals']) is not int or not 0 <= item['decimals'] <= 2), 'Complication decimals are 0 to 2')
+        if 'change' in item:
+            change = complication.path_template(item['change'], settings) if item['change'] != '' else 2
+            refuse(change == 1, "A complication path names only the app's settings")
+            refuse(change != 0, "A complication change is a path as its value's is")
+        refuse('size' in item and item['size'] not in ('small', 'wide'), 'A complication size is small or wide')
+        refuse('refresh' in item and (type(item['refresh']) is not int or not 300 <= item['refresh'] <= 86400), 'A complication refresh is 300 to 86400 seconds')
     return man
 
 def canonical(man):
@@ -202,3 +210,68 @@ def default_icon():
     def chunk(kind,data):return struct.pack(">I",len(data))+kind+data+struct.pack(">I",zlib.crc32(kind+data))
     rows=(b"\0"+bytes((119,237,215))*32)*32
     return b"\x89PNG\r\n\x1a\n"+chunk(b"IHDR",struct.pack(">IIBBBBB",32,32,8,2,0,0,0))+chunk(b"IDAT",b"\x78\x01\x01"+struct.pack("<HH",len(rows),len(rows)^0xffff)+rows+struct.pack(">I",zlib.adler32(rows)))+chunk(b"IEND",b"")
+
+# a live app's complications as the dev kit's mooboard/complication.py reads them, for check() above: keys and [n]
+# indexes, one {value} in a format, a path whose whole keys may name a text or choice setting, and the board's icons
+_PATH_KEY = re.compile(r"[A-Za-z0-9_-]+")
+_PATH_INDEX = re.compile(r"\[(0|[1-9][0-9]{0,2})\]")
+
+
+def _valid_path(path):
+    if not isinstance(path, str) or not path.isascii() or len(path) > 64:
+        return False
+    if path == "":
+        return True
+    at = 0
+    while True:
+        key = _PATH_KEY.match(path, at)
+        if not key:
+            return False
+        at = key.end()
+        while at < len(path) and path[at] == "[":
+            index = _PATH_INDEX.match(path, at)
+            if not index:
+                return False
+            at = index.end()
+        if at == len(path):
+            return True
+        if path[at] != ".":
+            return False
+        at += 1
+
+
+def _valid_format(words):
+    if not isinstance(words, str) or len(words.encode("utf-8", "surrogatepass")) > 16:
+        return False
+    before, found, after = words.partition("{value}")
+    return bool(found) and not any(ch in "{}" for ch in before + after)
+
+
+def _path_template(path, settings):
+    if not isinstance(path, str) or len(path) > 64:
+        return 2
+    declared = {s.get("key") for s in settings or [] if s.get("type") in ("text", "choice")}
+    plain, at = "", 0
+    while at < len(path):
+        if path[at] == "}":
+            return 2
+        if path[at] != "{":
+            plain += path[at]
+            at += 1
+            continue
+        end = path.find("}", at)
+        if end < 0:
+            return 2
+        group, dot, key = path[at + 1:end].partition(".")
+        if not dot or group != "settings" or key not in declared:
+            return 1
+        if (at > 0 and path[at - 1] != ".") or (end + 1 < len(path) and path[end + 1] not in ".["):
+            return 2
+        plain += "a"
+        at = end + 1
+    return 0 if _valid_path(plain) else 2
+
+
+_ICONS = ("sun", "moon", "partSun", "cloud", "rain", "snow", "storm", "fog", "sunUp", "sunDown", "bar", "plane")
+complication = SimpleNamespace(valid_path=_valid_path, valid_format=_valid_format, path_template=_path_template,
+                               icons=lambda: _ICONS)
