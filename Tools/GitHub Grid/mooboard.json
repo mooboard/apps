@@ -1,0 +1,23 @@
+{
+  "format": 3,
+  "id": "github-grid",
+  "name": "GitHub Grid",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "A year of GitHub contribution squares for any public username.",
+  "category": "Tools",
+  "runtime": "lua54",
+  "minFirmware": "0.4.1",
+  "boards": ["s3", "p4"],
+  "settings": [
+    {"key": "user", "type": "text", "label": "GitHub username", "default": "octocat", "max": 39},
+    {"key": "colors", "type": "choice", "label": "Colors", "default": "Green", "options": ["Green", "Teal", "Amber", "Pink", "White"]},
+    {"key": "total", "type": "toggle", "label": "Show total", "default": true}
+  ],
+  "controls": [
+    {"key": "count", "type": "readout", "label": "Last year"}
+  ],
+  "sources": [
+    {"key": "grid", "url": "https://api.mooboard.co/github/{settings.user}", "refresh": 3600}
+  ]
+}
