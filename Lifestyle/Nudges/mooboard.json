@@ -1,0 +1,25 @@
+{
+  "format": 3,
+  "id": "nudges",
+  "name": "Nudges",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "Gentle nudges to drink water and to switch between sitting and standing, quiet at night.",
+  "category": "Lifestyle",
+  "runtime": "lua54",
+  "minFirmware": "0.4.1",
+  "boards": ["s3", "p4"],
+  "settings": [
+    {"key": "show", "type": "choice", "label": "Nudges", "default": "Both", "options": ["Both", "Water", "Stand"]},
+    {"key": "water", "type": "choice", "label": "Water every", "default": "1 hour", "options": ["30 min", "45 min", "1 hour", "90 min", "2 hours"]},
+    {"key": "stand", "type": "choice", "label": "Switch every", "default": "45 min", "options": ["20 min", "30 min", "45 min", "1 hour", "90 min"]},
+    {"key": "quiet", "type": "choice", "label": "Quiet hours", "default": "10 pm to 7 am", "options": ["Off", "9 pm to 7 am", "10 pm to 7 am", "11 pm to 8 am", "Night mode"]}
+  ],
+  "controls": [
+    {"key": "drank", "type": "button", "label": "I drank"},
+    {"key": "moved", "type": "button", "label": "I switched"},
+    {"key": "water_left", "type": "readout", "label": "Next water"},
+    {"key": "stand_left", "type": "readout", "label": "Next switch"}
+  ],
+  "sources": []
+}
