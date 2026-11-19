@@ -64,7 +64,7 @@ return {
     if #s > 0 then pages[#pages + 1] = s end
     if #c > 0 then pages[#pages + 1] = c end
     if #pages == 0 then
-      local keyless = settings.key == "" or settings.key == "free at finnhub.io"
+      local keyless = (settings.key or "") == ""
       screen.text(keyless and "Add a free key" or "Waiting for prices", 3, 14, 8, dim)
       screen.text(keyless and "from finnhub.io" or "", 3, 26, 8, dim)
       return

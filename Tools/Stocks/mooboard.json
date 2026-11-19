@@ -15,9 +15,8 @@
   "settings": [
     {
       "key": "key",
-      "type": "text",
+      "type": "secret",
       "label": "Finnhub key",
-      "default": "free at finnhub.io",
       "max": 64
     },
     {
@@ -106,6 +105,7 @@
       "source": "coins",
       "path": "{settings.coin1}.usd",
       "icon": "bar",
+      "decimals": 2,
       "change": "{settings.coin1}.usd_24h_change",
       "size": "small",
       "refresh": 300
