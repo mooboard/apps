@@ -1,0 +1,23 @@
+{
+  "format": 3,
+  "id": "air-and-uv",
+  "name": "Air and UV",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "Air quality and UV index for your place, each in a color for its level.",
+  "category": "Lifestyle",
+  "runtime": "lua54",
+  "minFirmware": "0.4.1",
+  "boards": ["s3", "p4"],
+  "settings": [
+    {"key": "lat", "type": "text", "label": "Latitude", "default": "40.71", "max": 10},
+    {"key": "lon", "type": "text", "label": "Longitude", "default": "-74.01", "max": 11}
+  ],
+  "controls": [
+    {"key": "aqi", "type": "readout", "label": "Air quality"},
+    {"key": "uv", "type": "readout", "label": "UV index"}
+  ],
+  "sources": [
+    {"key": "air", "url": "https://air-quality-api.open-meteo.com/v1/air-quality?latitude={settings.lat}&longitude={settings.lon}&current=us_aqi,uv_index", "refresh": 900}
+  ]
+}
