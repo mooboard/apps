@@ -1,6 +1,5 @@
--- Stocks and crypto: your watchlist with today's change, three stocks then two coins
-local names = {bitcoin = "BTC", ethereum = "ETH", solana = "SOL", dogecoin = "DOGE", ripple = "XRP",
-               cardano = "ADA", litecoin = "LTC", tether = "USDT"}
+-- Stocks and crypto: your watchlist with today's change, three stocks then two coins + stocks come through mooboard's
+-- /quotes in the order asked and coins from CoinGecko by ticker, so nobody needs a key u906 c7619
 local up, down, flat, dim = "#34d378", "#ff5252", "#96a0aa", "#a1b5bd"
 
 local function price(value)
@@ -32,12 +31,12 @@ end
 
 local function stocks()
   local rows = {}
+  local feed = (data.stocks or {}).value
+  local q = type(feed) == "table" and type(feed.q) == "table" and feed.q or {}
   for i = 1, 3 do
-    local symbol = settings["stock" .. i]
-    local feed = data["s" .. i] or {}
-    local quote = feed.value
-    if symbol and symbol ~= "" and type(quote) == "table" and type(quote.c) == "number" and quote.c > 0 then
-      rows[#rows + 1] = {string.upper(symbol), quote.c, type(quote.dp) == "number" and quote.dp or 0}
+    local quote = q[i]
+    if type(quote) == "table" and type(quote.s) == "string" and type(quote.c) == "number" and quote.c > 0 then
+      rows[#rows + 1] = {quote.s, quote.c, type(quote.dp) == "number" and quote.dp or 0}
     end
   end
   return rows
@@ -47,11 +46,10 @@ local function coins()
   local rows = {}
   local feed = (data.coins or {}).value
   for i = 1, 2 do
-    local id = settings["coin" .. i]
-    local coin = type(feed) == "table" and id and feed[id] or nil
+    local ticker = settings["coin" .. i]
+    local coin = type(feed) == "table" and type(ticker) == "string" and feed[string.lower(ticker)] or nil
     if type(coin) == "table" and type(coin.usd) == "number" then
-      local name = names[id] or string.upper(string.sub(id, 1, 5))
-      rows[#rows + 1] = {name, coin.usd, type(coin.usd_24h_change) == "number" and coin.usd_24h_change or 0}
+      rows[#rows + 1] = {string.upper(ticker), coin.usd, type(coin.usd_24h_change) == "number" and coin.usd_24h_change or 0}
     end
   end
   return rows
@@ -64,9 +62,7 @@ return {
     if #s > 0 then pages[#pages + 1] = s end
     if #c > 0 then pages[#pages + 1] = c end
     if #pages == 0 then
-      local keyless = (settings.key or "") == ""
-      screen.text(keyless and "Add a free key" or "Waiting for prices", 3, 14, 8, dim)
-      screen.text(keyless and "from finnhub.io" or "", 3, 26, 8, dim)
+      screen.text("Waiting for prices", 3, 20, 8, dim)
       return
     end
     local page = pages[(ctx.elapsedMs // 6000) % #pages + 1]

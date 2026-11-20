@@ -14,12 +14,6 @@
   ],
   "settings": [
     {
-      "key": "key",
-      "type": "secret",
-      "label": "Finnhub key",
-      "max": 64
-    },
-    {
       "key": "stock1",
       "type": "text",
       "label": "Stock 1",
@@ -44,64 +38,45 @@
       "key": "coin1",
       "type": "text",
       "label": "Coin 1",
-      "default": "bitcoin",
-      "max": 32
+      "default": "BTC",
+      "max": 12
     },
     {
       "key": "coin2",
       "type": "text",
       "label": "Coin 2",
-      "default": "ethereum",
-      "max": 32
+      "default": "ETH",
+      "max": 12
     }
   ],
   "controls": [],
   "sources": [
     {
-      "key": "s1",
-      "url": "https://finnhub.io/api/v1/quote?symbol={settings.stock1}",
-      "refresh": 300,
-      "headers": {
-        "X-Finnhub-Token": "{settings.key}"
-      }
-    },
-    {
-      "key": "s2",
-      "url": "https://finnhub.io/api/v1/quote?symbol={settings.stock2}",
-      "refresh": 300,
-      "headers": {
-        "X-Finnhub-Token": "{settings.key}"
-      }
-    },
-    {
-      "key": "s3",
-      "url": "https://finnhub.io/api/v1/quote?symbol={settings.stock3}",
-      "refresh": 300,
-      "headers": {
-        "X-Finnhub-Token": "{settings.key}"
-      }
+      "key": "stocks",
+      "url": "https://api.mooboard.co/quotes?s={settings.stock1},{settings.stock2},{settings.stock3}",
+      "refresh": 300
     },
     {
       "key": "coins",
-      "url": "https://api.coingecko.com/api/v3/simple/price?ids={settings.coin1},{settings.coin2}&vs_currencies=usd&include_24hr_change=true",
+      "url": "https://api.coingecko.com/api/v3/simple/price?symbols={settings.coin1},{settings.coin2}&vs_currencies=usd&include_24hr_change=true",
       "refresh": 300
     }
   ],
   "complications": [
     {
       "key": "stock",
-      "label": "Stock 1",
-      "source": "s1",
-      "path": "c",
+      "label": "Stock: {settings.stock1}",
+      "source": "stocks",
+      "path": "q[0].c",
       "icon": "bar",
       "decimals": 2,
-      "change": "dp",
+      "change": "q[0].dp",
       "size": "small",
       "refresh": 300
     },
     {
       "key": "coin",
-      "label": "Coin 1",
+      "label": "Coin: {settings.coin1}",
       "source": "coins",
       "path": "{settings.coin1}.usd",
       "icon": "bar",
