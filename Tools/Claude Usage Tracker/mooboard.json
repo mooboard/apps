@@ -1,7 +1,7 @@
 {
   "format": 2,
   "id": "limits",
-  "name": "Limits",
+  "name": "Claude Usage Tracker",
   "version": "1.0.0",
   "by": "mooboard",
   "description": "Your Claude Code session and weekly limits as two bars.",
