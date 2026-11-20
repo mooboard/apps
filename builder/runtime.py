@@ -25,12 +25,12 @@ def _plain(value):
 ORDER = ('format', 'id', 'name', 'version', 'by', 'description', 'category', 'runtime', 'font', 'minFirmware', 'boards', 'settings', 'controls', 'sources', 'complications')
 SETTING_ORDER = ('key', 'type', 'label', 'default', 'max', 'options')
 CONTROL_ORDER = ('key', 'type', 'label', 'arg', 'min', 'max', 'chars', 'add')
-SOURCE_ORDER = ('key', 'url', 'refresh', 'headers')
-COMPLICATION_ORDER = ('key', 'label', 'source', 'path', 'icon', 'format', 'decimals', 'change', 'size', 'refresh')
+SOURCE_ORDER = ('key', 'url', 'refresh', 'headers', 'near')
+COMPLICATION_ORDER = ('key', 'label', 'source', 'path', 'icon', 'format', 'decimals', 'change', 'size', 'refresh', 'levels')
 IMAGE = re.compile('images/[a-z0-9-]{1,32}\\.png\\Z')
 ICON_WORDS = 'A complication icon is a board icon or a 7 x 7 PNG in the package'
 KEY = re.compile('[a-z][a-z0-9_]{0,15}\\Z')
-TOKEN = re.compile('\\{(settings|secrets)\\.([a-z][a-z0-9_]{0,15})\\}')
+TOKEN = re.compile('\\{(settings|secrets|place)\\.([a-z][a-z0-9_]{0,15})\\}')
 VERSION = re.compile('\\d+\\.\\d+\\.\\d+(?:-[0-9A-Za-z.-]+)?\\Z')
 CAP = 352 * 1024
 
@@ -127,7 +127,7 @@ def check(man):
         refuse(not isinstance(url, str) or not 1 <= len(url) <= 512 or (not package._plain(url)), 'A source needs a URL or a setting placeholder')
         secrets = {s['key'] for s in settings if s.get('type') == 'secret'}
         for group, field in TOKEN.findall(url):
-            refuse(group != 'settings' or field not in seen, 'Source URLs may refer only to declared settings')
+            refuse(not (group == 'settings' and field in seen or (group == 'place' and field in ('lat', 'lon'))), 'Source URLs may refer only to declared settings, place.lat, and place.lon')
             refuse(field in secrets, 'A secret setting goes only in a header')
         sample = TOKEN.sub('sample', url)
         refuse('{' in sample or '}' in sample, 'Invalid source URL placeholder')
@@ -141,8 +141,17 @@ def check(man):
             refuse(not TOKEN.search(value), 'Put API credentials in local secrets, never in the package')
             for group, field in TOKEN.findall(value):
                 refuse(group == 'settings' and field not in seen, 'Header settings must be declared')
+                refuse(group == 'place', "The board's place goes only in a source URL")
             sample = TOKEN.sub('sample', value)
             refuse('{' in sample or '}' in sample, 'Invalid source header placeholder')
+        if 'near' in source:
+            near = source['near']
+            parts = near.split(',') if isinstance(near, str) and len(near) <= 40 and re.fullmatch('[-0-9.,]+', near) else []
+            try:
+                lat, lon, km = (float(p) for p in parts) if len(parts) == 3 else (None, None, None)
+            except ValueError:
+                lat = lon = km = None
+            refuse(lat is None or not (-90 <= lat <= 90 and -180 <= lon <= 180 and (1 <= km <= 2000)), "A source's near is lat,lon,km with km 1 to 2000")
     complications = man.get('complications', [])
     refuse(not isinstance(complications, list) or len(complications) > 2, 'An app has at most 2 complications')
     seen_complications = set()
@@ -162,6 +171,10 @@ def check(man):
             refuse(not isinstance(icon, str) or not (icon in complication.icons() or IMAGE.fullmatch(icon)), ICON_WORDS)
         refuse('format' in item and (not complication.valid_format(item['format'])), 'A complication format has one {value} and at most 16 bytes')
         refuse('decimals' in item and (type(item['decimals']) is not int or not 0 <= item['decimals'] <= 2), 'Complication decimals are 0 to 2')
+        if 'levels' in item:
+            levels = item['levels']
+            good = isinstance(levels, list) and 2 <= len(levels) <= 12 and (len(levels) % 2 == 0) and all((type(levels[i]) is int and -1000000 <= levels[i] <= 1000000 and isinstance(levels[i + 1], str) and re.fullmatch('#[0-9a-fA-F]{6}', levels[i + 1]) for i in range(0, len(levels), 2)))
+            refuse(not good or any((levels[i] >= levels[i + 2] for i in range(0, len(levels) - 2, 2))), 'Complication levels are 1 to 6 tops each with its "#rrggbb", the tops rising')
         if 'change' in item:
             change = complication.path_template(item['change'], settings) if item['change'] != '' else 2
             refuse(change == 1, "A complication path names only the app's settings")
@@ -171,6 +184,8 @@ def check(man):
     newer = any((k in item for item in complications for k in ('change', 'size', 'refresh'))) or any(('{' in str(item.get(k, '')) for item in complications for k in ('path', 'change'))) or any((s.get('type') == 'secret' for s in settings))
     floor = tuple((int(n) for n in man['minFirmware'].split('-')[0].split('.')))
     refuse(newer and floor < (0, 4, 4), 'Complication change, size, refresh, setting paths, and secret settings need minFirmware 0.4.4 or later')
+    placed = any(('levels' in item for item in complications)) or any(('near' in s or '{place.' in str(s.get('url', '')) for s in sources))
+    refuse(placed and floor < (0, 4, 4), "Complication levels, the board's place, and near need minFirmware 0.4.4 or later")
     return man
 
 def canonical(man):
