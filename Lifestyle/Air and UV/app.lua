@@ -1,11 +1,11 @@
--- US air quality index and UV index from Open-Meteo, no key
+-- US air quality index and UV index from Open-Meteo, no key, at the board's place
 local AQI = {
   {50, "#34c759", "GOOD"}, {100, "#ffd60a", "FAIR"}, {150, "#ff9500", "SENSITIVE"},
   {200, "#ff3b30", "BAD"}, {300, "#af52de", "VERY BAD"}, {9999, "#c2185b", "HAZARD"},
 }
 local UV = {
-  {2.99, "#34c759", "LOW"}, {5.99, "#ffd60a", "MODERATE"}, {7.99, "#ff9500", "HIGH"},
-  {10.99, "#ff3b30", "VERY HIGH"}, {99, "#af52de", "EXTREME"},
+  {2, "#34c759", "LOW"}, {5, "#ffd60a", "MODERATE"}, {7, "#ff9500", "HIGH"},
+  {10, "#ff3b30", "VERY HIGH"}, {99, "#af52de", "EXTREME"},
 }
 
 local function level(table_, value)
@@ -47,7 +47,8 @@ return {
     local aqi = math.floor(tonumber(current.us_aqi) + 0.5)
     local uv = tonumber(current.uv_index) or 0
     local ai, arow = level(AQI, aqi)
-    local ui, urow = level(UV, uv)
+    -- each level by the whole number shown, as the complications pick their colors
+    local ui, urow = level(UV, math.floor(uv + 0.5))
     state.aqi = aqi .. " " .. arow[3]
     state.uv = (math.floor(uv * 10 + 0.5) / 10) .. " " .. urow[3]
     panel(2, "AIR", tostring(aqi), arow[3], arow[2], 6, ai, ctx)
