@@ -23,6 +23,14 @@ def app(folder, settings=None, data=None, state=None):
     return host.App(str(ROOT / folder), settings, state, data)
 
 
+def at(place, **kw):
+    """a frame's ctx with the board's place, as firmware 0.4.4 gives it (C7991)"""
+    return host.ctx(**kw) | {"lat": place[0], "lon": place[1]}
+
+
+BOSTON, LONDON, NEW_YORK = (42.35, -71.06), (51.51, -0.13), (40.71, -74.01)
+
+
 def iso(t, off="-05:00"):
     shift = (-1 if off[0] == "-" else 1) * (int(off[1:3]) * 3600 + int(off[4:6]) * 60)
     d = datetime.datetime.fromtimestamp(t + shift, datetime.timezone.utc)
@@ -185,12 +193,39 @@ class AirAndUvApp(unittest.TestCase):
         a = app(self.F)
         self.assertGreater(host.count_lit(a.rt.frame(host.ctx(ms=0))), 20)
 
-    def test_the_source_takes_the_places_coordinates(self):
+    def test_uv_levels_go_by_the_whole_number_shown(self):
+        for uv, word in ((2.4, "LOW"), (2.6, "MODERATE"), (5.4, "MODERATE"), (5.5, "HIGH"), (10.6, "EXTREME")):
+            a = app(self.F, None, self.air(30, uv))
+            a.rt.frame(host.ctx(ms=0))
+            self.assertTrue(a.state()["uv"].endswith(word), (uv, a.state()["uv"]))
+
+    def test_the_source_takes_the_boards_place_and_there_is_no_place_setting(self):
         man = json.load(open(ROOT / self.F / "mooboard.json"))
         url = man["sources"][0]["url"]
         self.assertTrue(url.startswith("https://air-quality-api.open-meteo.com/"))
-        self.assertIn("latitude={settings.lat}", url)
-        self.assertIn("longitude={settings.lon}", url)
+        self.assertIn("latitude={place.lat}", url)
+        self.assertIn("longitude={place.lon}", url)
+        self.assertEqual(man.get("settings", []), [])
+        self.assertEqual(man["minFirmware"], "0.4.4")
+
+    def test_complications_offer_air_quality_and_uv_in_the_apps_own_colors(self):
+        man = json.load(open(ROOT / self.F / "mooboard.json"))
+        comps = {c["key"]: c for c in man["complications"]}
+        self.assertEqual(sorted(comps), ["aqi", "uv"])
+        self.assertEqual((comps["aqi"]["path"], comps["uv"]["path"]), ("current.us_aqi", "current.uv_index"))
+        # the number alone, so the bar in its level's color fits beside it in a corner + the label names it in two lines
+        self.assertEqual([("format" in c, c["icon"]) for c in man["complications"]], [(False, "bar"), (False, "bar")])
+        sys.path.insert(0, DEVKIT)
+        from mooboard import complication
+        if not hasattr(complication, "level_of"):
+            self.skipTest("needs a dev kit with complication levels (firmware C7993)")
+        for aqi, uv in ((42, 0.4), (75, 2.6), (118, 6.4), (170, 9.5), (250, 11.4), (350, 3.0)):
+            data = self.air(aqi, uv)
+            a = app(self.F, None, data)
+            lit = host.lit(a.rt.frame(host.ctx(ms=0)))
+            for index in (0, 1):
+                self.assertIn(complication.level_of(man, data, index), lit, (aqi, uv, index))
+
 
 
 @need
@@ -201,7 +236,8 @@ class SpaceApp(unittest.TestCase):
         return {"iss": {"status": "ok", "value": {"latitude": lat, "longitude": lon, "timestamp": ts}}}
 
     def watch(self, mylat, mylon, lats, lon=0.0):
-        a = app(self.F, {"lat": str(mylat), "lon": str(mylon)})
+        a = app(self.F)
+        a.rt.frame(at((mylat, mylon), ms=0))   # the station's pass is worked out at the place the last frame had
         for i, lat in enumerate(lats):
             a.data(self.iss(lat, lon, BASE + i * 30))
         return a
@@ -226,6 +262,60 @@ class SpaceApp(unittest.TestCase):
         near = self.watch(30, 5, [4.0, 5.0]).state()["pass"]
         far = self.watch(30, 170, [4.0, 5.0]).state().get("pass", 10 ** 9)
         self.assertGreater(far, near)
+
+    def test_without_the_boards_place_it_keeps_locating(self):
+        a = app(self.F)
+        a.rt.frame(host.ctx(ms=0))
+        for i, lat in enumerate((4.0, 5.0)):
+            a.data(self.iss(lat, 0.0, BASE + i * 30))
+        self.assertNotIn("pass", a.state())
+        self.assertEqual(a.state()["next"], "waiting for the board's place")
+
+    def test_there_is_no_place_setting(self):
+        man = json.load(open(ROOT / self.F / "mooboard.json"))
+        self.assertEqual([s["key"] for s in man["settings"]], ["iss", "showers", "eclipses"])
+
+    def test_the_station_flies_on_an_arc_with_the_earths_center(self):
+        """page 1: every lit dot of the earth's edge is 48 from (20, 70) and the station's body 58, frame after frame"""
+        import math
+        a = app(self.F)
+        body, edge = (200, 206, 216), (31, 122, 168)
+        seen = set()
+        for ms in range(0, 6000, 250):
+            rgb = a.rt.frame(host.ctx(ms=ms))
+            dots = [(x, y) for y in range(32) for x in range(40) if host.at(rgb, x, y) == body]
+            self.assertTrue(dots, ms)
+            cx = sum(x for x, _ in dots) / len(dots)
+            cy = sum(y for _, y in dots) / len(dots)
+            self.assertAlmostEqual(math.hypot(cx - 20, cy - 70), 58, delta=0.8)
+            seen.add(round(cx))
+            for x, y in ((x, y) for y in range(32) for x in range(40) if host.at(rgb, x, y) == edge):
+                self.assertAlmostEqual(math.hypot(x - 20, y - 70), 48, delta=0.8)
+        self.assertGreater(len(seen), 15)   # it travels across
+
+    def test_the_led_icon_flies_on_an_arc_with_the_earths_center_too(self):
+        try:
+            from PIL import Image
+        except ImportError:
+            self.skipTest("needs Pillow")
+        import math
+        img = Image.open(ROOT / self.F / "listing/icon-led.png").convert("RGB")
+        frames = img.height // 12
+        white, blue = (255, 255, 255), (60, 170, 255)
+        radii = set()
+        for f in range(frames):
+            px = lambda x, y: img.getpixel((x, f * 12 + y))
+            station = [(x, y) for y in range(12) for x in range(12) if px(x, y) == white]
+            if len(station) == 2:   # the body whole on the icon
+                cx = sum(x for x, _ in station) / len(station)
+                cy = sum(y for _, y in station) / len(station)
+                radii.add(math.hypot(cx - 5.5, cy - 18))
+            edge = [(x, y) for x in range(12) for y in range(12) if px(x, y) == blue and
+                    (y == 0 or px(x, y - 1) == (0, 0, 0)) and y >= 7]
+            for x, y in edge:
+                self.assertAlmostEqual(math.hypot(x - 5.5, y - 18), 10, delta=0.75, msg=(f, x, y))
+        self.assertGreater(len(radii), 4)
+        self.assertLess(max(radii) - min(radii), 1.0, sorted(radii))   # one orbit, a dot's rounding apart
 
     def test_showers_and_eclipses_come_from_the_date(self):
         a = app(self.F)
@@ -296,16 +386,40 @@ class TransitApp(unittest.TestCase):
     def test_past_arrivals_are_dropped(self):
         self.assertEqual(self.next_of(self.mbta(("Red", -10, 0), ("Orange", 6, 0))), "Orange 6 min")
 
-    def test_no_feed_asks_for_one_and_draws_without_reading_data(self):
-        a = app(self.F)
-        rgb = a.rt.frame(host.ctx(ms=0, epoch=BASE))
-        self.assertGreater(host.count_lit(rgb), 30)
-        self.assertNotIn("next", a.state())
+    def test_no_link_and_no_city_near_asks_for_a_stop(self):
+        for ctx in (host.ctx(ms=0, epoch=BASE), at(LONDON, ms=0, epoch=BASE), at(NEW_YORK, ms=0, epoch=BASE)):
+            a = app(self.F, None, {"boston": {"status": "far"}})
+            rgb = a.rt.frame(ctx)
+            self.assertGreater(host.count_lit(rgb), 30)
+            self.assertEqual(a.state()["next"], "pick your stop")
 
-    def test_the_default_feed_is_empty_until_the_owner_picks_a_city(self):
+    def test_near_boston_with_no_link_shows_the_stops_near_the_board(self):
+        near = self.mbta(("Red", 4, 0), ("Orange", 7, 1))["stop"]["value"]
+        near["data"][0]["relationships"]["stop"] = {"data": {"id": "70079"}}
+        near["included"] = [{"id": "70079", "type": "stop", "attributes": {"name": "South Station"}}]
+        a = app(self.F, None, {"boston": {"status": "ok", "value": near}})
+        rgb = a.rt.frame(at(BOSTON, ms=0, epoch=BASE))
+        self.assertEqual(a.state()["next"], "Red 4 min")
+        self.assertGreater(host.count_lit(rgb), 150)
+        loading = app(self.F, None, {"boston": {"status": "loading"}})
+        loading.rt.frame(at(BOSTON, ms=0, epoch=BASE))
+        self.assertNotIn("next", loading.state())
+
+    def test_your_own_link_wins_over_the_city_near_you(self):
+        a = app(self.F, self.FEED, {"stop": self.mbta(("Blue", 3, 0))["stop"], "boston": self.mbta(("Red", 1, 0))["stop"]})
+        a.rt.frame(at(BOSTON, ms=0, epoch=BASE))
+        self.assertEqual(a.state()["next"], "Blue 3 min")
+
+    def test_each_city_is_a_source_asked_only_near_it(self):
         man = json.load(open(ROOT / self.F / "mooboard.json"))
         feed = [s for s in man["settings"] if s["key"] == "feed"][0]
         self.assertFalse(feed["default"].startswith("https://"))
+        boston = [s for s in man["sources"] if s["key"] == "boston"][0]
+        self.assertEqual(boston["near"], "42.36,-71.06,60")
+        self.assertTrue(boston["url"].startswith("https://api-v3.mbta.com/predictions?"))
+        self.assertIn("filter[latitude]={place.lat}&filter[longitude]={place.lon}", boston["url"])
+        lua = (ROOT / self.F / "app.lua").read_text()
+        self.assertIn('{name = "BOSTON", source = "boston", lat = 42.36, lon = -71.06, km = 60}', lua)
 
     def test_two_rows_show_and_a_soon_arrival_flashes(self):
         a = app(self.F, self.FEED, self.mbta(("Red", 1, 0), ("Orange", 7, 0), ("Blue", 9, 0)))
@@ -331,7 +445,8 @@ class StoreRules(unittest.TestCase):
         for folder in self.APPS:
             category, name = folder.split("/")
             row, icon, body, boards, kind, extra = build.load_app(ROOT, category, name)
-            self.assertEqual((kind, row["uses"], row["version"]), (3, "lua54", "1.0.0"))
+            version = "1.1.0" if folder in ("Lifestyle/Space", "Lifestyle/Air and UV", "Tools/Transit") else "1.0.0"
+            self.assertEqual((kind, row["uses"], row["version"]), (3, "lua54", version), folder)
 
     def test_public_text_has_no_em_dash_or_capital_mooboard(self):
         for folder in self.APPS:
