@@ -162,6 +162,7 @@ def check(man):
         refuse(key in seen_complications, 'Complication keys must be unique')
         seen_complications.add(key)
         refuse(not label(item['label'], 24), 'A complication needs a label of at most 24 characters')
+        refuse(not complication.label_template(item['label'], settings), "A complication label names only the app's settings")
         refuse(not isinstance(item['source'], str) or item['source'] not in seen_sources, "A complication reads one of the app's sources")
         path = complication.path_template(item['path'], settings)
         refuse(path == 1, "A complication path names only the app's settings")
@@ -181,7 +182,7 @@ def check(man):
             refuse(change != 0, "A complication change is a path as its value's is")
         refuse('size' in item and item['size'] not in ('small', 'wide'), 'A complication size is small or wide')
         refuse('refresh' in item and (type(item['refresh']) is not int or not 300 <= item['refresh'] <= 86400), 'A complication refresh is 300 to 86400 seconds')
-    newer = any((k in item for item in complications for k in ('change', 'size', 'refresh'))) or any(('{' in str(item.get(k, '')) for item in complications for k in ('path', 'change'))) or any((s.get('type') == 'secret' for s in settings))
+    newer = any((k in item for item in complications for k in ('change', 'size', 'refresh'))) or any(('{' in str(item.get(k, '')) for item in complications for k in ('path', 'change', 'label'))) or any((s.get('type') == 'secret' for s in settings))
     floor = tuple((int(n) for n in man['minFirmware'].split('-')[0].split('.')))
     refuse(newer and floor < (0, 4, 4), 'Complication change, size, refresh, setting paths, and secret settings need minFirmware 0.4.4 or later')
     placed = any(('levels' in item for item in complications)) or any(('near' in s or '{place.' in str(s.get('url', '')) for s in sources))
@@ -295,6 +296,27 @@ def _path_template(path, settings):
     return 0 if _valid_path(plain) else 2
 
 
+def _label_template(label, settings):
+    # u906 c7617 + every {...} of a complication's label is {settings.<key>} of a text or choice setting, no other brace
+    declared = {s.get("key") for s in settings or [] if s.get("type") in ("text", "choice")}
+    at = 0
+    while at < len(label):
+        if label[at] == "}":
+            return False
+        if label[at] != "{":
+            at += 1
+            continue
+        ends = [i for i in (label.find("{", at + 1), label.find("}", at + 1)) if i >= 0]
+        end = min(ends) if ends else -1
+        if end < 0 or label[end] != "}":
+            return False
+        group, dot, key = label[at + 1:end].partition(".")
+        if not dot or group != "settings" or key not in declared:
+            return False
+        at = end + 1
+    return True
+
+
 _ICONS = ("sun", "moon", "partSun", "cloud", "rain", "snow", "storm", "fog", "sunUp", "sunDown", "bar", "plane")
 complication = SimpleNamespace(valid_path=_valid_path, valid_format=_valid_format, path_template=_path_template,
-                               icons=lambda: _ICONS)
+                               label_template=_label_template, icons=lambda: _ICONS)
