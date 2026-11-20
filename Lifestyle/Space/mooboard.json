@@ -2,16 +2,14 @@
   "format": 3,
   "id": "space",
   "name": "Space",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "by": "mooboard",
   "description": "When the space station passes over you, the next meteor shower, and the next eclipse.",
   "category": "Lifestyle",
   "runtime": "lua54",
-  "minFirmware": "0.4.1",
+  "minFirmware": "0.4.4",
   "boards": ["s3", "p4"],
   "settings": [
-    {"key": "lat", "type": "text", "label": "Latitude", "default": "40.71", "max": 10},
-    {"key": "lon", "type": "text", "label": "Longitude", "default": "-74.01", "max": 11},
     {"key": "iss", "type": "toggle", "label": "Space station", "default": true},
     {"key": "showers", "type": "toggle", "label": "Meteor showers", "default": true},
     {"key": "eclipses", "type": "toggle", "label": "Eclipses", "default": true}

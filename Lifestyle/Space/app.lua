@@ -97,17 +97,22 @@ local function stars(ctx, n)
   end
 end
 
+-- earth's edge and the station's orbit share one center, so the station curves with the earth
+local EX, EY, EARTH, ORBIT = 20, 70, 48, 58
+local SWING = math.asin(17 / ORBIT)
+
 local function drawIss(ctx, st)
   stars(ctx, 14)
-  -- earth's edge and the station on its orbit
-  for x = 0, 36 do
-    local y = 30 - math.floor(math.sqrt(math.max(0, 70 * 70 - (x - 18) * (x - 18))) - 62)
-    if y >= 0 and y < 32 then screen.pixel(x + 2, y, "#1f7aa8") end
+  for x = 2, 38 do
+    local dx = x - EX
+    local top = math.floor(EY - math.sqrt(EARTH * EARTH - dx * dx) + 0.5)
+    screen.rect(x, top + 1, 1, 31 - top, "#0e3a52", true)
+    screen.pixel(x, top, "#1f7aa8")
   end
-  screen.rect(2, 27, 36, 4, "#0e3a52", true)
   local a = (ctx.monoMs % 6000) / 6000
-  local sx = 3 + math.floor(a * 34)
-  local sy = 18 - math.floor(math.sin(a * math.pi) * 8)
+  local t = (a * 2 - 1) * SWING
+  local sx = math.floor(EX + ORBIT * math.sin(t) + 0.5)
+  local sy = math.floor(EY - ORBIT * math.cos(t) + 0.5)
   screen.rect(sx - 1, sy, 3, 1, "#c8ced8", true)
   screen.rect(sx - 3, sy - 1, 2, 3, "#3caaff", true)
   screen.rect(sx + 2, sy - 1, 2, 3, "#3caaff", true)
@@ -163,8 +168,9 @@ return {
     local v = feed and feed.value
     if not v or v.latitude == nil then return end
     local lat, lon, ts = tonumber(v.latitude), tonumber(v.longitude), tonumber(v.timestamp)
-    local mylat, mylon = tonumber(settings.lat), tonumber(settings.lon)
-    if not (lat and lon and ts and mylat and mylon) then return end
+    -- the board's place, from the last frame
+    local mylat, mylon = tonumber(ctx.lat), tonumber(ctx.lon)
+    if not (lat and lon and ts) then return end
     local last = state.pl
     local up = state.up
     if last and ts > state.pt then
@@ -173,6 +179,7 @@ return {
     state.pl, state.pt, state.up = lat, ts, up
     state.at = ts
     if up == nil then return end
+    if not (mylat and mylon) then state.next = "waiting for the board's place" return end
     local t = next_pass(lat, lon, up, mylat, mylon)
     state.t0, state.pass = ts, t
     if t == nil then state.next = "none in 12 hours" else state.next = t == 0 and "overhead" or long(t) end
@@ -194,7 +201,7 @@ return {
         else
           st.text, st.color, st.size = long(rest), "#3caaff", 11
         end
-      elseif state.at and state.up ~= nil then
+      elseif state.at and state.up ~= nil and ctx.lat and state.next ~= "waiting for the board's place" then
         st.text, st.color, st.size = "NONE SOON", "#a1b5bd", 9
       else
         st.text, st.color, st.size = "LOCATING", "#a1b5bd", 9
