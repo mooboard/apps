@@ -2,12 +2,12 @@
   "format": 3,
   "id": "transit",
   "name": "Transit",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "by": "mooboard",
   "description": "The next bus or train at your stop, from your city's free feed.",
   "category": "Tools",
   "runtime": "lua54",
-  "minFirmware": "0.4.1",
+  "minFirmware": "0.4.4",
   "boards": ["s3", "p4"],
   "settings": [
     {"key": "feed", "type": "text", "label": "Feed link", "default": "none", "max": 256},
@@ -19,6 +19,7 @@
     {"key": "next", "type": "readout", "label": "Next"}
   ],
   "sources": [
-    {"key": "stop", "url": "{settings.feed}", "refresh": 30}
+    {"key": "stop", "url": "{settings.feed}", "refresh": 30},
+    {"key": "boston", "url": "https://api-v3.mbta.com/predictions?filter[latitude]={place.lat}&filter[longitude]={place.lon}&filter[radius]=0.01&sort=arrival_time&page[limit]=10&fields[prediction]=arrival_time,departure_time,direction_id&include=stop&fields[stop]=name", "refresh": 30, "near": "42.36,-71.06,60"}
   ]
 }

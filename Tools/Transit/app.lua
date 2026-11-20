@@ -3,6 +3,10 @@
 --                          "relationships": {"route": {"data": {"id": "Red"}}}}]}
 --   plain: {"arrivals": [{"route": "7", "at": 1795100000, "direction": 0}]} with at in epoch seconds or the same text
 local CUM = {0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334}
+-- the cities with a free feed that finds the stops near the board, each one of the app's sources with the same near
+local CITIES = {
+  {name = "BOSTON", source = "boston", lat = 42.36, lon = -71.06, km = 60},
+}
 local COLORS = {
   Red = "#ff3b30", Orange = "#ff9500", Blue = "#3c8cff", Mattapan = "#ff3b30",
   ["Green-B"] = "#34c759", ["Green-C"] = "#34c759", ["Green-D"] = "#34c759", ["Green-E"] = "#34c759",
@@ -50,8 +54,37 @@ local function chipColor(route)
   return "#ffd60a"
 end
 
+-- the closest city in CITIES within its km of the board's place, or nil
+local function nearest(ctx)
+  local lat, lon = tonumber(ctx.lat), tonumber(ctx.lon)
+  if not (lat and lon) then return nil end
+  local best, bestKm
+  for i = 1, #CITIES do
+    local c = CITIES[i]
+    local r = math.pi / 180
+    local a, b = math.sin((lat - c.lat) * r / 2), math.sin((lon - c.lon) * r / 2)
+    local km = 2 * 6371 * math.asin(math.sqrt(math.min(1, a * a + math.cos(c.lat * r) * math.cos(lat * r) * b * b)))
+    if km <= c.km and (bestKm == nil or km < bestKm) then best, bestKm = c, km end
+  end
+  return best
+end
+
+-- stop names from an MBTA feed's included stops, by id
+local function stopNames(value)
+  local names = {}
+  local inc = value.included
+  if type(inc) == "table" then
+    for i = 1, #inc do
+      local s = inc[i]
+      if s.type == "stop" and s.attributes and s.attributes.name then names[s.id] = s.attributes.name end
+    end
+  end
+  return names
+end
+
 local function arrivals(value)
   local out = {}
+  local names = stopNames(value)
   local want = tostring(settings.route)
   local dir = settings.heading == "Outbound" and 0 or (settings.heading == "Inbound" and 1 or nil)
   local list = value.data
@@ -70,9 +103,10 @@ local function arrivals(value)
       local at = p.attributes or {}
       local rel = p.relationships and p.relationships.route and p.relationships.route.data
       local route = rel and rel.id or "?"
+      local stop = p.relationships and p.relationships.stop and p.relationships.stop.data
       local t = epoch(at.arrival_time) or epoch(at.departure_time)
       if t and (want == "all" or want == route) and (dir == nil or at.direction_id == dir) then
-        out[#out + 1] = {route = route, at = t}
+        out[#out + 1] = {route = route, at = t, stop = stop and names[stop.id]}
       end
     end
   end
@@ -96,16 +130,19 @@ end
 
 return {
   frame = function(ctx)
-    local feed = data.stop or {}
-    local value = feed.value
-    local name = string.sub(tostring(settings.name), 1, 12)
-    if string.sub(tostring(settings.feed), 1, 8) ~= "https://" then
-      screen.text("SET A STOP", 24, 14, 9, "#a1b5bd")
-      screen.text("IN THE APP", 24, 26, 9, "#6f8793")
+    -- your own stop's link first, else the stops near you in the closest city we have a feed for
+    local own = string.sub(tostring(settings.feed), 1, 8) == "https://"
+    local city = not own and nearest(ctx) or nil
+    if not own and not city then
+      screen.text("PICK YOUR STOP", 12, 14, 9, "#a1b5bd")
+      screen.text("IN THE APP", 27, 26, 9, "#6f8793")
+      state.next = "pick your stop"
       return
     end
-    screen.text(name, 2, 7, 6, "#6f8793")
+    local feed = (own and data.stop or data[city.source]) or {}
+    local value = feed.value
     if not value then
+      screen.text(own and string.sub(tostring(settings.name), 1, 12) or "Near you", 2, 7, 6, "#6f8793")
       local dots = (ctx.monoMs // 400) % 4
       screen.text(string.sub("...", 1, dots), 2, 25, 11, "#a1b5bd")
       return
@@ -120,6 +157,9 @@ return {
         if not first then first = list[i] end
       end
     end
+    -- your stop's name, or the name of the stop near you with the next one
+    local name = own and string.sub(tostring(settings.name), 1, 12) or (first and first.stop) or "Near you"
+    screen.text(string.sub(name, 1, 20), 2, 7, 6, "#6f8793")
     if first then state.next = first.route .. " " .. ((first.at - now) // 60) .. " min" else
       screen.text("NONE SOON", 30, 24, 9, "#a1b5bd")
       state.next = "none"
