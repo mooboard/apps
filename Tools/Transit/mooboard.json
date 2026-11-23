@@ -2,7 +2,7 @@
   "format": 3,
   "id": "transit",
   "name": "Transit",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "by": "mooboard",
   "description": "The next bus or train at your stop, from your city's free feed.",
   "category": "Tools",
