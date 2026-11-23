@@ -429,6 +429,79 @@ class TransitApp(unittest.TestCase):
         self.assertGreater(host.count_lit(one), 150)
 
 
+class LedIconsSwitchAToB(unittest.TestCase):
+    """Air and UV and Transit's Home icons play option A's loop, then B's, and repeat (the owner, U909): a clean cut
+    between them, each part its option's loop played whole for 2 s or more, inside Home's icon limits, and the still
+    icon.png is A's best frame. Each option is known by a dot only it lights."""
+    APPS = {   # folder: (A's dot, B's dot, the icon maker's A and B, A's best frame)
+        "Lifestyle/Air and UV": ((8, 3, (255, 184, 28)), (5, 8, (205, 210, 215)), ("air_a", "air_b"), 0),   # sun, needle
+        "Tools/Transit": ((10, 2, (255, 59, 48)), (4, 1, (60, 170, 255)), ("transit_a", "transit_b"), 5),   # stop, train
+    }
+
+    def setUp(self):
+        try:
+            from PIL import Image
+        except ImportError:
+            self.skipTest("needs Pillow")
+        self.Image = Image
+
+    def strip(self, folder):
+        """the listing's icon-led.png as frames of 144 dots, after Home's limits: 12 wide, 2 to 32 frames, 4 KB"""
+        path = ROOT / folder / "listing/icon-led.png"
+        img = self.Image.open(path).convert("RGB")
+        self.assertEqual((img.width, img.height % 12), (12, 0), folder)
+        self.assertTrue(2 <= img.height // 12 <= 32, (folder, img.height // 12))
+        self.assertLessEqual(path.stat().st_size, 4096, folder)
+        return [tuple(img.getpixel((x, f * 12 + y)) for y in range(12) for x in range(12)) for f in range(img.height // 12)]
+
+    def option(self, folder, frame):
+        a, b = self.APPS[folder][:2]
+        lit = [frame[y * 12 + x] == k for x, y, k in (a, b)]
+        self.assertEqual(sum(lit), 1, "%s: a frame is A or B, never both or neither" % folder)
+        return "A" if lit[0] else "B"
+
+    def runs(self, folder):
+        out = []
+        for frame in self.strip(folder):
+            key = self.option(folder, frame)
+            if out and out[-1][0] == key:
+                out[-1][1] += 1
+            else:
+                out.append([key, 1])
+        return [tuple(r) for r in out]
+
+    def test_air_and_uv_plays_wind_and_sun_then_the_gauge(self):
+        runs = self.runs("Lifestyle/Air and UV")
+        self.assertEqual([k for k, _ in runs], ["A", "B"], runs)   # one cut to B, and the loop's wrap cuts back to A
+        self.assertTrue(all(n >= 10 for _, n in runs), runs)   # 2 s or more each at 200 ms a frame
+
+    def test_transit_plays_the_bus_then_the_train(self):
+        runs = self.runs("Tools/Transit")
+        self.assertEqual([k for k, _ in runs], ["A", "B"], runs)
+        self.assertTrue(all(n >= 10 for _, n in runs), runs)
+
+    def test_each_part_is_its_options_own_loop_played_whole(self):
+        if not os.path.isfile(os.path.join(HOST, "icons.py")):
+            self.skipTest("needs the icon maker (STORE_APPS_HOST)")
+        sys.path.insert(0, HOST)
+        import icons
+        rgb = lambda rows: tuple(icons.ledkit.PAL.get(k, (0, 0, 0)) for row in rows for k in row)
+        for folder, (_, _, names, _) in self.APPS.items():
+            frames = self.strip(folder)
+            a, b = ([rgb(f) for f in getattr(icons, n)()] for n in names)
+            cut = next(i for i, f in enumerate(frames) if self.option(folder, f) == "B")
+            self.assertEqual((cut % len(a), (len(frames) - cut) % len(b)), (0, 0), folder)
+            self.assertEqual(frames, a * (cut // len(a)) + b * ((len(frames) - cut) // len(b)), folder)
+
+    def test_the_still_icon_is_option_as_best_frame(self):
+        for folder, (_, _, _, best) in self.APPS.items():
+            frame = self.strip(folder)[best]
+            self.assertEqual(self.option(folder, frame), "A", folder)
+            icon = self.Image.open(ROOT / folder / "icon.png").convert("RGB")
+            self.assertEqual(tuple(icon.getpixel((4 + x * 2, 4 + y * 2)) for y in range(12) for x in range(12)), frame,
+                             folder)
+
+
 class StoreRules(unittest.TestCase):
     APPS = ("Lifestyle/Nudges", "Lifestyle/Space", "Lifestyle/Air and UV", "Tools/GitHub Grid", "Tools/Transit")
 
@@ -445,7 +518,7 @@ class StoreRules(unittest.TestCase):
         for folder in self.APPS:
             category, name = folder.split("/")
             row, icon, body, boards, kind, extra = build.load_app(ROOT, category, name)
-            version = "1.1.0" if folder in ("Lifestyle/Space", "Lifestyle/Air and UV", "Tools/Transit") else "1.0.0"
+            version = {"Lifestyle/Space": "1.1.0", "Lifestyle/Air and UV": "1.2.0", "Tools/Transit": "1.2.0"}.get(folder, "1.0.0")
             self.assertEqual((kind, row["uses"], row["version"]), (3, "lua54", version), folder)
 
     def test_public_text_has_no_em_dash_or_capital_mooboard(self):
