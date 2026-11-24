@@ -1,0 +1,21 @@
+{
+  "format": 3,
+  "id": "box-breathing",
+  "name": "Box Breathing",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "Breathe in, hold, breathe out, and hold while a dot walks the square.",
+  "category": "Lifestyle",
+  "runtime": "lua54",
+  "minFirmware": "0.4.1",
+  "boards": ["s3", "p4"],
+  "settings": [
+    {"key": "pattern", "type": "choice", "label": "Pattern", "default": "Box 4-4-4-4", "options": ["Box 4-4-4-4", "Relax 4-7-8", "Even 5-5"]},
+    {"key": "color", "type": "color", "label": "Color", "default": "#77EDD7"}
+  ],
+  "controls": [
+    {"key": "restart", "type": "button", "label": "Start over"},
+    {"key": "rounds", "type": "readout", "label": "Rounds"}
+  ],
+  "sources": []
+}
