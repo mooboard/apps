@@ -1,0 +1,17 @@
+{
+  "format": 3,
+  "id": "bonsai-life",
+  "name": "Bonsai Life",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "A pixel bonsai through the seasons, with spring blossoms, fall leaves, and winter snow.",
+  "category": "Ambiance",
+  "runtime": "lua54",
+  "minFirmware": "0.4.1",
+  "boards": ["s3", "p4"],
+  "settings": [
+    {"key": "season", "type": "choice", "label": "Season", "default": "By the date", "options": ["By the date", "Spring", "Summer", "Fall", "Winter"]},
+    {"key": "pot", "type": "color", "label": "Pot", "default": "#3C6E8C"}
+  ],
+  "sources": []
+}
