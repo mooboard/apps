@@ -1,0 +1,17 @@
+{
+  "format": 3,
+  "id": "oscilloscope",
+  "name": "Oscilloscope",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "A phosphor scope that sweeps waves and traces spinning figures, with a soft afterglow.",
+  "category": "Ambiance",
+  "runtime": "lua54",
+  "minFirmware": "0.4.4",
+  "boards": ["s3", "p4"],
+  "settings": [
+    {"key": "trace", "type": "choice", "label": "Trace", "default": "Both", "options": ["Both", "Waves", "Figures"]},
+    {"key": "phosphor", "type": "choice", "label": "Phosphor", "default": "Green", "options": ["Green", "Amber", "Blue", "White"]},
+    {"key": "grid", "type": "toggle", "label": "Grid", "default": true}
+  ]
+}
