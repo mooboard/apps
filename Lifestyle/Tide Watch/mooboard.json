@@ -1,0 +1,21 @@
+{
+  "format": 3,
+  "id": "tide-watch",
+  "name": "Tide Watch",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "The tide where you live, rising or falling, and when the next high and low come.",
+  "category": "Lifestyle",
+  "runtime": "lua54",
+  "minFirmware": "0.4.4",
+  "boards": ["s3", "p4"],
+  "settings": [
+    {"key": "curve", "type": "toggle", "label": "Tide curve", "default": true}
+  ],
+  "controls": [
+    {"key": "next", "type": "readout", "label": "Next tide"}
+  ],
+  "sources": [
+    {"key": "tide", "url": "https://marine-api.open-meteo.com/v1/marine?latitude={place.lat}&longitude={place.lon}&hourly=sea_level_height_msl&past_days=1&forecast_days=2", "refresh": 3600}
+  ]
+}
