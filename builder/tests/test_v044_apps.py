@@ -518,7 +518,7 @@ class StoreRules(unittest.TestCase):
         for folder in self.APPS:
             category, name = folder.split("/")
             row, icon, body, boards, kind, extra = build.load_app(ROOT, category, name)
-            version = {"Lifestyle/Space": "1.1.0", "Lifestyle/Air and UV": "1.2.0", "Tools/Transit": "1.2.0"}.get(folder, "1.0.0")
+            version = {"Lifestyle/Space": "1.2.0", "Lifestyle/Air and UV": "1.2.0", "Tools/Transit": "1.2.0"}.get(folder, "1.0.0")
             self.assertEqual((kind, row["uses"], row["version"]), (3, "lua54", version), folder)
 
     def test_public_text_has_no_em_dash_or_capital_mooboard(self):

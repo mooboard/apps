@@ -2,9 +2,9 @@
   "format": 3,
   "id": "space",
   "name": "Space",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "by": "mooboard",
-  "description": "When the space station passes over you, the next meteor shower, and the next eclipse.",
+  "description": "When the space station passes over you, the next meteor shower, the next eclipse you can see, and tonight's moon.",
   "category": "Lifestyle",
   "runtime": "lua54",
   "minFirmware": "0.4.4",
@@ -12,7 +12,8 @@
   "settings": [
     {"key": "iss", "type": "toggle", "label": "Space station", "default": true},
     {"key": "showers", "type": "toggle", "label": "Meteor showers", "default": true},
-    {"key": "eclipses", "type": "toggle", "label": "Eclipses", "default": true}
+    {"key": "eclipses", "type": "toggle", "label": "Eclipses", "default": true},
+    {"key": "moon", "type": "toggle", "label": "Tonight's moon", "default": true}
   ],
   "controls": [
     {"key": "next", "type": "readout", "label": "Station pass"}
