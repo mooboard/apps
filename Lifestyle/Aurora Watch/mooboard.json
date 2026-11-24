@@ -1,0 +1,21 @@
+{
+  "format": 3,
+  "id": "aurora-watch",
+  "name": "Aurora Watch",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "The Kp index now and tonight, and the Kp your place needs to see the aurora.",
+  "category": "Lifestyle",
+  "runtime": "lua54",
+  "minFirmware": "0.4.4",
+  "boards": ["s3", "p4"],
+  "controls": [
+    {"key": "kp", "type": "readout", "label": "Kp now"},
+    {"key": "tonight", "type": "readout", "label": "Tonight"},
+    {"key": "need", "type": "readout", "label": "Kp you need"}
+  ],
+  "sources": [
+    {"key": "kp", "url": "https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json", "refresh": 900},
+    {"key": "scales", "url": "https://services.swpc.noaa.gov/products/noaa-scales.json", "refresh": 1800}
+  ]
+}
