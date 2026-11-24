@@ -1,0 +1,23 @@
+{
+  "format": 3,
+  "id": "fantasy-football",
+  "name": "Fantasy Football",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "Your Sleeper fantasy football matchup this week, with both scores live during games.",
+  "category": "Lifestyle",
+  "runtime": "lua54",
+  "minFirmware": "0.4.1",
+  "boards": ["s3", "p4"],
+  "settings": [
+    {"key": "user", "type": "text", "label": "Sleeper username", "default": "your name", "max": 32},
+    {"key": "league", "type": "text", "label": "League", "default": "All", "max": 64}
+  ],
+  "controls": [
+    {"key": "score", "type": "readout", "label": "This week"},
+    {"key": "leagues", "type": "readout", "label": "Leagues"}
+  ],
+  "sources": [
+    {"key": "ff", "url": "https://api.mooboard.co/fantasy/sleeper/{settings.user}?league={settings.league}", "refresh": 60}
+  ]
+}

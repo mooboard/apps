@@ -21,7 +21,9 @@ if HAVE:
 
 need = unittest.skipUnless(HAVE, "needs the dev kit's native runtime")
 RAIN = "Lifestyle/Rain Soon"
+FANTASY = "Lifestyle/Fantasy Football"
 SPACE = "Lifestyle/Space"
+SLEEPER = json.loads((ROOT / "builder/tests/roadmap/fantasy-sleeper.json").read_text(encoding="utf-8"))
 RECORDED = json.loads((ROOT / "builder/tests/roadmap/open-meteo-15min.json").read_text(encoding="utf-8"))
 NOW = RECORDED["current"]["time"] + 237   # when it was recorded, 3 min 57 s into the quarter
 
@@ -151,6 +153,130 @@ class RainSoonApp(unittest.TestCase):
                 self.assertEqual(touching_edges(frame(rain_app(feed), ms=ms)), [], (feed and feed["rain"]["value"]["minutely_15"], ms))
 
 
+def ff_app(feed=None, settings=None):
+    values = {"user": "moofan"}
+    values.update(settings or {})
+    return host.App(str(ROOT / FANTASY), values, None, None if feed is None else {"ff": {"status": "ok", "value": feed}})
+
+
+def sleeper(**over):
+    body = copy.deepcopy(SLEEPER)
+    body.update(over)
+    return body
+
+
+def red(p):
+    return p[0] > 150 and p[1] < 90 and p[2] < 90
+
+
+@need
+class FantasyFootballApp(unittest.TestCase):
+    def test_before_a_name_it_asks_for_one(self):
+        a = ff_app(sleeper(), {"user": "your name"})
+        rgb = frame(a)
+        self.assertEqual(a.state()["score"], "Add your Sleeper name")
+        self.assertGreater(host.count_lit(rgb), 40)
+
+    def test_the_matchup_shows_both_scores_with_mine_on_top(self):
+        a = ff_app(sleeper())
+        rgb = frame(a)
+        self.assertEqual(a.state()["score"], "Up 112.4 to 98.2")
+        self.assertEqual(a.state()["leagues"], "Barn League, Work Pool")
+        top = [host.at(rgb, x, y) for y in range(2, 12) for x in range(92, 126)]
+        bottom = [host.at(rgb, x, y) for y in range(19, 30) for x in range(92, 126)]
+        self.assertIn((255, 255, 255), top)                  # the leader's score is white
+        self.assertNotIn((255, 255, 255), bottom)
+        self.assertTrue(any(p != (0, 0, 0) for p in bottom))
+
+    def test_the_bar_is_my_share_of_the_points(self):
+        rgb = frame(ff_app(sleeper()), ms=3000)   # after the league's name
+        mine = sum(1 for x in range(3, 71) if blue(host.at(rgb, x, 15)))
+        self.assertAlmostEqual(mine, round(68 * 112.44 / (112.44 + 98.2)), delta=2)
+
+    def test_a_final_week_says_won_or_lost(self):
+        a = ff_app(sleeper(final=True))
+        frame(a)
+        self.assertEqual(a.state()["score"], "Won 112.4 to 98.2")
+        a = ff_app(sleeper(final=True))
+        frame(a, ms=8000)
+        self.assertEqual(a.state()["score"], "Lost 56.2 to 61.0")
+
+    def test_leagues_take_turns(self):
+        a = ff_app(sleeper())
+        frame(a, ms=0)
+        self.assertEqual(a.state()["score"], "Up 112.4 to 98.2")
+        frame(a, ms=8000)
+        self.assertEqual(a.state()["score"], "Down 56.2 to 61.0")
+        frame(a, ms=16000)
+        self.assertEqual(a.state()["score"], "Up 112.4 to 98.2")
+
+    def test_the_league_picked_alone_stays(self):
+        one = sleeper(leagues=SLEEPER["leagues"][1:])
+        a = ff_app(one, {"league": "work"})
+        for ms in (0, 8000, 16000):
+            frame(a, ms=ms)
+            self.assertEqual(a.state()["score"], "Down 56.2 to 61.0")
+
+    def test_live_shows_once_the_scores_move_and_the_new_score_flashes(self):
+        a = ff_app(sleeper())
+        rgb = frame(a, ms=0)
+        self.assertFalse([p for p in host.lit(rgb) if red(p)])
+        moved = sleeper()
+        moved["leagues"][0]["me"]["points"] = 118.64
+        a.data({"ff": {"status": "ok", "value": moved}})
+        rgb = frame(a, NOW + 60, ms=100)
+        self.assertEqual(a.state()["score"], "Up 118.6 to 98.2")
+        self.assertTrue([p for p in host.lit(rgb) if red(p)], "LIVE in red")
+        self.assertIn((52, 199, 89), [host.at(rgb, x, y) for y in range(2, 12) for x in range(92, 126)])
+        rgb = frame(a, NOW + 60 + 20 * 60, ms=200)
+        self.assertFalse([p for p in host.lit(rgb) if red(p)], "quiet scores are not live")
+
+    def test_a_bye_has_no_opponent(self):
+        bye = sleeper(leagues=[dict(SLEEPER["leagues"][0], them=None)])
+        a = ff_app(bye)
+        frame(a)
+        self.assertEqual(a.state()["score"], "Bye week")
+
+    def test_each_problem_says_what_to_check(self):
+        for body, words in (({"user": "moofan", "error": "user"}, "No such Sleeper user"),
+                            ({"user": "moofan", "error": "league"}, "No such league"),
+                            ({"user": "moofan", "season": "2026", "off": True, "leagues": []}, "Off season"),
+                            (sleeper(leagues=[]), "No leagues this season")):
+            a = ff_app(body)
+            rgb = frame(a)
+            self.assertEqual(a.state()["score"], words)
+            self.assertGreater(host.count_lit(rgb), 40, words)
+
+    def test_another_names_scores_wait(self):
+        a = ff_app(sleeper(), {"user": "SomeoneElse"})
+        frame(a)
+        self.assertEqual(a.state()["score"], "Waiting")
+        a = ff_app(sleeper(), {"user": "MooFan"})   # Sleeper names have no case
+        frame(a)
+        self.assertEqual(a.state()["score"], "Up 112.4 to 98.2")
+
+    def test_night_is_dim(self):
+        for body in (sleeper(), {"user": "moofan", "error": "user"}, None):
+            rgb = frame(ff_app(body), night=True, hour=23)
+            self.assertLessEqual(max((max(p) for p in host.lit(rgb)), default=0), 120)
+
+    def test_nothing_touches_the_edges(self):
+        long = sleeper()
+        long["leagues"][0]["me"]["team"] = "W" * 24
+        long["leagues"][0]["me"]["points"] = 188.88
+        for body in (sleeper(), long, sleeper(final=True), {"user": "moofan", "error": "league"}, None):
+            for ms in range(0, 17000, 500):
+                self.assertEqual(touching_edges(frame(ff_app(body), ms=ms)), [], ms)
+
+    def test_a_long_name_never_runs_into_its_score(self):
+        """112.4 at size 9 is 32 dots wide, right at x 124, so it starts at 93 with two dark columns before it"""
+        long = sleeper()
+        long["leagues"][0]["me"]["team"] = "W" * 24
+        rgb = frame(ff_app(long))
+        self.assertEqual([host.at(rgb, x, y) for y in range(2, 12) for x in (90, 91)], [(0, 0, 0)] * 20)
+        self.assertTrue([y for y in range(2, 12) if host.at(rgb, 85, y) != (0, 0, 0)])   # the name runs up to them
+
+
 BOSTON, LONDON, SYDNEY = (42.35, -71.06), (51.51, -0.13), (-33.87, 151.21)
 
 
@@ -224,7 +350,7 @@ class SpaceMoonAndEclipses(unittest.TestCase):
 
 
 class RoadmapStoreRules(unittest.TestCase):
-    APPS = (RAIN,)
+    APPS = (RAIN, FANTASY)
 
     def setUp(self):
         sys.path.insert(0, str(ROOT / "builder"))
@@ -301,11 +427,24 @@ class RoadmapStoreRules(unittest.TestCase):
             self.assertEqual((rows[0]["version"], rows[0]["date"]), ("1.0", "2026-11-24"), folder)
             self.assertTrue(rows[0]["notes"].startswith("First release."), folder)
 
+    def test_fantasy_football_reads_the_mooboard_route_for_its_sleeper_name_and_league(self):
+        man = self.man(FANTASY)
+        self.assertEqual((man["version"], man["minFirmware"], man["category"]), ("1.0.0", "0.4.1", "Lifestyle"))
+        [source] = man["sources"]
+        self.assertEqual(source["url"], "https://api.mooboard.co/fantasy/sleeper/{settings.user}?league={settings.league}")
+        self.assertEqual((source["key"], source["refresh"]), ("ff", 60))
+        self.assertEqual([(s["key"], s["type"], s["default"]) for s in man["settings"]],
+                         [("user", "text", "your name"), ("league", "text", "All")])
+        self.assertEqual([(c["key"], c["type"]) for c in man["controls"]], [("score", "readout"), ("leagues", "readout")])
+        lua = (ROOT / FANTASY / "app.lua").read_text(encoding="utf-8")
+        for gone in ("string.find", "string.match", "string.gmatch", "string.gsub", ":find(", ":match(", ":gsub("):
+            self.assertNotIn(gone, lua)   # the board's Lua has none of them
+
 
 class RoadmapLedIcons(unittest.TestCase):
     """Home's icon for each: 12 wide, 2 to 32 frames, 4 KB at most, a loop that moves, and icon.png is its first
     frame at 2x"""
-    APPS = (RAIN,)
+    APPS = (RAIN, FANTASY)
 
     def setUp(self):
         try:

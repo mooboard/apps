@@ -1,0 +1,5 @@
+{"user": "moofan", "season": "2026", "week": 11, "final": false,
+ "leagues": [
+  {"id": "700000000000000001", "name": "Barn League", "me": {"team": "Hay Makers", "points": 112.44}, "them": {"team": "Rival", "points": 98.2}},
+  {"id": "700000000000000002", "name": "Work Pool", "me": {"team": "Hay Makers", "points": 56.22}, "them": {"team": "Night Owls", "points": 61.0}}
+ ]}
