@@ -1,0 +1,21 @@
+{
+  "format": 3,
+  "id": "rain-soon",
+  "name": "Rain Soon",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "A heads-up when rain or snow starts within the hour. Quiet otherwise.",
+  "category": "Lifestyle",
+  "runtime": "lua54",
+  "minFirmware": "0.4.4",
+  "boards": ["s3", "p4"],
+  "settings": [
+    {"key": "warn", "type": "choice", "label": "Warn for", "default": "Any rain", "options": ["Any rain", "Steady rain"]}
+  ],
+  "controls": [
+    {"key": "next", "type": "readout", "label": "Next hour"}
+  ],
+  "sources": [
+    {"key": "rain", "url": "https://api.open-meteo.com/v1/forecast?latitude={place.lat}&longitude={place.lon}&current=precipitation,snowfall&minutely_15=precipitation,snowfall&forecast_minutely_15=8&timeformat=unixtime", "refresh": 300}
+  ]
+}
