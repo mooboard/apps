@@ -272,16 +272,18 @@ class BuiltInCores(unittest.TestCase):
         self.assertIn(words, str(caught.exception))
         self.assertFalse(os.path.exists(os.path.join(tree.root, "dist")))
 
-    def test_the_builder_knows_the_firmwares_two(self):
-        self.assertEqual(build.BUILT_IN_CORES, {"font-nunito": "1.0.0", "font-product-sans": "1.0.0"})
+    def test_the_builder_knows_the_firmwares_one(self):
+        # product sans left the image for a core of its own (firmware c8780) + older firmware still holds it built in,
+        # so an app naming it downloads nothing there
+        self.assertEqual(build.BUILT_IN_CORES, {"font-nunito": "1.0.0"})
 
     def test_an_app_names_a_built_in_core_with_no_core_file(self):
         tree = Tree(self)
-        uses(tree, {"font-nunito": "1.0.0", "font-product-sans": "1.0.0"})
+        uses(tree, {"font-nunito": "1.0.0"})
         out = tree.build()
         row = load(out, "index2.json")["apps"][0]
-        # the row names them as the manifest does, which the board holds the two to (Package.cpp sameCores)
-        self.assertEqual(row["cores"], {"font-nunito": "1.0.0", "font-product-sans": "1.0.0"})
+        # the row names it as the manifest does, which the board holds the two to (Package.cpp sameCores)
+        self.assertEqual(row["cores"], {"font-nunito": "1.0.0"})
         package = zipfile.ZipFile(os.path.join(out, row["file"]))
         self.assertEqual(json.loads(package.read("mooboard.json"))["cores"], row["cores"])
         self.assertEqual(load(out, "cores.json")["cores"], [])
@@ -309,8 +311,7 @@ class BuiltInCores(unittest.TestCase):
         for least in ("1.0.1", "1.1.0", "2.0.0"):
             self.refused(lambda tree, least=least: uses(tree, {"font-nunito": least}),
                          "prayer: font-nunito is built into the firmware at 1.0.0, below the %s it names" % least)
-        self.refused(lambda tree: uses(tree, {"font-product-sans": "1.2.0"}),
-                     "font-product-sans is built into the firmware at 1.0.0")
+
 
     def test_an_unknown_core_with_no_core_file_is_still_refused(self):
         self.refused(lambda tree: uses(tree, {"font-nunito": "1.0.0", "font-other": "1.0.0"}),
@@ -319,6 +320,15 @@ class BuiltInCores(unittest.TestCase):
     def test_a_core_folder_for_a_built_in_id_is_refused(self):
         self.refused(lambda tree: add_core(tree, core_json(id="font-nunito")),
                      "Cores/font-nunito is built into the firmware and has no .core")
+
+    def test_an_app_naming_product_sans_takes_its_core(self):
+        """the core is listed in cores.json and counted in the app's room, as any downloaded font is (firmware c8780)"""
+        tree = Tree(self)
+        add_core(tree, core_json(id="font-product-sans"), folder="font-product-sans")
+        uses(tree, {"font-product-sans": "1.0.0"})
+        out = tree.build()
+        self.assertEqual(load(out, "index2.json")["apps"][0]["cores"], {"font-product-sans": "1.0.0"})
+        self.assertEqual([r["id"] for r in load(out, "cores.json")["cores"]], ["font-product-sans"])
 
 
 class Signed(unittest.TestCase):
@@ -342,9 +352,10 @@ class Signed(unittest.TestCase):
 
 
 class TheRepoCores(unittest.TestCase):
-    """the four font cores u652 + made by the firmware's tools/gen_fonts.py --core, each with its licence + the nine
-    service data cores u712 u782 (appletv, googlehome, googletv, govee, hue, lastfm, nanoleaf, sonos, spotify), each its
-    logo alone"""
+    """the five font cores u652 (product sans the fifth, firmware c8780) + made by the firmware's tools/gen_fonts.py
+    --core, each with its licence + the nine service data cores u712 u782 (appletv, googlehome, googletv, govee, hue,
+    lastfm, nanoleaf, sonos, spotify), each its logo alone + the stylized lyrics' cuts (c8782) with their licence + the
+    emoji pictures stay in the firmware (U937)"""
 
     def test_the_font_cores_build_and_every_app_is_in_index2(self):
         out = tempfile.mkdtemp()
@@ -353,18 +364,23 @@ class TheRepoCores(unittest.TestCase):
         rows = load(out, "cores.json")["cores"]
         self.assertEqual([(r["id"], r["version"], r["type"]) for r in rows],
                          [("font-albert-sans", "1.0.0", "font"), ("font-figtree", "1.0.0", "font"),
-                          ("font-inter", "1.0.0", "font"), ("font-outfit", "1.0.0", "font")]
+                          ("font-inter", "1.0.0", "font"), ("font-outfit", "1.0.0", "font"),
+                          ("font-product-sans", "1.0.0", "font"), ("kinetic-fonts", "1.0.0", "data")]
                          + [("service-" + k, "1.0.0", "data") for k in
                             ("appletv", "googlehome", "googletv", "govee", "hue", "lastfm", "nanoleaf", "sonos",
                              "spotify")])
+        cuts = ["light", "medium", "semibold", "bold", "black", "narrow-semibold", "narrow-black", "style"]
         for row in rows:
             names = zipfile.ZipFile(os.path.join(out, row["file"])).namelist()
-            if row["type"] == "data":
+            if row["id"] == "kinetic-fonts":
+                self.assertEqual(names, ["core.json", "data/OFL.txt"] + sorted("data/%s.bin" % c for c in cuts))
+            elif row["type"] == "data":
                 self.assertEqual(names, ["core.json", "data/logo.png"])
             else:
                 self.assertEqual(names[:2], ["core.json", "data/OFL.txt"])
                 self.assertTrue(all(n.endswith(".ttf") for n in names[2:]))
-            self.assertLessEqual(row["size"], 192 * 1024)
+            # product sans's five faces are the image's own cut, whole, so the largest
+            self.assertLessEqual(row["size"], (288 if row["id"] == "font-product-sans" else 192) * 1024)
         legacy = [a["id"] for a in load(out, "index.json")["apps"]]
         every = [a["id"] for a in load(out, "index2.json")["apps"]]
         self.assertEqual([a for a in every if a in legacy], legacy)

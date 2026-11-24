@@ -1,0 +1,22 @@
+{
+  "format": 1,
+  "kind": "core",
+  "id": "font-product-sans",
+  "version": "1.0.0",
+  "type": "font",
+  "roles": {
+    "SfMedium": "data/gsf-medium.ttf",
+    "SfSemibold": "data/gsf-semibold.ttf",
+    "SfSemiboldClock": "data/gsf-clock.ttf",
+    "SfrSemibold": "data/gsf-round-semibold.ttf",
+    "SfrBold": "data/gsf-round-bold.ttf"
+  },
+  "files": {
+    "data/OFL.txt": "fc13d69f63e36d284b6e383d4d1463d8ad404f0aa065e57cf961252d51063137",
+    "data/gsf-clock.ttf": "4800f54f2fae6f83e0c49be1ecd223230065c57b5299a668b636572edf1336f4",
+    "data/gsf-medium.ttf": "a341035b5176450924be1377e6958a40458f8c4e20325a090a168f8655cc9f13",
+    "data/gsf-round-bold.ttf": "a8b2874a36355bd1f2161a8e2bbec837acab1c67d92f78db8a3917cf9f7f2c53",
+    "data/gsf-round-semibold.ttf": "4e89f708e139baad6b81625577e81098cfabfb1d12f052c6cce657deb4f2f3ca",
+    "data/gsf-semibold.ttf": "c94a2b846a16f16224184035810b8d3b97af9ce0fb0bde31d98a862448483b7a"
+  }
+}

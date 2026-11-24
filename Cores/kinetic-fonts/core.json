@@ -1,0 +1,18 @@
+{
+  "format": 1,
+  "kind": "core",
+  "id": "kinetic-fonts",
+  "version": "1.0.0",
+  "type": "data",
+  "files": {
+    "data/OFL.txt": "fc13d69f63e36d284b6e383d4d1463d8ad404f0aa065e57cf961252d51063137",
+    "data/black.bin": "3338e695bfcd2f34e8441293b720cad630212499e9d24bb640ec108d3346571c",
+    "data/bold.bin": "fe87996c9e9e17f0d2eeeb40ae5bde97d736f2972b464d819a850a3e6e0f6c07",
+    "data/light.bin": "c166a4e156235dfaff1dd2cfb7a84b4a851b970b71db1b5cadc5283f90ec1e25",
+    "data/medium.bin": "a2760fc019556a84628a15def2c9454d73812647a90ccc9160d44125938276e1",
+    "data/narrow-black.bin": "2896898c48ff6a7dfa74b67526a8efb40141f3c381d481b0a169c9ab0d624b75",
+    "data/narrow-semibold.bin": "eedc51eb67960a6275cf1c863c99cb4d8872f7a89601835d51dcc3e3ef01e3b0",
+    "data/semibold.bin": "9ce611c2527f5b84c54472f58cafb7192222e2e415d62f170256dab6f6267851",
+    "data/style.bin": "024fd33e3646b87f8ae742fe7646ac4ab87bdbb406dff00fb9fbc0a95040b74f"
+  }
+}

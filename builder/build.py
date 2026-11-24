@@ -14,7 +14,8 @@ index2.json lists every app with its icon as a slice of icons2.bin (256 apps, 19
 as a second slice, "led", when it has one. A core is a shared data
 package (a font family) apps name in "cores"; Cores/<id>/ holds core.json and data/ and cores.json lists every
 version, the ones --previous-cores lists too, so older pins still resolve.
-The firmware carries font-nunito and font-product-sans (BUILT_IN_CORES), so an app names them with no .core.
+The firmware carries font-nunito (BUILT_IN_CORES), so an app names it with no .core. font-product-sans left the image
+in firmware 0.4.5 and is a core in Cores/ (older firmware still holds it built in and downloads nothing for it).
 --floor VERSION, a public release (X.Y.Z, X.Y.Z-alpha, or X.Y.Z-beta), raises every app whose minFirmware is an
 internal build (X.Y.Z-alpha.N or X.Y.Z-beta.N) below it to VERSION in its package and its rows; the manifests in git
 stay as they are and every other minimum is left alone.
@@ -250,7 +251,7 @@ CORES_DIR = "Cores"
 # version it meets (its major, its version or lower) and cores.json never lists one + index2's row keeps it as the
 # manifest names it, since the board holds the two to the same cores (Package.cpp sameCores) and downloads nothing for
 # a built-in id (Cores.cpp planCores)
-BUILT_IN_CORES = {"font-nunito": "1.0.0", "font-product-sans": "1.0.0"}
+BUILT_IN_CORES = {"font-nunito": "1.0.0"}   # font-product-sans moved to Cores/ with firmware c8780
 CORE_KEYS = ("format", "kind", "id", "version", "type", "minFirmware", "boards", "roles", "files")
 CORE_NEEDED = ("format", "kind", "id", "version", "type", "files")
 CORE_TYPES = ("font", "data")
