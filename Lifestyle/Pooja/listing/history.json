@@ -1,4 +1,5 @@
 [
+  {"version": "2.1", "date": "2026-11-24", "notes": "Pick the symbol before the words by festival, by weekday, fixed, or shuffled."},
   {"version": "2.0", "date": "2026-10-21", "notes": "Prayer is now Pooja, and the words keep time with the music from any source."},
   {"version": "1.0", "date": "2026-10-20", "notes": "First release. Aarti words on your mooboard in time with the recording, in English letters, Hindi, or both."}
 ]
