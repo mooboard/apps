@@ -1,0 +1,24 @@
+{
+  "format": 3,
+  "id": "youtube-subscribers",
+  "name": "YouTube Subscribers",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "Your channel's subscribers, views, or videos, with your own YouTube API key.",
+  "category": "Tools",
+  "runtime": "lua54",
+  "minFirmware": "0.4.4",
+  "boards": ["s3", "p4"],
+  "settings": [
+    {"key": "channel", "type": "text", "label": "Channel ID or handle", "default": "@YouTube", "max": 64},
+    {"key": "key", "type": "secret", "label": "API key", "max": 64},
+    {"key": "show", "type": "choice", "label": "Show", "default": "Subscribers", "options": ["Subscribers", "Views", "Videos"]}
+  ],
+  "controls": [
+    {"key": "count", "type": "readout", "label": "Count"}
+  ],
+  "sources": [
+    {"key": "byid", "url": "https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id={settings.channel}&fields=items(id,snippet(title,customUrl),statistics)", "refresh": 900, "headers": {"X-goog-api-key": "{settings.key}"}},
+    {"key": "byhandle", "url": "https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&forHandle={settings.channel}&fields=items(id,snippet(title,customUrl),statistics)", "refresh": 900, "headers": {"X-goog-api-key": "{settings.key}"}}
+  ]
+}

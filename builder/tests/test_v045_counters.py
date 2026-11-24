@@ -83,6 +83,14 @@ def touching_edges(rgb):
             if (x in (0, 127) or y in (0, 31)) and host.at(rgb, x, y) != (0, 0, 0)]
 
 
+def teal(p):
+    return p[0] < 120 and p[1] > 150 and p[2] > 130
+
+
+def youtube_red(p):
+    return p[0] > 180 and p[1] < 60 and p[2] < 60
+
+
 def region(rgb, x0, x1):
     return [host.at(rgb, x, y) for y in range(32) for x in range(x0, x1)]
 
@@ -263,12 +271,15 @@ class YouTubeSubscribersApp(unittest.TestCase):
         self.assertEqual(a.state()["count"], "2.56M subscribers")
         self.assertEqual(host.at(rgb, 126, 2), STALE)
 
-    def test_the_play_button_is_red_and_moves(self):
+    def test_the_bell_is_teal_and_rings(self):
+        """the store's own mark, a bell, and never a red play button like YouTube's logo"""
         a = app(YOUTUBE, youtube_feeds(), self.ID)
         shots = [region(frame(a, ms), 2, 30) for ms in range(3000, 6000, 250)]
         self.assertGreater(len(set(map(tuple, shots))), 1)
-        reds = [p for p in shots[0] if p[0] > 180 and p[1] < 60 and p[2] < 60]
-        self.assertGreater(len(reds), 60)
+        self.assertGreater(len([p for p in shots[0] if teal(p)]), 60)
+        for feeds in (youtube_feeds(), None):
+            rgb = frame(app(YOUTUBE, feeds, self.ID))
+            self.assertEqual([p for p in host.lit(rgb) if youtube_red(p)], [])
 
     def test_night_is_dim(self):
         for feeds in (youtube_feeds(), None):
@@ -434,12 +445,10 @@ class CounterLedIcons(unittest.TestCase):
         gold = lambda p: p[0] > 200 and p[1] > 150 and p[2] < 90
         self.assertTrue(all(sum(1 for p in f if gold(p)) >= 9 for f in self.frames(GITHUB)))
 
-    def test_youtube_is_a_red_play_button_in_every_frame(self):
-        red = lambda p: p[0] > 180 and p[1] < 60 and p[2] < 60
-        white = lambda p: min(p) > 200
+    def test_youtube_subscribers_is_a_teal_bell_and_no_red_in_any_frame(self):
         for f in self.frames(YOUTUBE):
-            self.assertGreaterEqual(sum(1 for p in f if red(p)), 30)
-            self.assertGreaterEqual(sum(1 for p in f if white(p)), 4)
+            self.assertGreaterEqual(sum(1 for p in f if teal(p)), 30)
+            self.assertFalse([p for p in f if youtube_red(p)])
 
 
 if __name__ == "__main__":
