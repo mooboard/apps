@@ -368,9 +368,15 @@ class CounterStoreRules(unittest.TestCase):
                 self.assertIn(key, [s["key"] for s in man.get("settings", [])], folder)
             self.assertNotIn("settings.key", lua, folder)   # the key stays in the header
             for source in man["sources"]:
-                self.assertIn("data.%s" % source["key"], lua, folder)
+                self.assertRegex(lua, r"\b(data|d)\.%s\b|\"%s\"" % (source["key"], source["key"]), folder)
             for key in [c["key"] for c in man.get("controls", []) if c["type"] == "readout"]:
                 self.assertIn("state.%s =" % key, lua, folder)
+
+    def test_the_lua_uses_no_string_patterns(self):
+        """the board's Lua host leaves out find, match, gmatch, and gsub (pw_runtime's guard list)"""
+        for folder in self.APPS:
+            lua = (ROOT / folder / "app.lua").read_text(encoding="utf-8")
+            self.assertEqual(re.findall(r"[:.](find|match|gmatch|gsub)\(", lua), [], folder)
 
     def test_public_text_has_no_em_dash_capital_mooboard_colon_or_semicolon_in_a_sentence(self):
         for folder in self.APPS:
