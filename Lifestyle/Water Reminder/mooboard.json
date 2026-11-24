@@ -1,0 +1,24 @@
+{
+  "format": 3,
+  "id": "water-reminder",
+  "name": "Water Reminder",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "A calm reminder to drink water, with a glass that fills when it's time.",
+  "category": "Lifestyle",
+  "runtime": "lua54",
+  "minFirmware": "0.4.1",
+  "boards": ["s3", "p4"],
+  "settings": [
+    {"key": "every", "type": "choice", "label": "Every", "default": "1 hour", "options": ["20 min", "30 min", "45 min", "1 hour", "90 min", "2 hours"]},
+    {"key": "hours", "type": "choice", "label": "Active hours", "default": "8 am to 10 pm", "options": ["All day", "7 am to 7 pm", "8 am to 6 pm", "8 am to 10 pm", "9 am to 5 pm"]},
+    {"key": "night", "type": "toggle", "label": "Skip at night", "default": true},
+    {"key": "style", "type": "choice", "label": "Style", "default": "Gentle", "options": ["Gentle", "Bold"]}
+  ],
+  "controls": [
+    {"key": "drank", "type": "button", "label": "I drank"},
+    {"key": "snooze", "type": "button", "label": "Snooze 10 min"},
+    {"key": "next", "type": "readout", "label": "Next reminder"}
+  ],
+  "sources": []
+}
