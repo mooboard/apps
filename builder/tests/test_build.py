@@ -1153,7 +1153,7 @@ class LedSlice(unittest.TestCase):
         self.assertEqual(icons[row["led"]["offset"]:row["led"]["offset"] + row["led"]["length"]], strip)
         self.assertEqual(len(icons), icon["length"] + len(strip))
         self.assertEqual(list(row), ["id", "name", "category", "by", "description", "version", "uses", "minFirmware",
-                                     "boards", "file", "size", "sha256", "icon", "led"])
+                                     "boards", "file", "size", "sha256", "icon", "led", "draw"])   # firmware c9264
 
     def test_no_strip_no_field(self):
         for tree in (Tree(self), self.tree()):

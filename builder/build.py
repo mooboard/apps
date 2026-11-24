@@ -38,6 +38,7 @@ import time
 import unicodedata
 import zlib
 
+import budgets
 import listing
 
 # the store's headings in their order from categories.txt at the repo's top, one a line + apps a to z by folder within
@@ -1284,6 +1285,11 @@ def build(root, out, generated=None, key=None, openssl="openssl", say=lambda lin
             listed_apps[man["id"]] = shown
         led = led_strip(root, category, folder, shown)
         resolve_cores(man, len(package), boards, cores)
+        # firmware c9264 its estimated power, memory, and storage + refused past 90% of a budget
+        draw = budgets.estimate(os.path.join(root, category, folder), man, package, "%s/%s" % (category, folder))
+        over = budgets.check(draw, len(package), boards, "%s/%s" % (category, folder), man["uses"])
+        if over:
+            raise Refused(over)
         name = "%s-%s.mooboard" % (man["id"], man["version"])
         packages[name] = package
         row = {key_: man[key_] for key_ in ("id", "name", "category", "by", "description", "version", "uses",
@@ -1307,6 +1313,7 @@ def build(root, out, generated=None, key=None, openssl="openssl", say=lambda lin
         if led is not None:
             row["led"] = {"offset": len(icons2), "length": len(led), "sha256": hashlib.sha256(led).hexdigest()}
             icons2 += led
+        row["draw"] = draw   # index2's alone, so index.json's contract stays as it was
         rows2.append(row)
         say("%s/%s: %s, %d bytes, %d entries" % (category, folder, name, len(package), count))
         least = json.loads(_read(os.path.join(root, category, folder, "mooboard.json"))).get("minFirmware")
