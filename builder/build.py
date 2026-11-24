@@ -220,8 +220,14 @@ LED_FILE = "icon-led.png"
 ICON = 32
 NAME_MAX = 24
 DESCRIPTION_MAX = 80
-KEYS = ("format", "id", "name", "version", "by", "description", "category", "uses", "minFirmware", "boards",
-        "cores", "settings", "controls", "lights")
+KEYS = ("format", "id", "name", "version", "by", "description", "category", "uses", "minFirmware", "api", "requires",
+        "boards", "cores", "settings", "controls", "lights")
+# u931 c8920 + the firmware's app api levels, vendored from its tools/api/levels.json: each level's first firmware and
+# the parts an app may require
+with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "levels.json"), encoding="utf-8") as _levels:
+    _LEVELS = json.load(_levels)
+LEVEL_FIRMWARE = {level["level"]: level["firmware"] for level in _LEVELS["levels"]}
+CAPS = tuple(_LEVELS["caps"])
 SETTING_KEYS = ("key", "type", "label", "default", "max", "options")
 CONTROL_KEYS = ("key", "type", "label", "arg", "min", "max", "chars", "add")
 SETTINGS_MAX = 8
@@ -391,12 +397,30 @@ def check_manifest(body, category, folder):
     if (not isinstance(boards, list) or not boards or len(set(map(str, boards))) != len(boards)
             or any(b not in BOARDS for b in boards)):
         raise Refused("%s: boards must be a list of s3 and p4, each once" % where)
+    check_level(man, where)
     if "cores" in man:
         check_cores_field(man, where)
     check_sheet(man, where)
     if "lights" in man:
         check_lights(man, where)
     return man
+
+
+def check_level(man, where):
+    """u931 c8920 + api a level levels.json lists, with minFirmware left out for the builder to write + requires 1 to 8
+    of its parts, each once, only beside api"""
+    if "api" in man:
+        if type(man["api"]) is not int or man["api"] not in LEVEL_FIRMWARE:
+            raise Refused("%s: api must be a level from 1 to %d" % (where, max(LEVEL_FIRMWARE)))
+        if "minFirmware" in man:
+            raise Refused("%s: leave minFirmware out; the builder writes it from api" % where)
+    if "requires" in man:
+        if "api" not in man:
+            raise Refused("%s: requires needs api" % where)
+        parts = man["requires"]
+        if (not isinstance(parts, list) or not 1 <= len(parts) <= 8 or len(set(map(str, parts))) != len(parts)
+                or any(p not in CAPS for p in parts)):
+            raise Refused("%s: requires must be 1 to 8 of %s, each once" % (where, ", ".join(CAPS)))
 
 
 def check_lights(man, where):
@@ -924,6 +948,8 @@ def load_app(root, category, folder, floor=None):
         if not os.path.isfile(os.path.join(base, name)):
             raise Refused("%s/%s is missing" % (where, name))
     man = check_manifest(_read(os.path.join(base, "mooboard.json")), category, folder)
+    if "api" in man:   # u931 c8920 + the level's first firmware, bare, so every pre-release of it meets it
+        man["minFirmware"] = LEVEL_FIRMWARE[man["api"]]
     if "minFirmware" in man:
         man["minFirmware"] = raised(man["minFirmware"], floor)
     words = None
@@ -1229,7 +1255,7 @@ def check_floor(floor):
 
 
 def build(root, out, generated=None, key=None, openssl="openssl", say=lambda line: None, previous=None, now=None,
-          previous_cores=None, floor=None):
+          previous_cores=None, floor=None, seam_public=False):
     check_floor(floor)
     generated = generated or default_generated()
     if not STAMP.fullmatch(generated):
@@ -1246,6 +1272,11 @@ def build(root, out, generated=None, key=None, openssl="openssl", say=lambda lin
         if man["id"] in seen:
             raise Refused("two apps have the id %s" % man["id"])
         seen.add(man["id"])
+        # u931 c8920 + a board from before the seam refuses a package with api, so none is listed until a public
+        # firmware carries it (7e)
+        if "api" in man and not seam_public:
+            raise Refused("%s names api %d, and no public firmware reads api yet; build with --seam-public once one "
+                          "does" % (man["id"], man["api"]))
         shown = listing.check(os.path.join(root, category, folder), man, icon, category, "%s/%s" % (category, folder))
         if shown is not None:
             listed_apps[man["id"]] = shown
@@ -1254,7 +1285,7 @@ def build(root, out, generated=None, key=None, openssl="openssl", say=lambda lin
         name = "%s-%s.mooboard" % (man["id"], man["version"])
         packages[name] = package
         row = {key_: man[key_] for key_ in ("id", "name", "category", "by", "description", "version", "uses",
-                                             "minFirmware") if key_ in man}
+                                             "minFirmware", "api", "requires") if key_ in man}
         row.update(boards=boards, file=name, size=len(package), sha256=hashlib.sha256(package).hexdigest())
         hosted = {}
         if words is not None:
@@ -1360,6 +1391,8 @@ def main(argv=None):
     parser.add_argument("--openssl", default="openssl")
     parser.add_argument("--floor", metavar="VERSION", help="a public release; every app whose minFirmware is an "
                                                           "internal build (.N) below it asks for it instead")
+    parser.add_argument("--seam-public", action="store_true", help="a public firmware reads api and requires (0.4.5 "
+                        "or later is out), so apps that name an api level may be listed")
     parser.add_argument("--listings", action="store_true", help="write listings.json at the repo's top and stop")
     args = parser.parse_args(argv)
     if args.listings:
@@ -1384,7 +1417,7 @@ def main(argv=None):
         return 1
     try:
         build(root, args.out, args.generated, args.key, args.openssl, say=print, previous=previous,
-              previous_cores=previous_cores, floor=args.floor)
+              previous_cores=previous_cores, floor=args.floor, seam_public=args.seam_public)
     except Refused as refused:
         print("refused: %s" % refused, file=sys.stderr)
         return 1

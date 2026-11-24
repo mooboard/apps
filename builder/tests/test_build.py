@@ -777,6 +777,61 @@ class TheRepo(unittest.TestCase):
 
 
 
+class ApiLevel(unittest.TestCase):
+    """u931 c8920 + an app names its app api level ("api") and the parts it can't work without ("requires"), and the
+    builder writes its minFirmware, the bare first firmware of that level in levels.json, so boards from before the
+    seam stop at the row + no api lands in a catalog until a public firmware carries the seam (--seam-public, 7e)"""
+
+    def tree(self, **changes):
+        tree = Tree(self)
+        tree.app("Lifestyle", "Prayer", manifest(**changes), pack_files())
+        return tree
+
+    def apps(self, out, name):
+        return {a["id"]: a for a in json.loads(read(os.path.join(out, name)))["apps"]}
+
+    def test_the_levels_are_the_firmwares(self):
+        self.assertEqual(build.LEVEL_FIRMWARE[8], "0.4.5")
+        self.assertEqual(build.LEVEL_FIRMWARE[1], "0.3.0")
+        self.assertEqual(build.CAPS, ("speaker", "card", "buttons", "wheel", "light-sensor", "gaming"))
+
+    def test_a_level_writes_the_minimum_and_the_rows(self):
+        out = self.tree(minFirmware=None, api=8, requires=["speaker"]).build(seam_public=True)
+        row = self.apps(out, "index2.json")["prayer"]
+        self.assertEqual((row["minFirmware"], row["api"], row["requires"]), ("0.4.5", 8, ["speaker"]))
+        packaged = zipfile.ZipFile(os.path.join(out, row["file"])).read("mooboard.json").decode()
+        self.assertEqual(json.loads(packaged)["api"], 8)
+        # after minFirmware in the board's order (Manifest.cpp)
+        self.assertLess(packaged.index('"minFirmware"'), packaged.index('"api"'))
+        self.assertLess(packaged.index('"api"'), packaged.index('"requires"'))
+        self.assertLess(packaged.index('"requires"'), packaged.index('"boards"'))
+        self.assertNotIn("prayer", self.apps(out, "index.json"))
+
+    def test_an_app_without_a_level_builds_the_same_bytes(self):
+        out = self.tree().build()
+        row = self.apps(out, "index2.json")["prayer"]
+        self.assertNotIn("api", row)
+        self.assertNotIn("requires", row)
+        self.assertEqual(row["minFirmware"], "0.3.0")
+
+    def test_no_level_reaches_a_catalog_before_the_seam_is_public(self):
+        with self.assertRaises(build.Refused) as caught:
+            self.tree(minFirmware=None, api=8).build()
+        self.assertIn("--seam-public", str(caught.exception))
+
+    def test_each_rule(self):
+        for changes, word in (({"api": 8}, "leave minFirmware out"), ({"minFirmware": None, "api": 0}, "api must be"),
+                              ({"minFirmware": None, "api": 9}, "api must be"),
+                              ({"minFirmware": None, "api": "8"}, "api must be"),
+                              ({"minFirmware": None, "api": 8, "requires": []}, "requires must be"),
+                              ({"minFirmware": None, "api": 8, "requires": ["gaming", "gaming"]}, "requires must be"),
+                              ({"minFirmware": None, "api": 8, "requires": ["edge-light"]}, "requires must be"),
+                              ({"requires": ["gaming"]}, "requires needs api")):
+            with self.assertRaises(build.Refused, msg=str(changes)) as caught:
+                self.tree(**changes).build(seam_public=True)
+            self.assertIn(word, str(caught.exception), changes)
+
+
 class Floor(unittest.TestCase):
     """--floor at a public release + an internal build's minimum under it asks for the release in the package and both
     indexes, so a store published with 0.4.0-alpha never asks for a .N build no one outside has (the owner, 2026-10-29)"""
