@@ -341,7 +341,7 @@ class CassetteDeckApp(unittest.TestCase):
 
     def test_meters_dance_and_can_be_turned_off(self):
         green = (52, 199, 89)
-        meters = lambda rgb: count(rgb, green, range(73, 126), range(11, 24))
+        meters = lambda rgb: count(rgb, green, range(76, 126), range(11, 24))
         self.assertGreater(meters(deck(ms=300)), 0)
         self.assertNotEqual([deck(ms=ms) for ms in (300, 400, 500, 600)][1:], [deck(ms=300)] * 3)
         self.assertEqual(meters(deck({"meters": False}, ms=300)), 0)
@@ -371,7 +371,7 @@ class UptimeApp(unittest.TestCase):
         a = app(UPTIME, None, {"one": page("GitHub"), "two": page("Cloudflare", "minor"),
                                "three": page("Discord", "major")})
         rgb = a.rt.frame(host.ctx(ms=0))
-        up, minor, major = host.at(rgb, 5, 8), host.at(rgb, 69, 8), host.at(rgb, 5, 24)
+        up, minor, major = host.at(rgb, 5, 6), host.at(rgb, 5, 16), host.at(rgb, 5, 26)
         self.assertEqual(max(up), up[1])
         self.assertTrue(minor[0] > minor[1] > minor[2], minor)
         self.assertTrue(major[0] > 3 * major[1], major)
@@ -398,7 +398,7 @@ class UptimeApp(unittest.TestCase):
         a.rt.frame(host.ctx(online=False))
         self.assertEqual(a.state()["status"], "Board offline")
 
-    def test_two_or_fewer_get_rows_and_more_get_a_grid(self):
+    def test_two_or_fewer_get_big_rows_and_more_get_small_ones(self):
         rows = app(UPTIME, NONE, {"one": page("GitHub"), "two": page("Cloudflare")}).rt.frame(host.ctx(ms=0))
         grid = app(UPTIME, None, {"one": page("GitHub"), "two": page("Cloudflare"),
                                   "three": page("Discord")}).rt.frame(host.ctx(ms=0))

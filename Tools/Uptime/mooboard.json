@@ -1,0 +1,27 @@
+{
+  "format": 3,
+  "id": "uptime",
+  "name": "Uptime",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "A status light for each service you count on, green when it's up and red when it's down.",
+  "category": "Tools",
+  "runtime": "lua54",
+  "minFirmware": "0.4.4",
+  "boards": ["s3", "p4"],
+  "settings": [
+    {"key": "one", "type": "text", "label": "Service 1", "default": "https://www.githubstatus.com/api/v2/status.json", "max": 256},
+    {"key": "two", "type": "text", "label": "Service 2", "default": "https://www.cloudflarestatus.com/api/v2/status.json", "max": 256},
+    {"key": "three", "type": "text", "label": "Service 3", "default": "https://discordstatus.com/api/v2/status.json", "max": 256},
+    {"key": "four", "type": "text", "label": "Service 4", "default": "none", "max": 256}
+  ],
+  "controls": [
+    {"key": "status", "type": "readout", "label": "Status"}
+  ],
+  "sources": [
+    {"key": "one", "url": "{settings.one}", "refresh": 60},
+    {"key": "two", "url": "{settings.two}", "refresh": 60},
+    {"key": "three", "url": "{settings.three}", "refresh": 60},
+    {"key": "four", "url": "{settings.four}", "refresh": 60}
+  ]
+}
