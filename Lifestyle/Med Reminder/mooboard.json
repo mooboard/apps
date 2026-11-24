@@ -1,0 +1,22 @@
+{
+  "format": 3,
+  "id": "med-reminder",
+  "name": "Med Reminder",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "Your daily doses at their times, with a pill that hops out when one is due.",
+  "category": "Lifestyle",
+  "runtime": "lua54",
+  "minFirmware": "0.4.1",
+  "boards": ["s3", "p4"],
+  "settings": [
+    {"key": "doses", "type": "choice", "label": "Doses", "default": "Once a day", "options": ["Once a day", "Twice a day", "Three times"]},
+    {"key": "first", "type": "choice", "label": "First dose", "default": "8 am", "options": ["6 am", "7 am", "8 am", "9 am", "10 am"]}
+  ],
+  "controls": [
+    {"key": "took", "type": "button", "label": "I took it"},
+    {"key": "next", "type": "readout", "label": "Next dose"},
+    {"key": "today", "type": "readout", "label": "Today"}
+  ],
+  "sources": []
+}
