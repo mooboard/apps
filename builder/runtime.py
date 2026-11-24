@@ -22,7 +22,9 @@ def _plain(value):
     if isinstance(value,dict):return all(_plain(k) and _plain(v) for k,v in value.items())
     return True
 
-ORDER = ('format', 'id', 'name', 'version', 'by', 'description', 'category', 'runtime', 'font', 'minFirmware', 'boards', 'settings', 'controls', 'sources', 'complications')
+ORDER = ('format', 'id', 'name', 'version', 'by', 'description', 'category', 'runtime', 'font', 'minFirmware', 'api', 'requires', 'boards', 'settings', 'controls', 'sources', 'complications')
+LEVEL_FIRMWARE = {1: '0.3.0', 2: '0.3.1', 3: '0.3.2', 4: '0.4.0', 5: '0.4.1', 6: '0.4.2', 7: '0.4.4', 8: '0.4.5'}
+CAPS = ('speaker', 'card', 'buttons', 'wheel', 'light-sensor', 'gaming')
 SETTING_ORDER = ('key', 'type', 'label', 'default', 'max', 'options')
 CONTROL_ORDER = ('key', 'type', 'label', 'arg', 'min', 'max', 'chars', 'add')
 SOURCE_ORDER = ('key', 'url', 'refresh', 'headers', 'near')
@@ -61,8 +63,13 @@ def check(man):
     refuse(man['id'] in package.RESERVED_IDS, 'Choose your own app id')
     for field, limit in (('name', 24), ('by', 32), ('description', 160)):
         refuse(not label(man.get(field), limit), '%s must be 1 to %d plain characters' % (field, limit))
+    refuse('minFirmware' not in man and 'api' not in man, "Name the app's api level or its minFirmware")
     for field in ('version', 'minFirmware'):
-        refuse(not isinstance(man.get(field), str) or not VERSION.fullmatch(man[field]), field + ' must be a semantic version')
+        if field == 'version' or field in man:
+            refuse(not isinstance(man.get(field), str) or not VERSION.fullmatch(man[field]), field + ' must be a semantic version')
+    refuse('api' in man and (type(man['api']) is not int or man['api'] not in LEVEL_FIRMWARE), 'api must be a level from 1 to %d' % max(LEVEL_FIRMWARE))
+    parts = man.get('requires', [])
+    refuse(not isinstance(parts, list) or ('requires' in man and (not 1 <= len(parts) <= 8)) or any((not isinstance(p, str) or p not in CAPS for p in parts)) or (len(set(parts)) != len(parts)), 'requires must be 1 to 8 of %s, each once' % (', '.join(CAPS[:-1]) + ', and ' + CAPS[-1]))
     refuse(man.get('runtime') != 'lua54', 'The live runtime is lua54')
     refuse('font' in man and (not (isinstance(man['font'], str) and re.fullmatch('[a-z0-9-]{1,32}', man['font']))), 'font is a family name such as inter')
     refuse(man.get('category') not in categories(), 'Use a current store category: ' + ', '.join(categories()))
@@ -183,7 +190,8 @@ def check(man):
         refuse('size' in item and item['size'] not in ('small', 'wide'), 'A complication size is small or wide')
         refuse('refresh' in item and (type(item['refresh']) is not int or not 300 <= item['refresh'] <= 86400), 'A complication refresh is 300 to 86400 seconds')
     newer = any((k in item for item in complications for k in ('change', 'size', 'refresh'))) or any(('{' in str(item.get(k, '')) for item in complications for k in ('path', 'change', 'label'))) or any((s.get('type') == 'secret' for s in settings))
-    floor = tuple((int(n) for n in man['minFirmware'].split('-')[0].split('.')))
+    least = LEVEL_FIRMWARE[man['api']] if 'api' in man else man['minFirmware']
+    floor = tuple((int(n) for n in least.split('-')[0].split('.')))
     refuse(newer and floor < (0, 4, 4), 'Complication change, size, refresh, setting paths, and secret settings need minFirmware 0.4.4 or later')
     placed = any(('levels' in item for item in complications)) or any(('near' in s or '{place.' in str(s.get('url', '')) for s in sources))
     refuse(placed and floor < (0, 4, 4), "Complication levels, the board's place, and near need minFirmware 0.4.4 or later")
