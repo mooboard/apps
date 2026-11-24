@@ -1,0 +1,21 @@
+{
+  "format": 3,
+  "id": "desk-sprout",
+  "name": "Desk Sprout",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "A sprout that reminds you to water your real plant, and droops when it's time.",
+  "category": "Lifestyle",
+  "runtime": "lua54",
+  "minFirmware": "0.4.1",
+  "boards": ["s3", "p4"],
+  "settings": [
+    {"key": "every", "type": "choice", "label": "Water every", "default": "1 week", "options": ["2 days", "3 days", "5 days", "1 week", "10 days", "2 weeks"]},
+    {"key": "pot", "type": "color", "label": "Pot", "default": "#C8643C"}
+  ],
+  "controls": [
+    {"key": "watered", "type": "button", "label": "I watered it"},
+    {"key": "next", "type": "readout", "label": "Next watering"}
+  ],
+  "sources": []
+}
