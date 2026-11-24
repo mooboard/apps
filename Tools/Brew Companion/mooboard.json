@@ -1,0 +1,22 @@
+{
+  "format": 3,
+  "id": "brew-companion",
+  "name": "Brew Companion",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "Steep timers for tea and the French press, with the brew darkening as it steeps.",
+  "category": "Tools",
+  "runtime": "lua54",
+  "minFirmware": "0.4.1",
+  "boards": ["s3", "p4"],
+  "controls": [
+    {"key": "green", "type": "button", "label": "Green tea"},
+    {"key": "black", "type": "button", "label": "Black tea"},
+    {"key": "oolong", "type": "button", "label": "Oolong"},
+    {"key": "herbal", "type": "button", "label": "Herbal tea"},
+    {"key": "press", "type": "button", "label": "French press"},
+    {"key": "stop", "type": "button", "label": "Stop"},
+    {"key": "left", "type": "readout", "label": "Time left"}
+  ],
+  "sources": []
+}
