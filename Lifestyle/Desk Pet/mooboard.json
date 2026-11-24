@@ -1,0 +1,22 @@
+{
+  "format": 3,
+  "id": "desk-pet",
+  "name": "Desk Pet",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "A tiny pixel pet that wanders your board, gets hungry, and naps at night.",
+  "category": "Lifestyle",
+  "runtime": "lua54",
+  "minFirmware": "0.4.1",
+  "boards": ["s3", "p4"],
+  "settings": [
+    {"key": "color", "type": "color", "label": "Color", "default": "#FFB7C9"},
+    {"key": "sleep", "type": "toggle", "label": "Sleeps at night", "default": true}
+  ],
+  "controls": [
+    {"key": "feed", "type": "button", "label": "Feed"},
+    {"key": "pet", "type": "button", "label": "Pet"},
+    {"key": "mood", "type": "readout", "label": "Mood"}
+  ],
+  "sources": []
+}
