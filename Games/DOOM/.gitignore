@@ -1,2 +1,2 @@
-# the shareware WAD chunks builder/doom.py makes, never committed
-data/
+# the shareware WAD chunks builder/doom.py makes, never committed + tables.bin is the engine's, from its GPL source, and in git
+data/wad-*.bin
