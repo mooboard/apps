@@ -810,10 +810,11 @@ def check_game(data, where):
 
 
 def check_doom(data, where):
-    """DOOM carries the shareware WAD alone as data/wad-0.bin to wad-3.bin + without them or with any other WAD the
-    build skips it with a note and builds the rest c3874"""
+    """DOOM carries the shareware WAD as data/wad-0.bin to wad-3.bin and the engine's tables as data/tables.bin
+    (firmware c8806) + without the chunks or with any other WAD or tables the build skips it with a note and builds the
+    rest c3874"""
     import doom
-    if not data:
+    if not any(name in data for name in doom.CHUNKS):
         raise Skipped("%s: data/ has no WAD chunks, %s" % (where, doom.HOW))
     try:
         doom.unpack(data)

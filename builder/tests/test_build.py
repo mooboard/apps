@@ -955,7 +955,8 @@ class Floor(unittest.TestCase):
 
 class Doom(unittest.TestCase):
     """0.4.0-alpha.4's doom renderer c3870 + its package is the shareware WAD's four chunks, never in git, so a build
-    without them or with any other WAD skips DOOM with a note and builds the rest c3874"""
+    without them or with any other WAD skips DOOM with a note and builds the rest c3874 + from 0.4.5 the engine's
+    start-up tables ride beside them as data/tables.bin, which is in git and checked by its sha256 (firmware c8806)"""
 
     def setUp(self):
         import doom
@@ -966,6 +967,11 @@ class Doom(unittest.TestCase):
             patcher = unittest.mock.patch.object(doom, name, value)
             patcher.start()
             self.addCleanup(patcher.stop)
+        self.tables = read(os.path.join(REPO, "Games", "DOOM", "data", doom.TABLES))
+
+    def data(self):
+        """data/ as a build with the WAD has it: the four chunks and the committed tables"""
+        return dict(self.doom.chunks(self.raw), **{self.doom.TABLES: self.tables})
 
     @staticmethod
     def man(**changes):
@@ -990,7 +996,7 @@ class Doom(unittest.TestCase):
         self.assertEqual(tuple(parts), self.doom.CHUNKS)
         self.assertTrue(all(0 < len(p) <= build.ENTRY_CAP for p in parts.values()))
         self.assertEqual(parts["wad-0.bin"][:4], b"MBW1")
-        self.assertEqual(self.doom.unpack(parts), self.raw)
+        self.assertEqual(self.doom.unpack(dict(parts, **{"tables.bin": self.tables})), self.raw)
         for raw in (self.raw[:-1], self.raw[:-1] + b"x", b""):
             with self.assertRaisesRegex(ValueError, "not the DOOM v1.9 shareware"):
                 self.doom.chunks(raw)
@@ -1012,33 +1018,45 @@ class Doom(unittest.TestCase):
         self.assertIn("not the DOOM v1.9 shareware", err.getvalue())
 
     def test_the_chunks_build_doom_into_index2_alone(self):
-        out, ids, skipped = self.built(self.doom.chunks(self.raw))
+        out, ids, skipped = self.built(self.data())
         self.assertEqual((ids, skipped), (["prayer", "doom"], []))
         row = json.loads(read(os.path.join(out, "index2.json")))["apps"][1]
         self.assertEqual((row["uses"], row["minFirmware"], row["boards"]), ("doom", "0.4.0-alpha.4", ["s3"]))
         self.assertNotIn("runtime", row)
         self.assertEqual([a["id"] for a in json.loads(read(os.path.join(out, "index.json")))["apps"]], ["prayer"])
         package = zipfile.ZipFile(os.path.join(out, row["file"]))
-        self.assertEqual(package.namelist(), ["mooboard.json", "icon.png"] + ["data/" + n for n in self.doom.CHUNKS])
+        self.assertEqual(package.namelist(),
+                         ["mooboard.json", "icon.png", "data/tables.bin"] + ["data/" + n for n in self.doom.CHUNKS])
+        self.assertEqual(package.read("data/tables.bin"), self.tables)
         self.assertNotIn("settings", json.loads(package.read("mooboard.json")))
         self.assertEqual(row["size"], os.path.getsize(os.path.join(out, row["file"])))
 
     def test_without_chunks_doom_skips_with_a_note_and_the_rest_builds(self):
-        out, ids, skipped = self.built({})
-        self.assertEqual(ids, ["prayer"])
-        self.assertEqual(skipped, ["skipped Games/DOOM: data/ has no WAD chunks, " + self.doom.HOW])
-        self.assertFalse([n for n in os.listdir(out) if n.startswith("doom-")])
+        for data in ({}, {"tables.bin": self.tables}):   # the public repo holds the tables alone
+            with self.subTest(sorted(data)):
+                out, ids, skipped = self.built(data)
+                self.assertEqual(ids, ["prayer"])
+                self.assertEqual(skipped, ["skipped Games/DOOM: data/ has no WAD chunks, " + self.doom.HOW])
+                self.assertFalse([n for n in os.listdir(out) if n.startswith("doom-")])
 
     def test_wrong_chunks_skip_doom_never_half_a_package(self):
-        good = self.doom.chunks(self.raw)
-        body = b"".join(good.values())
+        good = self.data()
+        body = b"".join(good[n] for n in self.doom.CHUNKS)
         cut = lambda b: dict(zip(self.doom.CHUNKS, (b[:build.ENTRY_CAP], b[build.ENTRY_CAP:2 * build.ENTRY_CAP],
                                                     b[2 * build.ENTRY_CAP:3 * build.ENTRY_CAP],
-                                                    b[3 * build.ENTRY_CAP:])))
+                                                    b[3 * build.ENTRY_CAP:])), **{"tables.bin": self.tables})
+        raw_tables = zlib.decompress(self.tables[8:])
+        other_tables = raw_tables[:100] + bytes([raw_tables[100] ^ 1]) + raw_tables[101:]
         other = __import__("random").Random(2).randbytes(len(self.raw))
         cases = {
-            "three chunks": ({k: v for k, v in good.items() if k != "wad-3.bin"}, "wad-0.bin to wad-3.bin alone"),
-            "an extra file": (dict(good, **{"wad-4.bin": b"x"}), "wad-0.bin to wad-3.bin alone"),
+            "three chunks": ({k: v for k, v in good.items() if k != "wad-3.bin"}, "wad-3.bin and tables.bin alone"),
+            "an extra file": (dict(good, **{"wad-4.bin": b"x"}), "wad-3.bin and tables.bin alone"),
+            "no tables": ({k: v for k, v in good.items() if k != "tables.bin"}, "wad-3.bin and tables.bin alone"),
+            "tables not MBT1": (dict(good, **{"tables.bin": b"MBT2" + self.tables[4:]}), "does not open with MBT1"),
+            "other tables": (dict(good, **{"tables.bin": b"MBT1" + self.tables[4:8] + zlib.compress(other_tables)}),
+                             "not the engine's tables"),
+            "tables cut short": (dict(good, **{"tables.bin": self.tables[:-6]}), "tables.bin"),
+            "tables run on": (dict(good, **{"tables.bin": self.tables + b"x"}), "runs on past its tables"),
             "no envelope": (cut(b"MBW2" + body[4:]), "MBW1 envelope"),
             "another length": (cut(body[:4] + struct.pack("<I", len(self.raw) + 1) + body[8:]), "bytes, not"),
             "cut short": (cut(body[:-10]), "cut short"),
@@ -1058,7 +1076,7 @@ class Doom(unittest.TestCase):
                 self.assertFalse([n for n in os.listdir(out) if n.startswith("doom-")])
 
     def test_doom_needs_alpha4_and_takes_no_settings(self):
-        data = self.doom.chunks(self.raw)
+        data = self.data()
         for man, why in ((self.man(minFirmware="0.4.0-alpha.3"), "minFirmware 0.4.0-alpha.4"),
                          (self.man(settings=[{"key": "speed", "type": "choice", "label": "Speed", "default": "Normal",
                                               "options": ["Slow", "Normal", "Fast"]}]), "takes no choice setting")):
@@ -1071,6 +1089,28 @@ class Doom(unittest.TestCase):
         for path in ("Games/DOOM/data/wad-0.bin", "Games/DOOM/DOOM1.WAD", "doom1.wad"):
             with self.subTest(path):
                 self.assertEqual(subprocess.run(["git", "-C", REPO, "check-ignore", "-q", path]).returncode, 0)
+        # the engine's tables are its own, from its GPL source, and in git
+        tables = subprocess.run(["git", "-C", REPO, "check-ignore", "-q", "Games/DOOM/data/tables.bin"])
+        self.assertEqual(tables.returncode, 1)
+
+    def test_the_script_writes_the_tables_and_checks_them(self):
+        raw = zlib.decompress(self.tables[8:])
+        self.assertEqual(len(raw), self.doom.TABLES_SIZE)
+        self.assertEqual(self.doom.unpack_tables(self.tables), raw)
+        self.assertEqual(self.doom.tables_file(raw), self.tables)   # the committed file is the script's own
+        folder = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, folder)
+        source, out = os.path.join(folder, "doom-tables.raw"), os.path.join(folder, "data")
+        with open(source, "wb") as f:
+            f.write(raw)
+        with unittest.mock.patch("sys.stdout", io.StringIO()):
+            self.assertEqual(self.doom.main(["--tables", source, "--out", out]), 0)
+        self.assertEqual(read(os.path.join(out, "tables.bin")), self.tables)
+        with open(source, "ab") as f:
+            f.write(b"x")
+        with unittest.mock.patch("sys.stderr", io.StringIO()) as err:
+            self.assertEqual(self.doom.main(["--tables", source, "--out", out]), 1)
+        self.assertIn("not the engine's tables", err.getvalue())
 
 
 class LedSlice(unittest.TestCase):
@@ -1297,7 +1337,8 @@ class Lights(unittest.TestCase):
                 if man["uses"] == "life":
                     self.assertNotIn("lights", man)
                     continue
-                self.assertEqual(man["minFirmware"], "0.4.2-alpha.1")
+                # the lights came in 0.4.2 + DOOM 1.2's tables need 0.4.5 (firmware c8806)
+                self.assertEqual(man["minFirmware"], "0.4.5-alpha.1" if man["uses"] == "doom" else "0.4.2-alpha.1")
                 if man["uses"] == "game":
                     self.assertNotIn("lights", man)
                     src = json.loads(read(os.path.join(REPO, "Games", folder, "data", "game.json")))

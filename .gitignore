@@ -1,5 +1,5 @@
 dist/
 __pycache__/
-# the DOOM WAD and its chunks never go in this public repo (builder/doom.py)
+# the DOOM WAD and its chunks never go in this public repo (builder/doom.py) + its tables.bin is the engine's own
 *.[Ww][Aa][Dd]
-Games/DOOM/data/
+Games/DOOM/data/wad-*.bin
