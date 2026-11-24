@@ -1,0 +1,18 @@
+{
+  "format": 3,
+  "id": "cassette-deck",
+  "name": "Vintage Cassette Deck",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "A mixtape plays in its deck, reels turning, meters dancing, and the tape flipping to side B.",
+  "category": "Ambiance",
+  "runtime": "lua54",
+  "minFirmware": "0.4.4",
+  "boards": ["s3", "p4"],
+  "settings": [
+    {"key": "label", "type": "text", "label": "Label", "default": "MIXTAPE", "max": 10},
+    {"key": "shell", "type": "choice", "label": "Shell", "default": "Smoke", "options": ["Smoke", "Cream", "Red", "Blue"]},
+    {"key": "tape", "type": "choice", "label": "Tape", "default": "C60", "options": ["C60", "C90"]},
+    {"key": "meters", "type": "toggle", "label": "Meters", "default": true}
+  ]
+}
