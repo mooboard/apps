@@ -273,7 +273,7 @@ class SpaceApp(unittest.TestCase):
 
     def test_there_is_no_place_setting(self):
         man = json.load(open(ROOT / self.F / "mooboard.json"))
-        self.assertEqual([s["key"] for s in man["settings"]], ["iss", "showers", "eclipses"])
+        self.assertEqual([s["key"] for s in man["settings"]], ["iss", "showers", "eclipses", "moon"])   # moon in 1.2
 
     def test_the_station_flies_on_an_arc_with_the_earths_center(self):
         """page 1: every lit dot of the earth's edge is 48 from (20, 70) and the station's body 58, frame after frame"""
