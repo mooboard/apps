@@ -1,0 +1,21 @@
+{
+  "format": 3,
+  "id": "rocket-launch-pad",
+  "name": "Rocket Launch Pad",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "The next rocket launch with its countdown, and a liftoff on your board when it goes.",
+  "category": "Lifestyle",
+  "runtime": "lua54",
+  "minFirmware": "0.4.4",
+  "boards": ["s3", "p4"],
+  "settings": [
+    {"key": "where", "type": "choice", "label": "Launches from", "default": "Anywhere", "options": ["Anywhere", "United States"]}
+  ],
+  "controls": [
+    {"key": "next", "type": "readout", "label": "Next launch"}
+  ],
+  "sources": [
+    {"key": "launches", "url": "https://ll.thespacedevs.com/2.2.0/launch/upcoming/?limit=5&mode=list", "refresh": 1800}
+  ]
+}
