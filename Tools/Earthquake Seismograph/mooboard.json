@@ -1,0 +1,24 @@
+{
+  "format": 3,
+  "id": "earthquake-seismograph",
+  "name": "Earthquake Seismograph",
+  "version": "1.0.0",
+  "by": "mooboard",
+  "description": "The world's latest earthquake, how long ago, and how far away, on a seismograph trace.",
+  "category": "Tools",
+  "runtime": "lua54",
+  "minFirmware": "0.4.4",
+  "boards": ["s3", "p4"],
+  "settings": [
+    {"key": "min", "type": "choice", "label": "Smallest", "default": "4.5", "options": ["2.5", "4.5", "6"]},
+    {"key": "units", "type": "choice", "label": "Distance", "default": "Miles", "options": ["Miles", "Kilometers"]}
+  ],
+  "controls": [
+    {"key": "latest", "type": "readout", "label": "Latest"},
+    {"key": "ago", "type": "readout", "label": "When"},
+    {"key": "away", "type": "readout", "label": "Distance"}
+  ],
+  "sources": [
+    {"key": "quakes", "url": "https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&limit=4&orderby=time&minmagnitude={settings.min}", "refresh": 300}
+  ]
+}
