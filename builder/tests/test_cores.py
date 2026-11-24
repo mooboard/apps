@@ -111,6 +111,7 @@ class Index2(unittest.TestCase):
             body = icons[slot["offset"]:slot["offset"] + slot["length"]]
             self.assertEqual(hashlib.sha256(body).hexdigest(), slot["sha256"])
             end += slot["length"]
+            self.assertEqual(sorted(row.pop("draw")), ["ma", "ram"])   # index2's alone firmware c9264
             if row["id"] in legacy:
                 old = legacy[row["id"]]
                 self.assertEqual(base64.b64decode(old.pop("icon")), body)
