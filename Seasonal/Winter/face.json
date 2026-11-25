@@ -1,0 +1,14 @@
+{
+  "id": "winter",
+  "name": "Winter",
+  "start": "2026-12-27",
+  "end": "2026-12-30",
+  "clock": {
+    "x": 64,
+    "y": 9,
+    "align": "center",
+    "font": "clock",
+    "size": 14,
+    "color": "#e0ecff"
+  }
+}
