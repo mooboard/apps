@@ -22,7 +22,8 @@ def _plain(value):
     if isinstance(value,dict):return all(_plain(k) and _plain(v) for k,v in value.items())
     return True
 
-ORDER = ('format', 'id', 'name', 'version', 'by', 'description', 'category', 'runtime', 'font', 'minFirmware', 'api', 'requires', 'boards', 'settings', 'controls', 'sources', 'complications')
+ORDER = ('format', 'id', 'name', 'version', 'by', 'description', 'category', 'runtime', 'font', 'minFirmware', 'api', 'requires', 'boards', 'settings', 'controls', 'sources', 'complications', 'statusIcon')
+STATUS_ICONS = ('football', 'basketball', 'soccer')
 LEVEL_FIRMWARE = {1: '0.3.0', 2: '0.3.1', 3: '0.3.2', 4: '0.4.0', 5: '0.4.1', 6: '0.4.2', 7: '0.4.4', 8: '0.4.5'}
 CAPS = ('speaker', 'card', 'buttons', 'wheel', 'light-sensor', 'gaming')
 SETTING_ORDER = ('key', 'type', 'label', 'default', 'max', 'options')
@@ -195,6 +196,9 @@ def check(man):
     refuse(newer and floor < (0, 4, 4), 'Complication change, size, refresh, setting paths, and secret settings need minFirmware 0.4.4 or later')
     placed = any(('levels' in item for item in complications)) or any(('near' in s or '{place.' in str(s.get('url', '')) for s in sources))
     refuse(placed and floor < (0, 4, 4), "Complication levels, the board's place, and near need minFirmware 0.4.4 or later")
+    if 'statusIcon' in man:
+        refuse(man['statusIcon'] not in STATUS_ICONS, 'statusIcon is football, basketball, or soccer')
+        refuse(floor < (0, 4, 5), 'A status bar icon needs api 8 or minFirmware 0.4.5 or later')
     return man
 
 def canonical(man):
